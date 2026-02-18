@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const navLinks = [
   { label: "Method", href: "#method" },
@@ -13,6 +14,8 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthed, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -24,6 +27,12 @@ export function Navbar() {
     setMobileOpen(false);
     const el = document.querySelector(href);
     el?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleLogout = () => {
+    logout();
+    setMobileOpen(false);
+    navigate("/");
   };
 
   return (
@@ -39,7 +48,7 @@ export function Navbar() {
 
         {/* Desktop */}
         <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+          {!isAuthed && navLinks.map((link) => (
             <button
               key={link.href}
               onClick={() => handleAnchor(link.href)}
@@ -48,12 +57,29 @@ export function Navbar() {
               {link.label}
             </button>
           ))}
-          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Log In
-          </Link>
-          <Button asChild size="sm" className="tracking-wide">
-            <Link to="/apply">Apply</Link>
-          </Button>
+
+          {isAuthed ? (
+            <>
+              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Log In
+              </Link>
+              <Button asChild size="sm" className="tracking-wide">
+                <Link to="/apply">Apply</Link>
+              </Button>
+            </>
+          )}
         </nav>
 
         {/* Mobile toggle */}
@@ -66,7 +92,7 @@ export function Navbar() {
       {mobileOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-lg border-b border-border">
           <nav className="container flex flex-col gap-4 py-6">
-            {navLinks.map((link) => (
+            {!isAuthed && navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleAnchor(link.href)}
@@ -75,16 +101,26 @@ export function Navbar() {
                 {link.label}
               </button>
             ))}
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Log In
-            </Link>
-            <Button asChild size="sm" className="w-fit tracking-wide">
-              <Link to="/apply">Apply</Link>
-            </Button>
+
+            {isAuthed ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Dashboard
+                </Link>
+                <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Log In
+                </Link>
+                <Button asChild size="sm" className="w-fit tracking-wide">
+                  <Link to="/apply">Apply</Link>
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       )}
