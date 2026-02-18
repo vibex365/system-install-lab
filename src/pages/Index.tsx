@@ -49,7 +49,7 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background glossy-surface">
       <Navbar />
 
       {/* ── Hero ── */}
@@ -61,9 +61,9 @@ export default function Index() {
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-background/80" />
+        <div className="absolute inset-0 bg-black/85" />
         {/* Bottom gradient fade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60" />
 
         <div className="container relative z-10 text-center py-24 md:py-32">
           <motion.h1
