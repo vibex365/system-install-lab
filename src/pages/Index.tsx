@@ -64,18 +64,18 @@ export default function Index() {
           </motion.p>
 
           <motion.h1
-            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.95] mb-8"
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.95] mb-6"
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Build Structured Systems{" "}
-            <span className="text-primary gold-text-glow">With AI.</span>
+            People Fail.{" "}
+            <span className="text-primary gold-text-glow">Systems Won't.</span>
           </motion.h1>
 
           <motion.p
-            className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-4"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.5 }}
+            className="text-xl md:text-2xl lg:text-3xl font-semibold text-foreground/90 tracking-tight mb-4"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
           >
-            Mandatory weekly build cohorts. AI-powered prompt architecture. Institutional accountability.
+            Build Structured Systems With AI.
           </motion.p>
 
           <motion.p
