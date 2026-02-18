@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import Index from "./pages/Index";
 import Apply from "./pages/Apply";
+import ApplicationUnderReview from "./pages/ApplicationUnderReview";
 import Waitlist from "./pages/Waitlist";
 import Login from "./pages/Login";
 import Status from "./pages/Status";
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apply" element={<Apply />} />
+            <Route path="/application-under-review" element={<ApplicationUnderReview />} />
             <Route path="/waitlist" element={<Waitlist />} />
             <Route path="/login" element={<Login />} />
             <Route path="/status" element={<Status />} />

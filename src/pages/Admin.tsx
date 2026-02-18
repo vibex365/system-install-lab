@@ -89,27 +89,33 @@ export default function Admin() {
                         <Button variant="ghost" size="sm" onClick={() => setSelected(null)}>Close</Button>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto">
                       <div className="grid sm:grid-cols-2 gap-4 text-sm">
                         <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground">{selected.email}</span></div>
-                        <div><span className="text-muted-foreground">Role:</span> <span className="text-foreground">{selected.role}</span></div>
-                        <div><span className="text-muted-foreground">Stage:</span> <span className="text-foreground">{selected.stage}</span></div>
+                        <div><span className="text-muted-foreground">Phone:</span> <span className="text-foreground">{selected.phone_number || "—"}</span></div>
+                        <div><span className="text-muted-foreground">Role:</span> <span className="text-foreground capitalize">{selected.role}</span></div>
+                        <div><span className="text-muted-foreground">Stage:</span> <span className="text-foreground capitalize">{selected.stage}</span></div>
                         <div><span className="text-muted-foreground">Status:</span> <StatusPill label={selected.status} variant={statusColor(selected.status)} /></div>
+                        <div><span className="text-muted-foreground">Payment:</span> <span className="text-foreground">{selected.payment_status || "—"}</span></div>
+                        <div><span className="text-muted-foreground">Revenue:</span> <span className="text-foreground">{selected.monthly_revenue || "—"}</span></div>
+                        <div><span className="text-muted-foreground">Hours/wk:</span> <span className="text-foreground">{selected.hours_per_week || "—"}</span></div>
+                        <div><span className="text-muted-foreground">Team:</span> <span className="text-foreground capitalize">{selected.team_status || "—"}</span></div>
+                        <div><span className="text-muted-foreground">Structure:</span> <span className="text-foreground">{selected.willing_structure === true ? "Yes" : selected.willing_structure === false ? "No" : "—"}</span></div>
+                        <div><span className="text-muted-foreground">Reviews:</span> <span className="text-foreground">{selected.willing_reviews === true ? "Yes" : selected.willing_reviews === false ? "No" : "—"}</span></div>
+                        <div><span className="text-muted-foreground">Emotion:</span> <span className="text-foreground capitalize">{selected.disruptive_emotion || "—"}</span></div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">What they're building</p>
-                        <p className="text-sm text-foreground">{selected.product}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Bottleneck</p>
-                        <p className="text-sm text-foreground">{selected.bottleneck}</p>
-                      </div>
-                      {selected.why_now && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Why now</p>
-                          <p className="text-sm text-foreground">{selected.why_now}</p>
-                        </div>
-                      )}
+
+                      <AdminField label="What they're building" value={selected.product} />
+                      <AdminField label="Bottleneck" value={selected.bottleneck} />
+                      <AdminField label="Failed projects (12mo)" value={selected.failed_projects} />
+                      <AdminField label="Why they didn't follow through" value={selected.failure_reason} />
+                      <AdminField label="What they're avoiding" value={selected.avoiding} />
+                      <AdminField label="Why now" value={selected.why_now} />
+                      <AdminField label="Consequence of no systems" value={selected.consequence} />
+                      <AdminField label="Peak productivity" value={selected.peak_productivity} />
+                      <AdminField label="Momentum loss" value={selected.momentum_loss} />
+
+
                       {!selected.user_id && selected.status === "accepted" && (
                         <p className="text-xs text-primary border border-primary/20 rounded-lg p-3 bg-primary/5">
                           User not registered yet. Will activate on first login via email match.
@@ -218,5 +224,15 @@ export default function Admin() {
         <Footer />
       </div>
     </AuthGate>
+  );
+}
+
+function AdminField({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm text-foreground">{value}</p>
+    </div>
   );
 }

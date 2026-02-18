@@ -1,63 +1,89 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
-import { CheckCircle, ArrowRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 
-const applySchema = z.object({
-  name: z.string().trim().min(1, "Required"),
-  email: z.string().trim().email("Invalid email"),
-  role: z.enum(["founder", "operator", "creator", "other"], { required_error: "Select a role" }),
-  stage: z.enum(["idea", "pre-revenue", "revenue", "scaling"], { required_error: "Select a stage" }),
-  product: z.string().trim().min(20, "At least 20 characters"),
-  bottleneck: z.string().trim().min(20, "At least 20 characters"),
-  whyNow: z.string().trim().optional(),
-});
+const TOTAL_STEPS = 4;
 
-type ApplyValues = z.infer<typeof applySchema>;
-
-const nextSteps = [
-  "We review your application within 48 hours.",
-  "If accepted, you get access + onboarding.",
-  "Week 1 installs cadence + system map.",
-];
+const emotions = ["Overwhelm", "Fear", "Doubt", "Distraction", "Burnout", "Other"];
 
 export default function Apply() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<ApplyValues>({
-    resolver: zodResolver(applySchema),
-    defaultValues: { name: "", email: user?.email ?? "", product: "", bottleneck: "", whyNow: "" },
-  });
+  // Step 1 — Identity
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("");
+  const [stage, setStage] = useState("");
 
-  const onSubmit = async (data: ApplyValues) => {
+  // Step 2 — Execution Reality
+  const [product, setProduct] = useState("");
+  const [monthlyRevenue, setMonthlyRevenue] = useState("");
+  const [hoursPerWeek, setHoursPerWeek] = useState("");
+  const [teamStatus, setTeamStatus] = useState("");
+  const [bottleneck, setBottleneck] = useState("");
+
+  // Step 3 — Psychology
+  const [failedProjects, setFailedProjects] = useState("");
+  const [failureReason, setFailureReason] = useState("");
+  const [peakProductivity, setPeakProductivity] = useState("");
+  const [momentumLoss, setMomentumLoss] = useState("");
+  const [disruptiveEmotion, setDisruptiveEmotion] = useState("");
+  const [avoiding, setAvoiding] = useState("");
+
+  // Step 4 — Commitment
+  const [whyNow, setWhyNow] = useState("");
+  const [consequence, setConsequence] = useState("");
+  const [willingStructure, setWillingStructure] = useState<boolean | null>(null);
+  const [willingReviews, setWillingReviews] = useState<boolean | null>(null);
+
+  const canProceed = () => {
+    switch (step) {
+      case 1: return name.trim() && email.trim() && phone.trim() && role && stage;
+      case 2: return product.trim().length >= 20 && bottleneck.trim().length >= 20;
+      case 3: return failedProjects.trim() && failureReason.trim() && disruptiveEmotion && avoiding.trim();
+      case 4: return whyNow.trim() && consequence.trim() && willingStructure !== null && willingReviews !== null;
+      default: return false;
+    }
+  };
+
+  const handleSubmit = async () => {
     setSubmitting(true);
     try {
       const { error } = await supabase.from("applications").insert({
-        name: data.name, email: data.email, role: data.role, stage: data.stage,
-        product: data.product, bottleneck: data.bottleneck, why_now: data.whyNow || null,
+        name, email, phone_number: phone, role, stage, product,
+        monthly_revenue: monthlyRevenue || null,
+        hours_per_week: hoursPerWeek || null,
+        team_status: teamStatus || null,
+        bottleneck, failed_projects: failedProjects, failure_reason: failureReason,
+        peak_productivity: peakProductivity || null,
+        momentum_loss: momentumLoss || null,
+        disruptive_emotion: disruptiveEmotion,
+        avoiding, why_now: whyNow || null, consequence,
+        willing_structure: willingStructure,
+        willing_reviews: willingReviews,
         user_id: user?.id ?? null,
+        payment_status: "pending", // Will be 'paid' once Stripe is wired
       });
       if (error) throw error;
-      track("apply_submitted", { role: data.role, stage: data.stage });
-      toast({ title: "Application submitted", description: "If it's a fit, you'll hear back." });
-      setSubmitted(true);
+      track("apply_submitted", { role, stage });
+      toast({ title: "Application submitted", description: "Under review." });
+      navigate("/application-under-review");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -65,134 +91,206 @@ export default function Apply() {
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="pt-32 pb-20">
-          <div className="container max-w-md mx-auto text-center">
-            <div className="rounded-2xl border border-primary/30 bg-card p-10">
-              <CheckCircle className="h-10 w-10 text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">Application received.</h2>
-              <p className="text-sm text-muted-foreground mb-2">We review every application within 48 hours.</p>
-              <p className="text-sm text-muted-foreground mb-6">If accepted, you'll get access and onboarding instructions.</p>
-              <div className="flex flex-col gap-3">
-                <Button asChild variant="outline" className="border-primary/30 text-foreground hover:bg-primary/10">
-                  <Link to="/">Back to Home</Link>
-                </Button>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/waitlist">Join the waitlist too <ArrowRight className="ml-1 h-3 w-3" /></Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const next = () => { if (canProceed()) setStep((s) => Math.min(s + 1, TOTAL_STEPS)); };
+  const prev = () => setStep((s) => Math.max(s - 1, 1));
+
+  const stepLabels = ["Identity", "Execution", "Psychology", "Commitment"];
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-16 min-h-screen flex">
         {/* Left — Form */}
-        <div className="flex-1 flex items-center justify-center px-6 py-20">
-          <div className="w-full max-w-lg">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">
-              Apply to Join PFSW
-            </h1>
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              This is an execution room. If you want leverage, apply.
-            </p>
-
-            <div className="space-y-4 mb-8">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary">What happens next</p>
-              {nextSteps.map((step, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm text-muted-foreground">{step}</p>
-                </div>
-              ))}
+        <div className="flex-1 flex flex-col justify-center px-6 py-20 overflow-y-auto">
+          <div className="w-full max-w-lg mx-auto">
+            {/* Progress bar */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                {stepLabels.map((label, i) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                      i + 1 <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <span className={`text-xs tracking-wide hidden sm:inline ${
+                      i + 1 <= step ? "text-foreground" : "text-muted-foreground"
+                    }`}>
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+              </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl><Input placeholder="Your full name" className="bg-background" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input type="email" placeholder="you@example.com" className="bg-background" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    <FormField control={form.control} name="role" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select role" /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="founder">Founder</SelectItem>
-                            <SelectItem value="operator">Operator</SelectItem>
-                            <SelectItem value="creator">Creator</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="stage" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stage</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select stage" /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="idea">Idea</SelectItem>
-                            <SelectItem value="pre-revenue">Pre-revenue</SelectItem>
-                            <SelectItem value="revenue">Revenue</SelectItem>
-                            <SelectItem value="scaling">Scaling</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+            {/* Step 1 — Identity */}
+            {step === 1 && (
+              <div className="space-y-5 animate-fade-in">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">Who are you?</h2>
+                  <p className="text-sm text-muted-foreground">Surface-level. We need to know who's applying.</p>
+                </div>
+                <Field label="Full Name" required>
+                  <Input placeholder="Your full name" className="bg-card" value={name} onChange={(e) => setName(e.target.value)} />
+                </Field>
+                <Field label="Email" required>
+                  <Input type="email" placeholder="you@example.com" className="bg-card" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </Field>
+                <Field label="Phone Number" required hint="Required for SMS decisions.">
+                  <Input type="tel" placeholder="+1 (555) 000-0000" className="bg-card" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </Field>
+                <Field label="What best describes you?" required>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger className="bg-card"><SelectValue placeholder="Select role" /></SelectTrigger>
+                    <SelectContent>
+                      {["Founder", "Operator", "Builder", "Creator", "Other"].map((r) => (
+                        <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="What stage are you in?" required>
+                  <Select value={stage} onValueChange={setStage}>
+                    <SelectTrigger className="bg-card"><SelectValue placeholder="Select stage" /></SelectTrigger>
+                    <SelectContent>
+                      {["Idea", "Pre-revenue", "Revenue", "Scaling"].map((s) => (
+                        <SelectItem key={s} value={s.toLowerCase()}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+            )}
+
+            {/* Step 2 — Execution Reality */}
+            {step === 2 && (
+              <div className="space-y-5 animate-fade-in">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">Your execution reality.</h2>
+                  <p className="text-sm text-muted-foreground">Where are you right now? No sugarcoating.</p>
+                </div>
+                <Field label="What are you building?" required hint="Min 20 characters.">
+                  <Textarea placeholder="Describe clearly." className="bg-card min-h-[100px]" value={product} onChange={(e) => setProduct(e.target.value)} />
+                </Field>
+                <Field label="Monthly revenue (if any)">
+                  <Input placeholder="$0, $1K, $10K+" className="bg-card" value={monthlyRevenue} onChange={(e) => setMonthlyRevenue(e.target.value)} />
+                </Field>
+                <Field label="Hours per week actively building">
+                  <Input placeholder="e.g. 20, 40, 60+" className="bg-card" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} />
+                </Field>
+                <Field label="Solo or team?">
+                  <Select value={teamStatus} onValueChange={setTeamStatus}>
+                    <SelectTrigger className="bg-card"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solo">Solo</SelectItem>
+                      <SelectItem value="small-team">Small team (2-5)</SelectItem>
+                      <SelectItem value="team">Team (6+)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Biggest current bottleneck" required hint="Min 20 characters.">
+                  <Textarea placeholder="What's actually slowing you down?" className="bg-card min-h-[100px]" value={bottleneck} onChange={(e) => setBottleneck(e.target.value)} />
+                </Field>
+              </div>
+            )}
+
+            {/* Step 3 — Psychology */}
+            {step === 3 && (
+              <div className="space-y-5 animate-fade-in">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">Go deeper.</h2>
+                  <p className="text-sm text-muted-foreground">This is where we extract signal from noise.</p>
+                </div>
+                <Field label="What have you started but failed to finish in the past 12 months?" required>
+                  <Textarea placeholder="Be specific." className="bg-card min-h-[80px]" value={failedProjects} onChange={(e) => setFailedProjects(e.target.value)} />
+                </Field>
+                <Field label="Why do you think you didn't follow through?" required>
+                  <Textarea placeholder="Be honest." className="bg-card min-h-[80px]" value={failureReason} onChange={(e) => setFailureReason(e.target.value)} />
+                </Field>
+                <Field label="When do you feel most productive?">
+                  <Input placeholder="e.g. Early morning, late night, after exercise..." className="bg-card" value={peakProductivity} onChange={(e) => setPeakProductivity(e.target.value)} />
+                </Field>
+                <Field label="When do you lose momentum?">
+                  <Input placeholder="e.g. After meetings, on weekends..." className="bg-card" value={momentumLoss} onChange={(e) => setMomentumLoss(e.target.value)} />
+                </Field>
+                <Field label="What emotion most often disrupts your execution?" required>
+                  <Select value={disruptiveEmotion} onValueChange={setDisruptiveEmotion}>
+                    <SelectTrigger className="bg-card"><SelectValue placeholder="Select emotion" /></SelectTrigger>
+                    <SelectContent>
+                      {emotions.map((e) => (
+                        <SelectItem key={e} value={e.toLowerCase()}>{e}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="What are you avoiding right now in your business?" required>
+                  <Textarea placeholder="The thing you know you should be doing." className="bg-card min-h-[80px]" value={avoiding} onChange={(e) => setAvoiding(e.target.value)} />
+                </Field>
+              </div>
+            )}
+
+            {/* Step 4 — Commitment */}
+            {step === 4 && (
+              <div className="space-y-5 animate-fade-in">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-1">Prove your commitment.</h2>
+                  <p className="text-sm text-muted-foreground">Last step. No going back after this.</p>
+                </div>
+                <Field label="Why is now the moment you're applying?" required>
+                  <Textarea placeholder="What changed?" className="bg-card min-h-[80px]" value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
+                </Field>
+                <Field label="What happens if you continue operating without systems?" required>
+                  <Textarea placeholder="Paint the picture." className="bg-card min-h-[80px]" value={consequence} onChange={(e) => setConsequence(e.target.value)} />
+                </Field>
+                <Field label="Are you willing to follow structure even when it's uncomfortable?" required>
+                  <div className="flex gap-3">
+                    <Button type="button" variant={willingStructure === true ? "default" : "outline"} size="sm"
+                      className={willingStructure === true ? "" : "border-border text-muted-foreground"}
+                      onClick={() => setWillingStructure(true)}>Yes</Button>
+                    <Button type="button" variant={willingStructure === false ? "default" : "outline"} size="sm"
+                      className={willingStructure === false ? "bg-destructive text-destructive-foreground" : "border-border text-muted-foreground"}
+                      onClick={() => setWillingStructure(false)}>No</Button>
                   </div>
-                  <FormField control={form.control} name="product" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>What are you building?</FormLabel>
-                      <FormControl><Textarea placeholder="Describe your project or business." className="bg-background min-h-[100px]" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="bottleneck" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Biggest execution bottleneck?</FormLabel>
-                      <FormControl><Textarea placeholder="What's slowing you down the most?" className="bg-background min-h-[100px]" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="whyNow" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Why now? <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
-                      <FormControl><Textarea placeholder="What's making this urgent?" className="bg-background" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" size="lg" className="w-full tracking-wide font-bold" disabled={submitting}>
-                    {submitting ? "Submitting..." : "Submit Application"}
-                  </Button>
-                </form>
-              </Form>
+                </Field>
+                <Field label="If accepted, will you commit to weekly execution reviews?" required>
+                  <div className="flex gap-3">
+                    <Button type="button" variant={willingReviews === true ? "default" : "outline"} size="sm"
+                      className={willingReviews === true ? "" : "border-border text-muted-foreground"}
+                      onClick={() => setWillingReviews(true)}>Yes</Button>
+                    <Button type="button" variant={willingReviews === false ? "default" : "outline"} size="sm"
+                      className={willingReviews === false ? "bg-destructive text-destructive-foreground" : "border-border text-muted-foreground"}
+                      onClick={() => setWillingReviews(false)}>No</Button>
+                  </div>
+                </Field>
+
+                {/* Payment placeholder */}
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Application Fee</p>
+                  <p className="text-sm text-muted-foreground">$5 one-time review fee. <span className="text-foreground font-medium">Stripe payment will be wired here.</span></p>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-8">
+              {step > 1 ? (
+                <Button variant="ghost" onClick={prev} className="text-muted-foreground">
+                  <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+              ) : <div />}
+
+              {step < TOTAL_STEPS ? (
+                <Button onClick={next} disabled={!canProceed()} className="tracking-wide font-bold">
+                  Continue <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              ) : (
+                <Button onClick={handleSubmit} disabled={!canProceed() || submitting} className="tracking-wide font-bold gold-glow-strong">
+                  {submitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -208,13 +306,25 @@ export default function Apply() {
                 <span className="text-primary gold-text-glow">Systems Work.</span>
               </h2>
               <p className="text-muted-foreground max-w-sm mx-auto">
-                The execution-first platform for serious builders.
+                This is not a community. This is a controlled admission environment.
               </p>
             </div>
           </div>
         </div>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-foreground mb-2 block">
+        {label}{required && <span className="text-primary ml-0.5">*</span>}
+      </label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
     </div>
   );
 }

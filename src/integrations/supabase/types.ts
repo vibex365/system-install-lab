@@ -17,45 +17,93 @@ export type Database = {
       applications: {
         Row: {
           admin_notes: string | null
+          avoiding: string | null
           bottleneck: string
+          consequence: string | null
           created_at: string
+          disruptive_emotion: string | null
           email: string
+          failed_projects: string | null
+          failure_reason: string | null
+          hours_per_week: string | null
           id: string
+          momentum_loss: string | null
+          monthly_revenue: string | null
           name: string
+          payment_status: string | null
+          peak_productivity: string | null
+          phone_number: string | null
           product: string
+          psychological_score: number | null
           role: string
           stage: string
           status: Database["public"]["Enums"]["application_status"]
+          stripe_session_id: string | null
+          team_status: string | null
           user_id: string | null
           why_now: string | null
+          willing_reviews: boolean | null
+          willing_structure: boolean | null
         }
         Insert: {
           admin_notes?: string | null
+          avoiding?: string | null
           bottleneck: string
+          consequence?: string | null
           created_at?: string
+          disruptive_emotion?: string | null
           email: string
+          failed_projects?: string | null
+          failure_reason?: string | null
+          hours_per_week?: string | null
           id?: string
+          momentum_loss?: string | null
+          monthly_revenue?: string | null
           name: string
+          payment_status?: string | null
+          peak_productivity?: string | null
+          phone_number?: string | null
           product: string
+          psychological_score?: number | null
           role: string
           stage: string
           status?: Database["public"]["Enums"]["application_status"]
+          stripe_session_id?: string | null
+          team_status?: string | null
           user_id?: string | null
           why_now?: string | null
+          willing_reviews?: boolean | null
+          willing_structure?: boolean | null
         }
         Update: {
           admin_notes?: string | null
+          avoiding?: string | null
           bottleneck?: string
+          consequence?: string | null
           created_at?: string
+          disruptive_emotion?: string | null
           email?: string
+          failed_projects?: string | null
+          failure_reason?: string | null
+          hours_per_week?: string | null
           id?: string
+          momentum_loss?: string | null
+          monthly_revenue?: string | null
           name?: string
+          payment_status?: string | null
+          peak_productivity?: string | null
+          phone_number?: string | null
           product?: string
+          psychological_score?: number | null
           role?: string
           stage?: string
           status?: Database["public"]["Enums"]["application_status"]
+          stripe_session_id?: string | null
+          team_status?: string | null
           user_id?: string | null
           why_now?: string | null
+          willing_reviews?: boolean | null
+          willing_structure?: boolean | null
         }
         Relationships: []
       }
