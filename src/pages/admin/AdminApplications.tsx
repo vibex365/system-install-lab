@@ -123,8 +123,8 @@ export default function AdminApplications() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead className="bg-muted">
               <tr>
                 <th className="text-left px-4 py-2.5 text-muted-foreground font-medium text-xs">Name</th>

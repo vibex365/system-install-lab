@@ -47,27 +47,29 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        <div className="flex-1 flex flex-col">
-          <header className="md:hidden flex items-center gap-2 p-3 border-b border-border bg-card overflow-x-auto">
-            {navItems.map((item) => {
-              const active = pathname === item.path || (item.path !== "/admin" && pathname.startsWith(item.path));
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap transition-colors",
-                    active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
-                  )}
-                >
-                  <item.icon className="h-3.5 w-3.5" />
-                  {item.label}
-                </Link>
-              );
-            })}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="md:hidden border-b border-border bg-card">
+            <div className="flex items-center gap-1 px-2 py-2 overflow-x-auto scrollbar-hide">
+              {navItems.map((item) => {
+                const active = pathname === item.path || (item.path !== "/admin" && pathname.startsWith(item.path));
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] whitespace-nowrap transition-colors shrink-0",
+                      active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
+                    )}
+                  >
+                    <item.icon className="h-3 w-3" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          <main className="flex-1 p-3 md:p-8 overflow-y-auto">
             {children}
           </main>
         </div>
