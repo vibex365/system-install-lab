@@ -24,7 +24,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: system },
           { role: "user", content: message },
@@ -34,7 +34,20 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      const status = response.status;
       const err = await response.text();
+      if (status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (status === 402) {
+        return new Response(JSON.stringify({ error: "AI usage limit reached. Contact admin." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       throw new Error(`AI gateway error: ${err}`);
     }
 

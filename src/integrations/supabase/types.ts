@@ -238,6 +238,71 @@ export type Database = {
           },
         ]
       }
+      job_runs: {
+        Row: {
+          created_at: string
+          id: string
+          input_snippet: string | null
+          job_id: string
+          output_snippet: string | null
+          step: string
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          input_snippet?: string | null
+          job_id: string
+          output_snippet?: string | null
+          step: string
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          input_snippet?: string | null
+          job_id?: string
+          output_snippet?: string | null
+          step?: string
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_runs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          id: string
+          payload_json: Json
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload_json?: Json
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload_json?: Json
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       moderation_actions: {
         Row: {
           action_type: string
@@ -512,6 +577,10 @@ export type Database = {
           id: string
           integrations: string[] | null
           package_id: string | null
+          packaged_complexity: string | null
+          packaged_prompt: string | null
+          packaged_summary: string | null
+          packaged_tags: string[] | null
           problem: string | null
           raw_prompt: string
           scope: string | null
@@ -526,6 +595,10 @@ export type Database = {
           id?: string
           integrations?: string[] | null
           package_id?: string | null
+          packaged_complexity?: string | null
+          packaged_prompt?: string | null
+          packaged_summary?: string | null
+          packaged_tags?: string[] | null
           problem?: string | null
           raw_prompt: string
           scope?: string | null
@@ -540,6 +613,10 @@ export type Database = {
           id?: string
           integrations?: string[] | null
           package_id?: string | null
+          packaged_complexity?: string | null
+          packaged_prompt?: string | null
+          packaged_summary?: string | null
+          packaged_tags?: string[] | null
           problem?: string | null
           raw_prompt?: string
           scope?: string | null
