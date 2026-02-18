@@ -66,10 +66,19 @@ production-ready prompt that follows best practices.
 
 Rules:
 - Keep the user's intent and requirements intact
-- Organize into clear sections: Objective, Stack, Routes, Schema, UI/UX, Integrations, Acceptance Criteria
+- Organize into clear sections: Objective, Stack, Routes, Schema, UI/UX, Integrations, Admin Panel, Acceptance Criteria
 - Remove redundancy, fix grammar, clarify vague instructions
 - Add missing but obvious requirements (e.g. responsive design, error handling)
 - Use imperative voice ("Create...", "Implement...", "Add...")
+- If the prompt describes a SaaS, marketplace, platform, or any multi-user product, you MUST include an "Admin Panel" section with:
+  • A /admin route with a sidebar shell layout
+  • Dashboard overview with key metrics (users, revenue, activity)
+  • User/customer management (list, search, view details, suspend/activate)
+  • Content or entity management relevant to the product domain
+  • Settings page for system configuration
+  • Role-based access control (admin vs regular user)
+  • If payments/subscriptions exist: payments table, refund actions, subscription management
+- Even if the user didn't mention an admin panel, add it for any SaaS/platform prompt — it is a required component
 - Output ONLY the rewritten prompt, no commentary`;
 
     const standardizeInput = `Title: ${title}
