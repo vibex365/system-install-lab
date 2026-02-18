@@ -32,14 +32,15 @@ export default function Status() {
       });
   }, [user]);
 
-  const statusConfig = {
+  const statusConfig: Record<string, { icon: typeof Clock; label: string; color: string; description: string }> = {
     pending: { icon: Clock, label: "Pending Review", color: "text-primary", description: "Your membership is under review. We'll update you soon." },
+    accepted_pending_payment: { icon: CheckCircle, label: "Accepted — Complete Payment", color: "text-primary", description: "You've been accepted! Complete your membership to get started." },
     active: { icon: CheckCircle, label: "Active", color: "text-green-500", description: "You have full access. Head to your dashboard." },
     inactive: { icon: XCircle, label: "Inactive", color: "text-destructive", description: "Your membership has been deactivated." },
   };
 
-  const status = profile?.member_status ?? "pending";
-  const config = statusConfig[status];
+  const status = (profile?.member_status as string) ?? "pending";
+  const config = statusConfig[status] || statusConfig.pending;
   const Icon = config.icon;
 
   return (
@@ -60,6 +61,12 @@ export default function Status() {
             {hasApp === false && (
               <Button asChild className="mb-4">
                 <Link to="/apply">Submit an Application</Link>
+              </Button>
+            )}
+
+            {status === "accepted_pending_payment" && (
+              <Button asChild className="mb-2">
+                <Link to="/accepted">View Your Acceptance</Link>
               </Button>
             )}
 

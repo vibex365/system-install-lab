@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Status from "./pages/Status";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import Accepted from "./pages/Accepted";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/status" element={<Status />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/accepted" element={<Accepted />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />

@@ -42,9 +42,28 @@ export default function Admin() {
     const { error } = await supabase.from("applications").update({ status }).eq("id", app.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
 
-    // If accepted and there's a user_id, activate that profile
-    if (status === "accepted" && app.user_id) {
-      await supabase.from("profiles").update({ member_status: "active" }).eq("id", app.user_id);
+    if (status === "accepted") {
+      // Set profile to accepted_pending_payment if user exists
+      if (app.user_id) {
+        await supabase.from("profiles").update({ member_status: "accepted_pending_payment" as any }).eq("id", app.user_id);
+      }
+      // Send acceptance SMS
+      if (app.phone_number) {
+        try {
+          await supabase.functions.invoke("send-sms", {
+            body: { phone: app.phone_number, message: "You've been accepted into PFSW. Log in to view your acceptance." },
+          });
+        } catch (e) { console.error("SMS failed:", e); }
+      }
+    } else if (status === "rejected") {
+      // Send rejection SMS
+      if (app.phone_number) {
+        try {
+          await supabase.functions.invoke("send-sms", {
+            body: { phone: app.phone_number, message: "Your PFSW application was reviewed but not approved at this time." },
+          });
+        } catch (e) { console.error("SMS failed:", e); }
+      }
     }
 
     toast({ title: `Application ${status}` });
