@@ -31,65 +31,68 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData } = await supabase.auth.getUser(token);
-    const user = userData.user;
-    if (!user?.email) throw new Error("Not authenticated");
+    if (!userData.user) throw new Error("Not authenticated");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe not configured");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Get base_price from system_meta
+    const { session_id } = await req.json();
+
+    if (!session_id) {
+      return new Response(JSON.stringify({ error: "session_id required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify the checkout session is paid
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status !== "paid") {
+      return new Response(JSON.stringify({ error: "Payment not completed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = session.metadata?.user_id || userData.user.id;
+
+    // Activate the user
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Read system_meta to determine tier
     const { data: systemMeta } = await supabaseAdmin
       .from("system_meta")
-      .select("base_price, version, founding_access_open")
+      .select("version")
       .limit(1)
       .single();
 
-    const price = systemMeta?.base_price || 500;
+    const isV1 = systemMeta?.version === "v1";
 
-    const { success_url, cancel_url } = await req.json();
+    const { error } = await supabaseAdmin.from("profiles").update({
+      member_status: "active",
+      member_tier: isV1 ? "founding" : "standard",
+      invite_multiplier: isV1 ? 1.5 : 1.0,
+    }).eq("id", userId);
 
-    // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (error) {
+      console.error("Error activating membership:", error);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product: "prod_U0CRITris3mNCG",
-            unit_amount: price,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: success_url || `${req.headers.get("origin")}/dashboard?membership_session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancel_url || `${req.headers.get("origin")}/accepted`,
-      metadata: {
-        type: "membership",
-        user_id: user.id,
-      },
-    });
-
-    return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
+    return new Response(JSON.stringify({ success: true, tier: isV1 ? "founding" : "standard" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Error creating membership checkout:", err);
+    console.error("Verify membership error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
