@@ -65,25 +65,31 @@ export default function Apply() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("applications").insert({
-        name, email, phone_number: phone, role, stage, product,
-        monthly_revenue: monthlyRevenue || null,
-        hours_per_week: hoursPerWeek || null,
-        team_status: teamStatus || null,
-        bottleneck, failed_projects: failedProjects, failure_reason: failureReason,
-        peak_productivity: peakProductivity || null,
-        momentum_loss: momentumLoss || null,
-        disruptive_emotion: disruptiveEmotion,
-        avoiding, why_now: whyNow || null, consequence,
-        willing_structure: willingStructure,
-        willing_reviews: willingReviews,
-        user_id: user?.id ?? null,
-        payment_status: "pending", // Will be 'paid' once Stripe is wired
+      const { data, error } = await supabase.functions.invoke("create-application-checkout", {
+        body: {
+          name, email, phone_number: phone, role, stage, product,
+          monthly_revenue: monthlyRevenue || null,
+          hours_per_week: hoursPerWeek || null,
+          team_status: teamStatus || null,
+          bottleneck, failed_projects: failedProjects, failure_reason: failureReason,
+          peak_productivity: peakProductivity || null,
+          momentum_loss: momentumLoss || null,
+          disruptive_emotion: disruptiveEmotion,
+          avoiding, why_now: whyNow || null, consequence,
+          willing_structure: willingStructure,
+          willing_reviews: willingReviews,
+          user_id: user?.id ?? null,
+          success_url: `${window.location.origin}/application-under-review`,
+          cancel_url: `${window.location.origin}/apply?cancelled=true`,
+        },
       });
       if (error) throw error;
-      track("apply_submitted", { role, stage });
-      toast({ title: "Application submitted", description: "Under review." });
-      navigate("/application-under-review");
+      if (data?.url) {
+        track("apply_checkout_redirect", { role, stage });
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -266,10 +272,10 @@ export default function Apply() {
                   </div>
                 </Field>
 
-                {/* Payment placeholder */}
+                {/* Payment notice */}
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mt-4">
                   <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Application Fee</p>
-                  <p className="text-sm text-muted-foreground">$5 one-time review fee. <span className="text-foreground font-medium">Stripe payment will be wired here.</span></p>
+                  <p className="text-sm text-muted-foreground">$5 one-time review fee. You'll be redirected to secure payment on submit.</p>
                 </div>
               </div>
             )}
@@ -288,7 +294,7 @@ export default function Apply() {
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} disabled={!canProceed() || submitting} className="tracking-wide font-bold gold-glow-strong">
-                  {submitting ? "Submitting..." : "Submit Application"}
+                  {submitting ? "Redirecting to payment..." : "Pay $5 & Submit"}
                 </Button>
               )}
             </div>
