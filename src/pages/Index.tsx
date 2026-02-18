@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -9,11 +9,15 @@ import { PrinciplesList } from "@/components/PrinciplesList";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Search, PenTool, Rocket, FileCode, Map, CalendarCheck,
   Sparkles, BookOpen, Users, Target, Zap, Eye, RotateCcw, Power,
 } from "lucide-react";
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
 
 /* ── Typewriter hook ── */
 function useTypewriter(text: string, speed = 60, startDelay = 0, enabled = true) {
@@ -136,7 +140,42 @@ function LightSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 /* ── Page ── */
 export default function Index() {
-  const [lightsOn, setLightsOn] = useState(false);
+  const reduceMotion = useReducedMotion();
+
+  // Persist light state in localStorage
+  const [lightsOn, setLightsOn] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem("pfsw_lights") === "on";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("pfsw_lights", lightsOn ? "on" : "off");
+    } catch {}
+  }, [lightsOn]);
+
+  // Spotlight center for cursor-follow
+  const [spotCenter, setSpotCenter] = useState({ x: 50, y: 45 });
+
+  useEffect(() => {
+    if (!lightsOn) return;
+    const onMove = (e: MouseEvent) => {
+      const w = window.innerWidth || 1;
+      const h = window.innerHeight || 1;
+      setSpotCenter({
+        x: clamp((e.clientX / w) * 100, 30, 70),
+        y: clamp((e.clientY / h) * 100, 20, 65),
+      });
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [lightsOn]);
+
+  const overlayOpacity = lightsOn ? 0.3 : 0.92;
+  const spotlightSize = lightsOn ? 55 : 10;
 
   const headline = "People Fail. Systems Work.";
   const subheadline = "PFSW is the execution-first platform for serious builders. We don't sell motivation — we install systems.";
@@ -147,6 +186,8 @@ export default function Index() {
   const scrollTo = useCallback((id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  const animDuration = reduceMotion ? 0 : 0.8;
 
   return (
     <div className="min-h-screen bg-background">
@@ -309,6 +350,34 @@ export default function Index() {
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent pointer-events-none" />
           </motion.div>
         </div>
+
+        {/* ── Darkness overlay ── */}
+        <motion.div
+          className="absolute inset-0 z-20 pointer-events-none"
+          style={{ backgroundColor: "rgba(0,0,0,1)", mixBlendMode: "multiply" }}
+          initial={false}
+          animate={{ opacity: overlayOpacity }}
+          transition={{ duration: animDuration, ease: "easeOut" }}
+        />
+
+        {/* ── Spotlight mask ── */}
+        <motion.div
+          className="absolute inset-0 z-30 pointer-events-none"
+          initial={false}
+          animate={{ opacity: lightsOn ? 1 : 0.2 }}
+          transition={{ duration: animDuration, ease: "easeOut" }}
+          style={{
+            background: `radial-gradient(circle at ${spotCenter.x}% ${spotCenter.y}%, hsl(48 96% 53% / 0.5) 0%, hsl(48 96% 53% / 0.2) ${spotlightSize}%, transparent ${spotlightSize + 20}%)`,
+          }}
+        />
+
+        {/* ── Cinematic vignette ── */}
+        <div
+          className="absolute inset-0 z-40 pointer-events-none"
+          style={{
+            background: "radial-gradient(circle at 50% 40%, transparent 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.85) 100%)",
+          }}
+        />
       </section>
 
       {/* ── Method ── */}
