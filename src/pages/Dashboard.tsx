@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
@@ -9,6 +9,8 @@ import { StatusPill } from "@/components/StatusPill";
 import { StepList } from "@/components/StepList";
 import { EmptyState } from "@/components/EmptyState";
 import { track } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Map, Zap, FileText } from "lucide-react";
 
 const cadenceSteps = [
@@ -21,7 +23,38 @@ const cadenceSteps = [
 const promptPacks = ["MVP Blueprint Prompt", "Architecture Prompt", "Landing Page Prompt"];
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const [activating, setActivating] = useState(false);
+
   useEffect(() => { track("dashboard_viewed"); }, []);
+
+  // Verify membership payment if redirected from Stripe
+  useEffect(() => {
+    const membershipSessionId = searchParams.get("membership_session_id");
+    if (!membershipSessionId) return;
+
+    const verify = async () => {
+      setActivating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-membership-payment", {
+          body: { session_id: membershipSessionId },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast({ title: "Membership activated!", description: `Welcome, ${data.tier} member.` });
+        // Clean URL
+        window.history.replaceState({}, "", "/dashboard");
+      } catch (err: any) {
+        console.error("Membership verification error:", err);
+        toast({ title: "Verification issue", description: err.message, variant: "destructive" });
+      } finally {
+        setActivating(false);
+      }
+    };
+
+    verify();
+  }, [searchParams, toast]);
 
   return (
     <AuthGate requireActive>
@@ -29,6 +62,13 @@ export default function Dashboard() {
         <Navbar />
         <main className="pt-24 pb-20">
           <div className="container max-w-5xl">
+            {activating && (
+              <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin inline-block mr-2" />
+                <span className="text-sm text-primary font-medium">Activating your membership...</span>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-3 mb-10">
               <StatusPill label="Active" variant="active" />
               <StatusPill label="Week 01" />

@@ -3,11 +3,14 @@ project_id = "ioepxvknkxapeqcuxwdt"
 [functions.create-application-checkout]
 verify_jwt = false
 
-[functions.stripe-webhook]
+[functions.verify-application-payment]
 verify_jwt = false
 
 [functions.send-sms]
 verify_jwt = false
 
 [functions.create-membership-checkout]
+verify_jwt = false
+
+[functions.verify-membership-payment]
 verify_jwt = false

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,15 +14,22 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 
 const TOTAL_STEPS = 4;
-
 const emotions = ["Overwhelm", "Fear", "Doubt", "Distraction", "Burnout", "Other"];
 
 export default function Apply() {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
+  // Show cancelled message if redirected from Stripe
+  useEffect(() => {
+    if (searchParams.get("cancelled") === "true") {
+      toast({ title: "Payment cancelled", description: "Your application was not submitted.", variant: "destructive" });
+    }
+  }, [searchParams, toast]);
 
   // Step 1 — Identity
   const [name, setName] = useState("");
@@ -65,21 +72,28 @@ export default function Apply() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      // Store form data in localStorage for retrieval after Stripe redirect
+      const applicationData = {
+        name, email, phone_number: phone, role, stage, product,
+        monthly_revenue: monthlyRevenue || null,
+        hours_per_week: hoursPerWeek || null,
+        team_status: teamStatus || null,
+        bottleneck, failed_projects: failedProjects, failure_reason: failureReason,
+        peak_productivity: peakProductivity || null,
+        momentum_loss: momentumLoss || null,
+        disruptive_emotion: disruptiveEmotion,
+        avoiding, why_now: whyNow || null, consequence,
+        willing_structure: willingStructure,
+        willing_reviews: willingReviews,
+        user_id: user?.id ?? null,
+      };
+      localStorage.setItem("pfsw_application_data", JSON.stringify(applicationData));
+
+      // Create Stripe checkout session
       const { data, error } = await supabase.functions.invoke("create-application-checkout", {
         body: {
-          name, email, phone_number: phone, role, stage, product,
-          monthly_revenue: monthlyRevenue || null,
-          hours_per_week: hoursPerWeek || null,
-          team_status: teamStatus || null,
-          bottleneck, failed_projects: failedProjects, failure_reason: failureReason,
-          peak_productivity: peakProductivity || null,
-          momentum_loss: momentumLoss || null,
-          disruptive_emotion: disruptiveEmotion,
-          avoiding, why_now: whyNow || null, consequence,
-          willing_structure: willingStructure,
-          willing_reviews: willingReviews,
-          user_id: user?.id ?? null,
-          success_url: `${window.location.origin}/application-under-review`,
+          email,
+          success_url: `${window.location.origin}/application-under-review?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/apply?cancelled=true`,
         },
       });
