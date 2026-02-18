@@ -23,7 +23,6 @@ export default function Login() {
     try {
       await login(email, password);
       toast({ title: "Logged in", description: "Welcome back." });
-      navigate("/engine");
     } catch (err: any) {
       toast({ title: "Login failed", description: err.message, variant: "destructive" });
     } finally {
