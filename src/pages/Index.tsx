@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -9,35 +9,12 @@ import { PrinciplesList } from "@/components/PrinciplesList";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Search, PenTool, Rocket, FileCode, Map, CalendarCheck,
-  Sparkles, BookOpen, Users, Target, Zap, Eye, RotateCcw, Power,
+  Sparkles, BookOpen, Users, Target, Zap, Eye, RotateCcw,
 } from "lucide-react";
-
-/* ── Typewriter hook ── */
-function useTypewriter(text: string, speed = 60, startDelay = 0, enabled = true) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    if (!enabled) { setDisplayed(""); setDone(false); return; }
-    setDisplayed("");
-    setDone(false);
-    let i = 0;
-    const timeout = setTimeout(() => {
-      const interval = setInterval(() => {
-        i++;
-        setDisplayed(text.slice(0, i));
-        if (i >= text.length) { clearInterval(interval); setDone(true); }
-      }, speed);
-      return () => clearInterval(interval);
-    }, startDelay);
-    return () => clearTimeout(timeout);
-  }, [text, speed, startDelay, enabled]);
-
-  return { displayed, done };
-}
+import heroBg from "@/assets/hero-bg.png";
 
 /* ── Data ── */
 const methodCards = [
@@ -65,85 +42,8 @@ const proofCards = [
   { title: "Execution cadence installed", description: "Creator went from scattered to shipping weekly with a 5-step operating loop." },
 ];
 
-/* ── Grid Cell ── */
-function GridCell({ delay, lit }: { delay: number; lit: boolean }) {
-  return (
-    <motion.div
-      className="relative border border-primary/10 rounded-sm overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: lit ? 1 : 0.15 }}
-      transition={{ duration: 0.8, delay: lit ? delay : 0 }}
-    >
-      {lit && (
-        <>
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-primary/8 to-transparent"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2, delay: delay + 0.2 }}
-          />
-          <motion.div
-            className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-primary/40"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.4, delay: delay + 0.5 }}
-          />
-          {/* Random "data lines" */}
-          <motion.div
-            className="absolute bottom-2 left-2 right-4 h-px bg-primary/20"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.6, delay: delay + 0.7 }}
-            style={{ transformOrigin: "left" }}
-          />
-          <motion.div
-            className="absolute bottom-4 left-2 right-8 h-px bg-primary/15"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.5, delay: delay + 0.9 }}
-            style={{ transformOrigin: "left" }}
-          />
-        </>
-      )}
-    </motion.div>
-  );
-}
-
-/* ── Light Switch ── */
-function LightSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className="group relative flex items-center gap-3 px-5 py-3 rounded-full border border-border bg-card/80 backdrop-blur-sm transition-all hover:border-primary/40 hover:gold-glow"
-      aria-label="Turn on the light"
-    >
-      <motion.div
-        className="relative w-8 h-8 rounded-full flex items-center justify-center"
-        animate={{
-          backgroundColor: on ? "hsl(48 96% 53% / 0.2)" : "transparent",
-          boxShadow: on ? "0 0 20px hsl(48 96% 53% / 0.4)" : "none",
-        }}
-        transition={{ duration: 0.5 }}
-      >
-        <Power className={`w-4 h-4 transition-colors duration-500 ${on ? "text-primary" : "text-muted-foreground"}`} />
-      </motion.div>
-      <span className="text-sm tracking-wide text-muted-foreground group-hover:text-foreground transition-colors">
-        {on ? "Systems online" : "Turn on the light"}
-      </span>
-    </button>
-  );
-}
-
 /* ── Page ── */
 export default function Index() {
-  const [lightsOn, setLightsOn] = useState(false);
-
-  const headline = "People Fail. Systems Work.";
-  const subheadline = "PFSW is the execution-first platform for serious builders. We don't sell motivation — we install systems.";
-
-  const { displayed: typedHeadline, done: headlineDone } = useTypewriter(headline, 50, 400, lightsOn);
-  const { displayed: typedSub, done: subDone } = useTypewriter(subheadline, 25, 400 + headline.length * 50 + 200, lightsOn);
-
   const scrollTo = useCallback((id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -154,129 +54,60 @@ export default function Index() {
 
       {/* ── Hero ── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Texture overlay */}
-        <div className="absolute inset-0 hero-noise pointer-events-none z-[1]" />
-        {/* Glossy base */}
-        <div className="absolute inset-0 glossy-surface" />
+        {/* Photo background */}
+        <img
+          src={heroBg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-background/80" />
+        {/* Bottom gradient fade */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
 
-        {/* Glow orbs — visible when lights on */}
-        <AnimatePresence>
-          {lightsOn && (
-            <>
-              <motion.div
-                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsl(48 96% 53% / 0.12) 0%, transparent 70%)" }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{ duration: 1.5 }}
-              />
-              <motion.div
-                className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full"
-                style={{ background: "radial-gradient(circle, hsl(48 96% 53% / 0.06) 0%, transparent 70%)" }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 2, delay: 0.3 }}
-              />
-            </>
-          )}
-        </AnimatePresence>
+        <div className="container relative z-10 text-center py-24 md:py-32">
+          <motion.h1
+            className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.95] mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
+            People Fail.{" "}
+            <span className="text-primary gold-text-glow">Systems Work.</span>
+          </motion.h1>
 
-        <div className="container relative z-10 text-center py-20">
-          {/* Light switch */}
-          <motion.div
-            className="flex justify-center mb-12"
+          <motion.p
+            className="text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
           >
-            <LightSwitch on={lightsOn} onToggle={() => setLightsOn(true)} />
-          </motion.div>
+            PFSW is the execution-first platform for serious builders. We don't sell motivation — we install systems.
+          </motion.p>
 
-          {/* Headline with typewriter */}
-          <div className="min-h-[80px] md:min-h-[100px] lg:min-h-[120px] mb-6">
-            <AnimatePresence>
-              {lightsOn ? (
-                <motion.h1
-                  className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.05]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {typedHeadline.includes("Systems") ? (
-                    <>
-                      {typedHeadline.split("Systems")[0]}
-                      <span className="text-primary gold-text-glow">Systems{typedHeadline.split("Systems")[1] || ""}</span>
-                    </>
-                  ) : (
-                    typedHeadline
-                  )}
-                  {!headlineDone && (
-                    <span className="inline-block w-[3px] h-[0.8em] bg-primary ml-1 animate-pulse" />
-                  )}
-                </motion.h1>
-              ) : (
-                <motion.h1
-                  className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-muted-foreground/20 leading-[1.05]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                >
-                  _ _ _
-                </motion.h1>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Subheadline */}
-          <div className="min-h-[60px] md:min-h-[50px] mb-10 max-w-2xl mx-auto">
-            <AnimatePresence>
-              {lightsOn && headlineDone && (
-                <motion.p
-                  className="text-lg md:text-xl text-muted-foreground leading-relaxed"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {typedSub}
-                  {!subDone && (
-                    <span className="inline-block w-[2px] h-[0.8em] bg-muted-foreground ml-0.5 animate-pulse" />
-                  )}
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* CTAs */}
-          <AnimatePresence>
-            {lightsOn && subDone && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="space-y-6"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="space-y-6"
+          >
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <Button asChild size="lg" className="tracking-wide text-lg px-10 py-6 font-bold gold-glow-strong">
+                <Link to="/apply">Apply to Join</Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="tracking-wide text-lg px-10 py-6 font-bold border-primary/30 text-foreground hover:bg-primary/10"
+                onClick={() => scrollTo("#method")}
               >
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button asChild size="lg" className="tracking-wide px-8 gold-glow-strong">
-                    <Link to="/apply">Apply to Join</Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="tracking-wide px-8 border-primary/30 text-foreground hover:bg-primary/10"
-                    onClick={() => scrollTo("#method")}
-                  >
-                    See the Method
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground tracking-wide">
-                  Built for operators. Designed for outcomes.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+                See the Method
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground tracking-wide">
+              Built for operators. Designed for outcomes.
+            </p>
+          </motion.div>
         </div>
       </section>
 
