@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate with a shared worker secret
     const workerKey = req.headers.get("x-worker-key");
-    const expectedKey = Deno.env.get("OPENCLAW_WORKER_KEY");
+    const expectedKey = Deno.env.get("openclaw");
     if (!expectedKey || workerKey !== expectedKey) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
