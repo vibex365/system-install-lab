@@ -109,7 +109,7 @@ export default function Admin() {
   };
 
   return (
-    <AuthGate requireAdmin>
+    <AuthGate requireChiefArchitect>
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-24 pb-20">

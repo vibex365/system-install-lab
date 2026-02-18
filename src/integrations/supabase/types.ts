@@ -134,6 +134,68 @@ export type Database = {
         }
         Relationships: []
       }
+      cohort_members: {
+        Row: {
+          cohort_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          cohort_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          cohort_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_members_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cohorts: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          day_of_week: number
+          id: string
+          lead_id: string | null
+          name: string
+          time_slot: string
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          day_of_week: number
+          id?: string
+          lead_id?: string | null
+          name: string
+          time_slot: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          lead_id?: string | null
+          name?: string
+          time_slot?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           author_id: string
@@ -214,6 +276,39 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          email: string
+          id: string
+          status: string
+          stripe_session_id: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          email: string
+          id?: string
+          status?: string
+          stripe_session_id?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+          stripe_session_id?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           author_id: string
@@ -270,36 +365,289 @@ export type Database = {
       }
       profiles: {
         Row: {
+          attendance_count: number
+          certified_at: string | null
+          cohort_id: string | null
+          consecutive_missed_sessions: number
           created_at: string
           email: string
           full_name: string | null
           id: string
           invite_multiplier: number
           invite_reputation_score: number
+          last_attended_at: string | null
           member_status: Database["public"]["Enums"]["member_status"]
           member_tier: string | null
         }
         Insert: {
+          attendance_count?: number
+          certified_at?: string | null
+          cohort_id?: string | null
+          consecutive_missed_sessions?: number
           created_at?: string
           email: string
           full_name?: string | null
           id: string
           invite_multiplier?: number
           invite_reputation_score?: number
+          last_attended_at?: string | null
           member_status?: Database["public"]["Enums"]["member_status"]
           member_tier?: string | null
         }
         Update: {
+          attendance_count?: number
+          certified_at?: string | null
+          cohort_id?: string | null
+          consecutive_missed_sessions?: number
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
           invite_multiplier?: number
           invite_reputation_score?: number
+          last_attended_at?: string | null
           member_status?: Database["public"]["Enums"]["member_status"]
           member_tier?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_generations: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string | null
+          tokens_estimate: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          tokens_estimate?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          tokens_estimate?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_generations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
         Relationships: []
+      }
+      prompt_sessions: {
+        Row: {
+          context_json: Json
+          created_at: string
+          id: string
+          last_output: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_json?: Json
+          created_at?: string
+          id?: string
+          last_output?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_json?: Json
+          created_at?: string
+          id?: string
+          last_output?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prompt_submissions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          integrations: string[] | null
+          package_id: string | null
+          problem: string | null
+          raw_prompt: string
+          scope: string | null
+          status: string
+          submitted_by: string
+          target_user: string | null
+          title: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          integrations?: string[] | null
+          package_id?: string | null
+          problem?: string | null
+          raw_prompt: string
+          scope?: string | null
+          status?: string
+          submitted_by: string
+          target_user?: string | null
+          title: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          integrations?: string[] | null
+          package_id?: string | null
+          problem?: string | null
+          raw_prompt?: string
+          scope?: string | null
+          status?: string
+          submitted_by?: string
+          target_user?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_submissions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompt_versions: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          id: string
+          prompt_id: string
+          prompt_text: string
+          version: number
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          prompt_id: string
+          prompt_text: string
+          version: number
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          prompt_id?: string
+          prompt_text?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_versions_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompts: {
+        Row: {
+          approved_by: string | null
+          complexity: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          package_id: string
+          prompt_text: string
+          status: string
+          summary: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_by?: string | null
+          complexity?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          package_id: string
+          prompt_text: string
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_by?: string | null
+          complexity?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          package_id?: string
+          prompt_text?: string
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_meta: {
         Row: {
@@ -417,7 +765,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "chief_architect" | "architect_lead"
       application_status: "submitted" | "reviewing" | "accepted" | "rejected"
       member_status:
         | "pending"
@@ -551,7 +899,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "chief_architect", "architect_lead"],
       application_status: ["submitted", "reviewing", "accepted", "rejected"],
       member_status: [
         "pending",

@@ -14,7 +14,7 @@ import { ArrowLeft, Pin, Lock, Trash2, RotateCcw } from "lucide-react";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin } = useAuth();
+  const { user, isChiefArchitect: isAdmin } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [post, setPost] = useState<any>(null);
