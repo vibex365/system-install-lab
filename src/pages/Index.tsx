@@ -8,35 +8,86 @@ import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import {
-  Brain, Users, CalendarCheck, BookOpen, Shield, Layers,
-} from "lucide-react";
+import { Brain, Users, CalendarCheck, BookOpen, Shield, Layers } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 
 /* ── Data ── */
 const pillars = [
-  { icon: Brain, title: "Prompt Engine", description: "AI-powered prompt architecture with persistent memory. Build structured, deployment-ready system prompts." },
-  { icon: BookOpen, title: "Curated Library", description: "Battle-tested prompt blueprints across MVP, SaaS, e-commerce, agency, and internal tools." },
-  { icon: CalendarCheck, title: "Weekly Build Cohorts", description: "Mandatory weekly sessions with structured roll call, hot seats, and commitments. No passive consumption." },
-  { icon: Users, title: "Architect Leads", description: "Certified leads run each cohort. Accountability through hierarchy, not motivation." },
-  { icon: Shield, title: "Moderated Submissions", description: "Members submit prompts for review. Approved work enters the institutional library." },
-  { icon: Layers, title: "Session Memory", description: "Every generation is tracked. Context persists across sessions. Your architecture compounds." },
+  {
+    icon: Brain,
+    title: "Prompt Engine",
+    description:
+      "AI-powered prompt architecture with persistent memory. Build structured, deployment-ready system prompts.",
+  },
+  {
+    icon: BookOpen,
+    title: "Curated Library",
+    description: "Battle-tested prompt blueprints across MVP, SaaS, e-commerce, agency, and internal tools.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Weekly Build Cohorts",
+    description:
+      "Mandatory weekly sessions with structured roll call, hot seats, and commitments. No passive consumption.",
+  },
+  {
+    icon: Users,
+    title: "Architect Leads",
+    description: "Certified leads run each cohort. Accountability through hierarchy, not motivation.",
+  },
+  {
+    icon: Shield,
+    title: "Moderated Submissions",
+    description: "Members submit prompts for review. Approved work enters the institutional library.",
+  },
+  {
+    icon: Layers,
+    title: "Session Memory",
+    description: "Every generation is tracked. Context persists across sessions. Your architecture compounds.",
+  },
 ];
 
 const process = [
   { step: "01", title: "Apply", desc: "Submit your application with a $5 processing fee. We review within 48 hours." },
-  { step: "02", title: "Get Accepted", desc: "Accepted applicants activate membership at $197/month. No trials, no discounts." },
-  { step: "03", title: "Choose Your Cohort", desc: "Select a weekly build cohort. Attendance is mandatory. Structure is non-negotiable." },
-  { step: "04", title: "Build With Systems", desc: "Access the Prompt Engine, Library, and weekly sessions. Ship structured output every week." },
+  {
+    step: "02",
+    title: "Get Accepted",
+    desc: "Accepted applicants activate membership at $197/month. No trials, no discounts.",
+  },
+  {
+    step: "03",
+    title: "Choose Your Cohort",
+    desc: "Select a weekly build cohort. Attendance is mandatory. Structure is non-negotiable.",
+  },
+  {
+    step: "04",
+    title: "Build With Systems",
+    desc: "Access the Prompt Engine, Library, and weekly sessions. Ship structured output every week.",
+  },
 ];
 
 const institutionalFaqs = [
-  { q: "What is PFSW?", a: "A private prompt architecture institution. We teach builders how to construct structured AI system prompts — and hold them accountable through mandatory weekly cohorts." },
-  { q: "Why does the application cost $5?", a: "To filter. If $5 stops you, the program isn't for you. The fee ensures only serious operators enter the pipeline." },
-  { q: "What does $197/month include?", a: "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, and the member submission pipeline." },
-  { q: "What happens if I miss sessions?", a: "Two consecutive missed sessions trigger a warning. Three triggers a review. Attendance is mandatory — this is an institution, not a community." },
+  {
+    q: "What is PFSW?",
+    a: "A private prompt architecture institution. We teach builders how to construct structured AI system prompts — and hold them accountable through mandatory weekly cohorts.",
+  },
+  {
+    q: "Why does the application cost $5?",
+    a: "To filter. If $5 stops you, the program isn't for you. The fee ensures only serious operators enter the pipeline.",
+  },
+  {
+    q: "What does $197/month include?",
+    a: "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, and the member submission pipeline.",
+  },
+  {
+    q: "What happens if I miss sessions?",
+    a: "Two consecutive missed sessions trigger a warning. Three triggers a review. Attendance is mandatory — this is an institution, not a community.",
+  },
   { q: "Can I cancel?", a: "Yes. No contracts. But the prompts you build and the systems you install stay with you." },
-  { q: "Is this coaching?", a: "No. This is a structured operating environment. You get frameworks, architecture tools, and disciplined cadence — not advice." },
+  {
+    q: "Is this coaching?",
+    a: "No. This is a structured operating environment. You get frameworks, architecture tools, and disciplined cadence — not advice.",
+  },
 ];
 
 /* ── Page ── */
@@ -58,42 +109,52 @@ export default function Index() {
         <div className="container relative z-10 text-center py-24 md:py-32">
           <motion.p
             className="text-xs md:text-sm uppercase tracking-[0.3em] text-primary mb-8 font-medium"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
             A Private Prompt Architecture Institution
           </motion.p>
 
           <motion.h1
             className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.95] mb-6"
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
           >
-            People Fail.{" "}
-            <span className="text-primary gold-text-glow">Systems Won't.</span>
+            People Fail. <span className="text-primary gold-text-glow">Systems Work.</span>
           </motion.h1>
 
           <motion.p
             className="text-xl md:text-2xl lg:text-3xl font-semibold text-foreground/90 tracking-tight mb-4"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
           >
             Build Structured Systems With AI.
           </motion.p>
 
           <motion.p
             className="text-sm text-muted-foreground mb-12"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.7 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
           >
             Application required · $197/month upon acceptance
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-5"
           >
             <Button asChild size="lg" className="tracking-wide text-lg px-10 py-6 font-bold gold-glow-strong">
               <Link to="/apply">Apply for Access</Link>
             </Button>
             <Button
-              variant="outline" size="lg"
+              variant="outline"
+              size="lg"
               className="tracking-wide text-lg px-10 py-6 font-bold border-primary/30 text-foreground hover:bg-primary/10"
               onClick={() => scrollTo("#doctrine")}
             >
