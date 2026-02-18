@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-const navLinks = [
+const publicLinks = [
   { label: "Method", href: "#method" },
   { label: "What You Get", href: "#deliverables" },
   { label: "Proof", href: "#proof" },
@@ -14,8 +14,10 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, isAdmin, logout } = useAuth();
+  const { user, profile, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+
+  const isActive = profile?.member_status === "active";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -35,6 +37,17 @@ export function Navbar() {
     navigate("/");
   };
 
+  const memberLinks = (
+    <>
+      <Link to="/board" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Board</Link>
+      <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+    </>
+  );
+
+  const adminLinks = (
+    <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</Link>
+  );
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -42,47 +55,31 @@ export function Navbar() {
       }`}
     >
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="text-lg font-bold tracking-[0.2em] text-foreground">
-          PFSW
-        </Link>
+        <Link to="/" className="text-lg font-bold tracking-[0.2em] text-foreground">PFSW</Link>
 
         {/* Desktop */}
         <nav className="hidden md:flex items-center gap-8">
-          {!user && navLinks.map((link) => (
-            <button
-              key={link.href}
-              onClick={() => handleAnchor(link.href)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide"
-            >
+          {!user && publicLinks.map((link) => (
+            <button key={link.href} onClick={() => handleAnchor(link.href)} className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide">
               {link.label}
             </button>
           ))}
 
+          {user && (isActive || isAdmin) && memberLinks}
+          {user && isAdmin && adminLinks}
+
+          {user && !isActive && !isAdmin && (
+            <Link to="/status" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
+          )}
+
           {user ? (
-            <>
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Dashboard
-              </Link>
-              {isAdmin && (
-                <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Admin
-                </Link>
-              )}
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <LogOut className="h-3.5 w-3.5" /> Log Out
-              </button>
-            </>
+            <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <LogOut className="h-3.5 w-3.5" /> Log Out
+            </button>
           ) : (
             <>
-              <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Log In
-              </Link>
-              <Button asChild size="sm" className="tracking-wide">
-                <Link to="/apply">Apply</Link>
-              </Button>
+              <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log In</Link>
+              <Button asChild size="sm" className="tracking-wide"><Link to="/apply">Apply</Link></Button>
             </>
           )}
         </nav>
@@ -97,38 +94,31 @@ export function Navbar() {
       {mobileOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-lg border-b border-border">
           <nav className="container flex flex-col gap-4 py-6">
-            {!user && navLinks.map((link) => (
-              <button
-                key={link.href}
-                onClick={() => handleAnchor(link.href)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left tracking-wide"
-              >
+            {!user && publicLinks.map((link) => (
+              <button key={link.href} onClick={() => handleAnchor(link.href)} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left tracking-wide">
                 {link.label}
               </button>
             ))}
 
-            {user ? (
+            {user && (isActive || isAdmin) && (
               <>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Dashboard
-                </Link>
-                {isAdmin && (
-                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    Admin
-                  </Link>
-                )}
-                <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">
-                  Log Out
-                </button>
+                <Link to="/board" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Board</Link>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
               </>
+            )}
+            {user && isAdmin && (
+              <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</Link>
+            )}
+            {user && !isActive && !isAdmin && (
+              <Link to="/status" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
+            )}
+
+            {user ? (
+              <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">Log Out</button>
             ) : (
               <>
-                <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Log In
-                </Link>
-                <Button asChild size="sm" className="w-fit tracking-wide">
-                  <Link to="/apply">Apply</Link>
-                </Button>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log In</Link>
+                <Button asChild size="sm" className="w-fit tracking-wide"><Link to="/apply">Apply</Link></Button>
               </>
             )}
           </nav>

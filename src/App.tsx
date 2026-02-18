@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import Index from "./pages/Index";
 import Apply from "./pages/Apply";
@@ -11,11 +11,18 @@ import Waitlist from "./pages/Waitlist";
 import Login from "./pages/Login";
 import Status from "./pages/Status";
 import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
 import Accepted from "./pages/Accepted";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import BoardFeed from "./pages/BoardFeed";
+import PostDetail from "./pages/PostDetail";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminApplications from "./pages/admin/AdminApplications";
+import AdminMembers from "./pages/admin/AdminMembers";
+import AdminBoards from "./pages/admin/AdminBoards";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminModLog from "./pages/admin/AdminModLog";
 
 const queryClient = new QueryClient();
 
@@ -34,10 +41,23 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/status" element={<Status />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<Admin />} />
             <Route path="/accepted" element={<Accepted />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+
+            {/* Board routes */}
+            <Route path="/board" element={<Navigate to="/board/main" replace />} />
+            <Route path="/board/:slug" element={<BoardFeed />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminOverview />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/members" element={<AdminMembers />} />
+            <Route path="/admin/boards" element={<AdminBoards />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/modlog" element={<AdminModLog />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
