@@ -23,9 +23,7 @@ export default function Login() {
     try {
       await login(email, password);
       toast({ title: "Logged in", description: "Welcome back." });
-      // Redirect based on member_status will happen after profile loads
-      // For now navigate to status, AuthGate/useEffect will handle redirect
-      navigate("/status");
+      navigate("/engine");
     } catch (err: any) {
       toast({ title: "Login failed", description: err.message, variant: "destructive" });
     } finally {

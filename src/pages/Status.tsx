@@ -72,7 +72,7 @@ export default function Status() {
 
             {status === "active" && (
               <Button asChild>
-                <Link to="/dashboard">Go to Dashboard</Link>
+                <Link to="/engine">Go to Engine</Link>
               </Button>
             )}
 
