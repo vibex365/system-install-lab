@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthGate } from "@/components/AuthGate";
@@ -10,34 +11,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2 } from "lucide-react";
+import { Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2, Trash2, Download } from "lucide-react";
 
 const SYSTEM_PROMPT = `You are PFSW — People Fail, Systems Work. You are an elite prompt architect.
 
 Rules:
 - Tone: disciplined, premium, direct.
 - No hype. No emojis.
-- Output MUST follow this exact structure:
-  1. Objective
-  2. Stack
-  3. Routes
-  4. Database Schema
-  5. RLS Policies
-  6. Core User Flows
-  7. UI/UX Requirements (black/gold editorial)
-  8. Integrations
-  9. Acceptance Criteria
-  10. Build Order
+- Output MUST follow this EXACT structure in this EXACT order. Include ALL sections. No extra commentary before or after.
+
+1. Objective
+2. Stack
+3. Routes
+4. Database Schema
+5. RLS Policies
+6. Core User Flows
+7. UI/UX Requirements (black/gold editorial)
+8. Integrations
+9. Acceptance Criteria
+10. Build Order
 
 Use stored session context as truth unless overridden.
 Keep MVP minimal. Remove unnecessary features.
-Return only the final build prompt.`;
+Return only the final build prompt — nothing else.`;
 
 const DAILY_LIMIT = 50;
 
 export default function Engine() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   // Left panel fields
   const [productName, setProductName] = useState("");
@@ -66,6 +69,26 @@ export default function Engine() {
     checkUsage();
   }, []);
 
+  // Load library prompt into engine if navigated with ?loadPrompt=<id>
+  useEffect(() => {
+    const loadPromptId = searchParams.get("loadPrompt");
+    if (loadPromptId) {
+      supabase
+        .from("prompts")
+        .select("*, package:prompt_packages!prompts_package_id_fkey(slug)")
+        .eq("id", loadPromptId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setOutput(data.prompt_text);
+            setCategory(data.package?.slug || "");
+            setActiveSessionId(null);
+            toast({ title: "Prompt loaded from Library" });
+          }
+        });
+    }
+  }, [searchParams]);
+
   const checkUsage = async () => {
     if (!user) return;
     const since = new Date(Date.now() - 86400000).toISOString();
@@ -90,7 +113,7 @@ export default function Engine() {
 
   const loadSession = (session: any) => {
     setActiveSessionId(session.id);
-    const ctx = session.context_json || {};
+    const ctx = session.context_json as Record<string, string> || {};
     setProductName(ctx.productName || "");
     setTargetUser(ctx.targetUser || "");
     setOffer(ctx.offer || "");
@@ -124,6 +147,32 @@ export default function Engine() {
     loadSessions();
   };
 
+  const deleteSession = async (id: string) => {
+    await supabase.from("prompt_sessions").delete().eq("id", id);
+    if (activeSessionId === id) {
+      setActiveSessionId(null);
+      newSession();
+    }
+    toast({ title: "Session deleted" });
+    loadSessions();
+  };
+
+  const newSession = () => {
+    setActiveSessionId(null);
+    setProductName(""); setTargetUser(""); setOffer(""); setMonetization("");
+    setIntegrations(""); setConstraints(""); setCategory(""); setOutput("");
+  };
+
+  const exportOutput = () => {
+    const blob = new Blob([output], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${productName || "prompt"}-blueprint.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const generate = async (refinement?: string) => {
     if (usageCount >= DAILY_LIMIT) {
       toast({ title: "Usage temporarily limited", description: "Try again later.", variant: "destructive" });
@@ -142,7 +191,7 @@ Category: ${category}
 ${refinement ? `\nRefinement: ${refinement}` : ""}
 ${output ? `\nPrevious Output:\n${output}` : ""}
 
-Generate a complete Lovable-ready build prompt.`;
+Generate a complete Lovable-ready build prompt following the exact 10-section structure.`;
 
       const response = await supabase.functions.invoke("generate-prompt", {
         body: { system: SYSTEM_PROMPT, message: userMessage },
@@ -183,9 +232,17 @@ Generate a complete Lovable-ready build prompt.`;
                 <p className="text-xs text-muted-foreground">{usageCount}/{DAILY_LIMIT} generations today</p>
               </div>
               <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={newSession} className="text-xs border-border">
+                  <Plus className="h-3 w-3 mr-1" /> New
+                </Button>
                 <Button size="sm" variant="outline" onClick={saveSession} className="text-xs border-border">
                   <Save className="h-3 w-3 mr-1" /> Save
                 </Button>
+                {output && (
+                  <Button size="sm" variant="outline" onClick={exportOutput} className="text-xs border-border">
+                    <Download className="h-3 w-3 mr-1" /> Export
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -229,26 +286,34 @@ Generate a complete Lovable-ready build prompt.`;
                 </Card>
 
                 {/* Sessions */}
-                {sessions.length > 0 && (
-                  <Card className="bg-card border-border">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Saved Sessions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-1">
-                      {sessions.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => loadSession(s)}
-                          className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
-                            s.id === activeSessionId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                          }`}
-                        >
-                          {s.title || "Untitled"}
-                        </button>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Sessions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {sessions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-2">No saved sessions yet.</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {sessions.map((s) => (
+                          <div key={s.id} className="flex items-center gap-1">
+                            <button
+                              onClick={() => loadSession(s)}
+                              className={`flex-1 text-left px-3 py-2 rounded text-xs transition-colors ${
+                                s.id === activeSessionId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                              }`}
+                            >
+                              {s.title || "Untitled"}
+                            </button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => deleteSession(s.id)}>
+                              <Trash2 className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Right — Output */}
@@ -279,16 +344,16 @@ Generate a complete Lovable-ready build prompt.`;
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Generate
                   </Button>
-                  <Button variant="outline" onClick={() => generate("Refine and improve the output")} disabled={generating || !output} className="border-border">
+                  <Button variant="outline" onClick={() => generate("Refine and improve the output. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
                     <RefreshCw className="h-3 w-3 mr-1" /> Refine
                   </Button>
-                  <Button variant="outline" onClick={() => generate("Simplify. Remove unnecessary complexity.")} disabled={generating || !output} className="border-border">
+                  <Button variant="outline" onClick={() => generate("Simplify. Remove unnecessary complexity. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
                     <Minimize2 className="h-3 w-3 mr-1" /> Simplify
                   </Button>
-                  <Button variant="outline" onClick={() => generate("Add Stripe integration with checkout sessions.")} disabled={generating || !output} className="border-border">
+                  <Button variant="outline" onClick={() => generate("Add Stripe integration with checkout sessions. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
                     <Plus className="h-3 w-3 mr-1" /> + Stripe
                   </Button>
-                  <Button variant="outline" onClick={() => generate("Add Supabase Auth + RLS policies.")} disabled={generating || !output} className="border-border">
+                  <Button variant="outline" onClick={() => generate("Add Supabase Auth + RLS policies. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
                     <Plus className="h-3 w-3 mr-1" /> + Supabase
                   </Button>
                 </div>

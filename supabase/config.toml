@@ -17,3 +17,12 @@ verify_jwt = false
 
 [functions.generate-prompt]
 verify_jwt = false
+
+[functions.jobs-create]
+verify_jwt = false
+
+[functions.jobs-claim]
+verify_jwt = false
+
+[functions.jobs-report]
+verify_jwt = false
