@@ -53,7 +53,7 @@ export default function MagazineInside() {
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">The Doctrine</p>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground leading-tight mb-4">
               People Fail.<br />
-              <span className="text-primary gold-text-glow">Systems Work.</span>
+              <span className="text-primary gold-text-glow">Systems Won't.</span>
             </h1>
             <p className="text-muted-foreground leading-relaxed mb-2">
               This is the institutional doctrine of PFSW. Read it. Internalize it. Operate by it.
