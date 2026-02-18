@@ -113,21 +113,54 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          invite_multiplier: number
+          invite_reputation_score: number
           member_status: Database["public"]["Enums"]["member_status"]
+          member_tier: string | null
         }
         Insert: {
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          invite_multiplier?: number
+          invite_reputation_score?: number
           member_status?: Database["public"]["Enums"]["member_status"]
+          member_tier?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          invite_multiplier?: number
+          invite_reputation_score?: number
           member_status?: Database["public"]["Enums"]["member_status"]
+          member_tier?: string | null
+        }
+        Relationships: []
+      }
+      system_meta: {
+        Row: {
+          base_price: number
+          founding_access_open: boolean
+          id: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          base_price?: number
+          founding_access_open?: boolean
+          id?: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          base_price?: number
+          founding_access_open?: boolean
+          id?: string
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
@@ -186,7 +219,11 @@ export type Database = {
     Enums: {
       app_role: "admin" | "member"
       application_status: "submitted" | "reviewing" | "accepted" | "rejected"
-      member_status: "pending" | "active" | "inactive"
+      member_status:
+        | "pending"
+        | "active"
+        | "inactive"
+        | "accepted_pending_payment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -316,7 +353,12 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "member"],
       application_status: ["submitted", "reviewing", "accepted", "rejected"],
-      member_status: ["pending", "active", "inactive"],
+      member_status: [
+        "pending",
+        "active",
+        "inactive",
+        "accepted_pending_payment",
+      ],
     },
   },
 } as const
