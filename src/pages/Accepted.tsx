@@ -33,7 +33,7 @@ export default function Accepted() {
     try {
       const { data, error } = await supabase.functions.invoke("create-membership-checkout", {
         body: {
-          success_url: `${window.location.origin}/dashboard?membership_session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${window.location.origin}/engine?membership_session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${window.location.origin}/accepted`,
         },
       });

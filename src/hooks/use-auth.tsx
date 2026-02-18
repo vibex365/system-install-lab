@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import type { Tables } from "@/integrations/supabase/types";
@@ -22,11 +22,17 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+// Routes that should not trigger auto-redirect after login
+const PUBLIC_ROUTES = ["/", "/apply", "/privacy", "/terms", "/waitlist", "/login"];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthState["user"]>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole>("member");
   const [loading, setLoading] = useState(true);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -45,6 +51,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setRole("member");
   }, []);
+
+  // Smart redirect after login based on member_status
+  useEffect(() => {
+    if (!justLoggedIn || !profile) return;
+    setJustLoggedIn(false);
+
+    const status = profile.member_status as string;
+    if (status === "accepted_pending_payment") {
+      navigate("/accepted", { replace: true });
+    } else if (status === "active") {
+      navigate("/engine", { replace: true });
+    } else {
+      navigate("/status", { replace: true });
+    }
+  }, [justLoggedIn, profile, navigate]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -75,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    setJustLoggedIn(true);
     track("login_success");
   }, []);
 

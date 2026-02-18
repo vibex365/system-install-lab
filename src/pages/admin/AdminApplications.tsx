@@ -99,14 +99,14 @@ export default function AdminApplications() {
                 </p>
               )}
 
-              <div className="flex gap-2 pt-2">
-                <Button size="sm" variant="outline" onClick={() => updateStatus(selected, "reviewing")} disabled={selected.status === "reviewing"}>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => updateStatus(selected, "reviewing")} disabled={selected.status === "reviewing"} className="text-xs">
                   <Clock className="h-3 w-3 mr-1" /> Review
                 </Button>
-                <Button size="sm" onClick={() => updateStatus(selected, "accepted")} disabled={selected.status === "accepted"}>
+                <Button size="sm" onClick={() => updateStatus(selected, "accepted")} disabled={selected.status === "accepted"} className="text-xs">
                   <CheckCircle className="h-3 w-3 mr-1" /> Accept
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => updateStatus(selected, "rejected")} disabled={selected.status === "rejected"}>
+                <Button size="sm" variant="destructive" onClick={() => updateStatus(selected, "rejected")} disabled={selected.status === "rejected"} className="text-xs">
                   <XCircle className="h-3 w-3 mr-1" /> Reject
                 </Button>
               </div>
