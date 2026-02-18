@@ -83,6 +83,32 @@ export default function BoardFeed() {
 
   useEffect(() => { load(); }, [boardSlug]);
 
+  // Realtime subscriptions for posts, votes, and comments
+  useEffect(() => {
+    if (!board) return;
+
+    const channel = supabase
+      .channel(`board-${board.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'posts', filter: `board_id=eq.${board.id}` },
+        () => { fetchPosts(board.id); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'votes' },
+        () => { fetchPosts(board.id); }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => { fetchPosts(board.id); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [board]);
+
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     posts.forEach((p) => p.tags.forEach((t) => tags.add(t)));
