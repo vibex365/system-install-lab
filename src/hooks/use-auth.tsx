@@ -6,10 +6,14 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
 
+type AppRole = "chief_architect" | "architect_lead" | "member";
+
 interface AuthState {
   user: { id: string; email: string } | null;
   profile: Profile | null;
-  isAdmin: boolean;
+  role: AppRole;
+  isChiefArchitect: boolean;
+  isLead: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -21,7 +25,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthState["user"]>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<AppRole>("member");
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
@@ -32,32 +36,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single();
     setProfile(data);
 
-    // Check admin role
-    const { data: hasAdmin } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-    setIsAdmin(!!hasAdmin);
+    // Check roles in priority order
+    const { data: isCA } = await supabase.rpc("has_role", { _user_id: userId, _role: "chief_architect" });
+    if (isCA) { setRole("chief_architect"); return; }
+
+    const { data: isLead } = await supabase.rpc("has_role", { _user_id: userId, _role: "architect_lead" });
+    if (isLead) { setRole("architect_lead"); return; }
+
+    setRole("member");
   }, []);
 
   useEffect(() => {
-    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
           setUser({ id: session.user.id, email: session.user.email! });
-          // Use setTimeout to avoid Supabase deadlock
           setTimeout(() => fetchProfile(session.user.id), 0);
         } else {
           setUser(null);
           setProfile(null);
-          setIsAdmin(false);
+          setRole("member");
         }
         setLoading(false);
       }
     );
 
-    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email! });
@@ -90,8 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     track("logout");
   }, []);
 
+  const isChiefArchitect = role === "chief_architect";
+  const isLead = role === "architect_lead";
+
   return (
-    <AuthContext.Provider value={{ user, profile, isAdmin, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, profile, role, isChiefArchitect, isLead, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

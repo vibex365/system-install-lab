@@ -5,19 +5,17 @@ import { Menu, X, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const publicLinks = [
-  { label: "Method", href: "#method" },
-  { label: "What You Get", href: "#deliverables" },
-  { label: "Proof", href: "#proof" },
+  { label: "Doctrine", href: "#doctrine" },
   { label: "FAQ", href: "#faq" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, profile, isAdmin, logout } = useAuth();
+  const { user, profile, isChiefArchitect, isLead, logout } = useAuth();
   const navigate = useNavigate();
 
-  const isActive = profile?.member_status === "active";
+  const isActive = profile?.member_status === "active" || isChiefArchitect;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -39,13 +37,10 @@ export function Navbar() {
 
   const memberLinks = (
     <>
-      <Link to="/board" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Board</Link>
-      <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+      <Link to="/engine" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
+      <Link to="/library" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+      <Link to="/magazine/inside" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Magazine</Link>
     </>
-  );
-
-  const adminLinks = (
-    <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</Link>
   );
 
   return (
@@ -65,10 +60,15 @@ export function Navbar() {
             </button>
           ))}
 
-          {user && (isActive || isAdmin) && memberLinks}
-          {user && isAdmin && adminLinks}
+          {user && isActive && memberLinks}
+          {user && isChiefArchitect && (
+            <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</Link>
+          )}
+          {user && isLead && (
+            <Link to="/lead/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Lead</Link>
+          )}
 
-          {user && !isActive && !isAdmin && (
+          {user && !isActive && !isChiefArchitect && (
             <Link to="/status" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
           )}
 
@@ -100,16 +100,20 @@ export function Navbar() {
               </button>
             ))}
 
-            {user && (isActive || isAdmin) && (
+            {user && isActive && (
               <>
-                <Link to="/board" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Board</Link>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+                <Link to="/engine" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
+                <Link to="/library" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+                <Link to="/magazine/inside" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Magazine</Link>
               </>
             )}
-            {user && isAdmin && (
+            {user && isChiefArchitect && (
               <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</Link>
             )}
-            {user && !isActive && !isAdmin && (
+            {user && isLead && (
+              <Link to="/lead/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Lead</Link>
+            )}
+            {user && !isActive && !isChiefArchitect && (
               <Link to="/status" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
             )}
 

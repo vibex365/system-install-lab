@@ -30,7 +30,7 @@ interface PostRow {
 export default function BoardFeed() {
   const { slug } = useParams<{ slug: string }>();
   const boardSlug = slug || "main";
-  const { user, isAdmin } = useAuth();
+  const { user, isChiefArchitect: isAdmin } = useAuth();
   const [board, setBoard] = useState<{ id: string; name: string; description: string | null; is_locked: boolean } | null>(null);
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);

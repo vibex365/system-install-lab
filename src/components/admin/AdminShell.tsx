@@ -1,13 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, FileText, Users, Shield, Settings, ScrollText } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Overview", path: "/admin", icon: LayoutDashboard },
   { label: "Applications", path: "/admin/applications", icon: FileText },
   { label: "Members", path: "/admin/members", icon: Users },
-  { label: "Boards", path: "/admin/boards", icon: Shield },
+  { label: "Cohorts", path: "/admin/cohorts", icon: Calendar },
+  { label: "Submissions", path: "/admin/submissions", icon: BookOpen },
+  { label: "Payments", path: "/admin/payments", icon: CreditCard },
   { label: "Settings", path: "/admin/settings", icon: Settings },
   { label: "Mod Log", path: "/admin/modlog", icon: ScrollText },
 ];
@@ -16,12 +18,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
 
   return (
-    <AuthGate requireAdmin>
+    <AuthGate requireChiefArchitect>
       <div className="min-h-screen bg-background flex">
-        {/* Sidebar */}
         <aside className="hidden md:flex w-56 flex-col border-r border-border bg-card">
           <div className="p-4 border-b border-border">
-            <Link to="/admin" className="text-sm font-bold tracking-[0.15em] text-foreground">PFSW ADMIN</Link>
+            <Link to="/admin" className="text-sm font-bold tracking-[0.15em] text-foreground">CHIEF ARCHITECT</Link>
           </div>
           <nav className="flex-1 p-2 space-y-0.5">
             {navItems.map((item) => {
@@ -42,11 +43,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="p-4 border-t border-border">
-            <Link to="/board" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Board</Link>
+            <Link to="/engine" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Engine</Link>
           </div>
         </aside>
 
-        {/* Mobile header */}
         <div className="flex-1 flex flex-col">
           <header className="md:hidden flex items-center gap-2 p-3 border-b border-border bg-card overflow-x-auto">
             {navItems.map((item) => {
