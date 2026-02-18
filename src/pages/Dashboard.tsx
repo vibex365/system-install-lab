@@ -18,22 +18,17 @@ const cadenceSteps = [
   { label: "Review", active: false },
 ];
 
-const promptPacks = [
-  "MVP Blueprint Prompt",
-  "Architecture Prompt",
-  "Landing Page Prompt",
-];
+const promptPacks = ["MVP Blueprint Prompt", "Architecture Prompt", "Landing Page Prompt"];
 
 export default function Dashboard() {
   useEffect(() => { track("dashboard_viewed"); }, []);
 
   return (
-    <AuthGate>
+    <AuthGate requireActive>
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-24 pb-20">
           <div className="container max-w-5xl">
-            {/* Command Bar */}
             <div className="flex flex-wrap items-center gap-3 mb-10">
               <StatusPill label="Active" variant="active" />
               <StatusPill label="Week 01" />
@@ -42,7 +37,6 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            {/* Main Grid */}
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
@@ -52,9 +46,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">Your System Map appears here.</p>
-                  <Button size="sm" variant="outline" disabled className="opacity-50 border-border">
-                    Generate System Map
-                  </Button>
+                  <Button size="sm" variant="outline" disabled className="opacity-50 border-border">Generate System Map</Button>
                 </CardContent>
               </Card>
 
@@ -79,16 +71,13 @@ export default function Dashboard() {
                   {promptPacks.map((p) => (
                     <div key={p} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2">
                       <span className="text-sm text-foreground">{p}</span>
-                      <Button size="sm" variant="ghost" className="text-xs text-primary h-auto py-1 px-2" disabled>
-                        Open
-                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs text-primary h-auto py-1 px-2" disabled>Open</Button>
                     </div>
                   ))}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Recent Activity */}
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
               <Card className="bg-card border-border">

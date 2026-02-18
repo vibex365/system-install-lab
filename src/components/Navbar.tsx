@@ -14,7 +14,7 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthed, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,8 +29,8 @@ export function Navbar() {
     el?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setMobileOpen(false);
     navigate("/");
   };
@@ -48,7 +48,7 @@ export function Navbar() {
 
         {/* Desktop */}
         <nav className="hidden md:flex items-center gap-8">
-          {!isAuthed && navLinks.map((link) => (
+          {!user && navLinks.map((link) => (
             <button
               key={link.href}
               onClick={() => handleAnchor(link.href)}
@@ -58,11 +58,16 @@ export function Navbar() {
             </button>
           ))}
 
-          {isAuthed ? (
+          {user ? (
             <>
               <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Admin
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -92,7 +97,7 @@ export function Navbar() {
       {mobileOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-lg border-b border-border">
           <nav className="container flex flex-col gap-4 py-6">
-            {!isAuthed && navLinks.map((link) => (
+            {!user && navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleAnchor(link.href)}
@@ -102,11 +107,16 @@ export function Navbar() {
               </button>
             ))}
 
-            {isAuthed ? (
+            {user ? (
               <>
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Admin
+                  </Link>
+                )}
                 <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">
                   Log Out
                 </button>

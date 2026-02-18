@@ -2,14 +2,34 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 
-export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isAuthed } = useAuth();
+interface AuthGateProps {
+  children: React.ReactNode;
+  requireActive?: boolean;
+  requireAdmin?: boolean;
+}
+
+export function AuthGate({ children, requireActive = false, requireAdmin = false }: AuthGateProps) {
+  const { user, profile, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthed) navigate("/login", { replace: true });
-  }, [isAuthed, navigate]);
+    if (loading) return;
+    if (!user) { navigate("/login", { replace: true }); return; }
+    if (requireAdmin && !isAdmin) { navigate("/", { replace: true }); return; }
+    if (requireActive && profile?.member_status !== "active") { navigate("/status", { replace: true }); return; }
+  }, [user, profile, isAdmin, loading, navigate, requireActive, requireAdmin]);
 
-  if (!isAuthed) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+  if (requireAdmin && !isAdmin) return null;
+  if (requireActive && profile?.member_status !== "active") return null;
+
   return <>{children}</>;
 }
