@@ -61,9 +61,9 @@ export default function Index() {
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/85" />
+        <div className="absolute inset-0 bg-black/70" />
         {/* Bottom gradient fade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
 
         <div className="container relative z-10 text-center py-24 md:py-32">
           <motion.h1

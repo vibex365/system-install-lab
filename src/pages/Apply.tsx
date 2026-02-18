@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { CheckCircle, ArrowRight } from "lucide-react";
+import heroBg from "@/assets/hero-bg.png";
 
 const applySchema = z.object({
   name: z.string().trim().min(1, "Required"),
@@ -37,32 +38,20 @@ const nextSteps = [
 export default function Apply() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<ApplyValues>({
     resolver: zodResolver(applySchema),
-    defaultValues: {
-      name: "",
-      email: user?.email ?? "",
-      product: "",
-      bottleneck: "",
-      whyNow: "",
-    },
+    defaultValues: { name: "", email: user?.email ?? "", product: "", bottleneck: "", whyNow: "" },
   });
 
   const onSubmit = async (data: ApplyValues) => {
     setSubmitting(true);
     try {
       const { error } = await supabase.from("applications").insert({
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        stage: data.stage,
-        product: data.product,
-        bottleneck: data.bottleneck,
-        why_now: data.whyNow || null,
+        name: data.name, email: data.email, role: data.role, stage: data.stage,
+        product: data.product, bottleneck: data.bottleneck, why_now: data.whyNow || null,
         user_id: user?.id ?? null,
       });
       if (error) throw error;
@@ -106,110 +95,121 @@ export default function Apply() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 pb-20">
-        <div className="container max-w-5xl">
-          <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
-            {/* Left column */}
-            <div className="lg:col-span-2 space-y-8">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">
-                  Apply to Join PFSW
-                </h1>
-                <p className="text-muted-foreground leading-relaxed">
-                  This is an execution room. If you want leverage, apply.
-                </p>
-              </div>
-              <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary">What happens next</p>
-                {nextSteps.map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                      {i + 1}
-                    </span>
-                    <p className="text-sm text-muted-foreground">{step}</p>
-                  </div>
-                ))}
-              </div>
+      <main className="pt-16 min-h-screen flex">
+        {/* Left — Form */}
+        <div className="flex-1 flex items-center justify-center px-6 py-20">
+          <div className="w-full max-w-lg">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">
+              Apply to Join PFSW
+            </h1>
+            <p className="text-muted-foreground leading-relaxed mb-8">
+              This is an execution room. If you want leverage, apply.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary">What happens next</p>
+              {nextSteps.map((step, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm text-muted-foreground">{step}</p>
+                </div>
+              ))}
             </div>
 
-            {/* Right column — form */}
-            <div className="lg:col-span-3">
-              <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                    <FormField control={form.control} name="name" render={({ field }) => (
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl><Input placeholder="Your full name" className="bg-background" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl><Input type="email" placeholder="you@example.com" className="bg-background" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <FormField control={form.control} name="role" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl><Input placeholder="Your full name" className="bg-background" {...field} /></FormControl>
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select role" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            <SelectItem value="founder">Founder</SelectItem>
+                            <SelectItem value="operator">Operator</SelectItem>
+                            <SelectItem value="creator">Creator</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormField control={form.control} name="stage" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl><Input type="email" placeholder="you@example.com" className="bg-background" {...field} /></FormControl>
+                        <FormLabel>Stage</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select stage" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            <SelectItem value="idea">Idea</SelectItem>
+                            <SelectItem value="pre-revenue">Pre-revenue</SelectItem>
+                            <SelectItem value="revenue">Revenue</SelectItem>
+                            <SelectItem value="scaling">Scaling</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <div className="grid sm:grid-cols-2 gap-5">
-                      <FormField control={form.control} name="role" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select role" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="founder">Founder</SelectItem>
-                              <SelectItem value="operator">Operator</SelectItem>
-                              <SelectItem value="creator">Creator</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="stage" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Stage</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="bg-background"><SelectValue placeholder="Select stage" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="idea">Idea</SelectItem>
-                              <SelectItem value="pre-revenue">Pre-revenue</SelectItem>
-                              <SelectItem value="revenue">Revenue</SelectItem>
-                              <SelectItem value="scaling">Scaling</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-                    <FormField control={form.control} name="product" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>What are you building?</FormLabel>
-                        <FormControl><Textarea placeholder="Describe your project or business." className="bg-background min-h-[100px]" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="bottleneck" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Biggest execution bottleneck?</FormLabel>
-                        <FormControl><Textarea placeholder="What's slowing you down the most?" className="bg-background min-h-[100px]" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="whyNow" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Why now? <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
-                        <FormControl><Textarea placeholder="What's making this urgent?" className="bg-background" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <Button type="submit" size="lg" className="w-full tracking-wide font-bold" disabled={submitting}>
-                      {submitting ? "Submitting..." : "Submit Application"}
-                    </Button>
-                  </form>
-                </Form>
-              </div>
+                  </div>
+                  <FormField control={form.control} name="product" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What are you building?</FormLabel>
+                      <FormControl><Textarea placeholder="Describe your project or business." className="bg-background min-h-[100px]" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="bottleneck" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Biggest execution bottleneck?</FormLabel>
+                      <FormControl><Textarea placeholder="What's slowing you down the most?" className="bg-background min-h-[100px]" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="whyNow" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Why now? <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                      <FormControl><Textarea placeholder="What's making this urgent?" className="bg-background" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" size="lg" className="w-full tracking-wide font-bold" disabled={submitting}>
+                    {submitting ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </div>
+        </div>
+
+        {/* Right — Image with overlay */}
+        <div className="hidden lg:block flex-1 relative">
+          <img src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 flex items-center justify-center p-12">
+            <div className="text-center">
+              <h2 className="text-4xl font-black tracking-tight text-foreground mb-4">
+                People Fail.<br />
+                <span className="text-primary gold-text-glow">Systems Work.</span>
+              </h2>
+              <p className="text-muted-foreground max-w-sm mx-auto">
+                The execution-first platform for serious builders.
+              </p>
             </div>
           </div>
         </div>
