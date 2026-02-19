@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, BookOpen } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, BookOpen, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <AuthGate requireChiefArchitect>
@@ -49,24 +51,37 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex-1 flex flex-col min-w-0">
           <header className="md:hidden border-b border-border bg-card">
-            <div className="flex items-center gap-1 px-2 py-2 overflow-x-auto scrollbar-hide">
-              {navItems.map((item) => {
-                const active = pathname === item.path || (item.path !== "/admin" && pathname.startsWith(item.path));
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      "flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] whitespace-nowrap transition-colors shrink-0",
-                      active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
-                    )}
-                  >
-                    <item.icon className="h-3 w-3" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <Link to="/admin" className="text-sm font-bold tracking-[0.15em] text-foreground">CHIEF ARCHITECT</Link>
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
+            {mobileOpen && (
+              <nav className="border-t border-border px-2 py-2 space-y-0.5 bg-card">
+                {navItems.map((item) => {
+                  const active = pathname === item.path || (item.path !== "/admin" && pathname.startsWith(item.path));
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                        active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <Link to="/engine" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Engine</Link>
+              </nav>
+            )}
           </header>
 
           <main className="flex-1 p-3 md:p-8 overflow-y-auto">
