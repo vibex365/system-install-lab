@@ -348,6 +348,15 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
       await serviceSupabase.from("jobs").update({ status: "completed" }).eq("id", job.id);
     }
 
+    // Insert notification for the user
+    await serviceSupabase.from("user_notifications").insert({
+      user_id: userId,
+      type: "agent_run",
+      title: `${agent.name} completed`,
+      body: result.slice(0, 200) + (result.length > 200 ? "…" : ""),
+      agent_run_id: run?.id,
+    });
+
     return new Response(JSON.stringify({ success: true, result, run_id: run?.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

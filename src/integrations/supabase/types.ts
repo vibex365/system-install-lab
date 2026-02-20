@@ -21,6 +21,8 @@ export type Database = {
           expires_at: string | null
           id: string
           leased_at: string
+          next_run_at: string | null
+          schedule: string | null
           status: string
           stripe_session_id: string | null
           stripe_subscription_id: string | null
@@ -32,6 +34,8 @@ export type Database = {
           expires_at?: string | null
           id?: string
           leased_at?: string
+          next_run_at?: string | null
+          schedule?: string | null
           status?: string
           stripe_session_id?: string | null
           stripe_subscription_id?: string | null
@@ -43,6 +47,8 @@ export type Database = {
           expires_at?: string | null
           id?: string
           leased_at?: string
+          next_run_at?: string | null
+          schedule?: string | null
           status?: string
           stripe_session_id?: string | null
           stripe_subscription_id?: string | null
@@ -899,6 +905,39 @@ export type Database = {
           id?: string
           updated_at?: string
           version?: string
+        }
+        Relationships: []
+      }
+      user_notifications: {
+        Row: {
+          agent_run_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          agent_run_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          agent_run_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }

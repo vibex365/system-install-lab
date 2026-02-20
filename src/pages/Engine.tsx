@@ -284,6 +284,26 @@ export default function Engine() {
     checkUsage();
   }, []);
 
+  // Realtime: subscribe to agent run notifications for the current user
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("user-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "user_notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as { title: string; body: string };
+          toast({
+            title: `🤖 ${n.title}`,
+            description: n.body || "View results on the Agents page.",
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   useEffect(() => {
     const membershipSessionId = searchParams.get("membership_session_id");
     if (membershipSessionId && profile && !profile.cohort_id) {
