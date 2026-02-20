@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AuthGate } from "@/components/AuthGate";
 import { useAuth } from "@/hooks/use-auth";
@@ -103,7 +103,13 @@ export default function Accepted() {
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-6">What This Actually Is.</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">PFSW is not a community. It's not a mastermind. It's not a network.</p>
             <p className="text-muted-foreground leading-relaxed mb-4">It's an execution infrastructure. A controlled environment where serious builders operate under structure, accountability, and weekly review cycles.</p>
-            <p className="text-muted-foreground leading-relaxed">You ship. You review. You iterate. Or you don't belong here.</p>
+            <p className="text-muted-foreground leading-relaxed mb-6">You ship. You review. You iterate. Or you don't belong here.</p>
+            <Link
+              to="/magazine/inside"
+              className="inline-flex items-center text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-4"
+            >
+              Read the full doctrine before you decide →
+            </Link>
           </section>
           <GoldDivider />
           <section className="py-8">
@@ -140,7 +146,7 @@ export default function Accepted() {
             <p className="text-muted-foreground leading-relaxed mb-8">This is binary. You're in, or you're not. There's no "maybe later." If you release your spot, it goes to the next person in line.</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button onClick={handleAccept} disabled={loading} className="flex-1 h-14 text-base font-bold tracking-wide gold-glow-strong">
-                {loading ? "Processing..." : "Accept My Founding Spot"}
+                {loading ? "Processing..." : foundingOpen ? "Accept My Founding Spot" : "Activate Membership"}
               </Button>
               <Button variant="ghost" onClick={handleRelease} disabled={loading} className="flex-1 h-14 text-base text-muted-foreground">
                 Release My Spot
