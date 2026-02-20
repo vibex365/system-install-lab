@@ -124,6 +124,7 @@ export type Database = {
           headline: string
           icon_name: string
           id: string
+          included_with_membership: boolean
           job_type: string
           name: string
           price_cents: number
@@ -142,6 +143,7 @@ export type Database = {
           headline: string
           icon_name?: string
           id?: string
+          included_with_membership?: boolean
           job_type: string
           name: string
           price_cents?: number
@@ -160,6 +162,7 @@ export type Database = {
           headline?: string
           icon_name?: string
           id?: string
+          included_with_membership?: boolean
           job_type?: string
           name?: string
           price_cents?: number

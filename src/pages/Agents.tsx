@@ -87,6 +87,7 @@ interface Agent {
   price_cents: number;
   stripe_price_id: string | null;
   status: string;
+  included_with_membership: boolean;
 }
 
 interface AgentLease {
@@ -484,24 +485,28 @@ function AgentCard({
   lastRun,
   onLease,
   onRun,
+  onActivateIncluded,
   leasing,
+  activating,
 }: {
   agent: Agent;
   lease: AgentLease | null;
   lastRun: AgentRun | null;
   onLease: (agent: Agent) => void;
   onRun: (agent: Agent) => void;
+  onActivateIncluded: (agent: Agent) => void;
   leasing: boolean;
+  activating: boolean;
 }) {
   const [exampleOpen, setExampleOpen] = useState(false);
   const IconComponent = ICON_MAP[agent.icon_name] || Package;
   const isActive = lease?.status === "active";
   const hasStripePrice = !!agent.stripe_price_id;
-  const canLease = agent.status === "active" && hasStripePrice;
+  const canLease = agent.status === "active" && hasStripePrice && !agent.included_with_membership;
   const price = (agent.price_cents / 100).toFixed(0);
 
   return (
-    <Card className="bg-card border-border flex flex-col">
+    <Card className={`bg-card flex flex-col ${agent.included_with_membership ? "border-primary/40" : "border-border"}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -514,6 +519,11 @@ function AgentCard({
                 <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 border ${CATEGORY_COLORS[agent.category] || ""}`}>
                   {agent.category}
                 </Badge>
+                {agent.included_with_membership && (
+                  <Badge className="text-[10px] px-1.5 py-0 h-4 bg-primary/20 text-primary border border-primary/40">
+                    Included
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{agent.headline}</p>
             </div>
@@ -524,10 +534,14 @@ function AgentCard({
               <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px]">
                 <CheckCircle2 className="h-3 w-3 mr-1" /> Active
               </Badge>
-            ) : agent.status === "coming_soon" || !hasStripePrice ? (
+            ) : agent.status === "coming_soon" ? (
               <Badge variant="outline" className="text-[10px] text-muted-foreground">Coming Soon</Badge>
             ) : null}
-            <span className="text-xs font-bold text-primary">${price}/mo</span>
+            {agent.included_with_membership ? (
+              <span className="text-xs font-bold text-primary">Included</span>
+            ) : (
+              <span className="text-xs font-bold text-primary">${price}/mo</span>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -577,6 +591,11 @@ function AgentCard({
           {isActive ? (
             <Button size="sm" className="w-full" onClick={() => onRun(agent)}>
               <Play className="h-3.5 w-3.5 mr-1.5" /> Run Agent
+            </Button>
+          ) : agent.included_with_membership ? (
+            <Button size="sm" className="w-full" onClick={() => onActivateIncluded(agent)} disabled={activating}>
+              {activating ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+              Activate — Included Free
             </Button>
           ) : canLease ? (
             <Button size="sm" className="w-full" onClick={() => onLease(agent)} disabled={leasing}>
@@ -712,6 +731,7 @@ function AgentsContent() {
   const [leasingId, setLeasingId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [runModalAgent, setRunModalAgent] = useState<Agent | null>(null);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
   const [proposalPrefill, setProposalPrefill] = useState<{ business_name: string; url: string } | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -769,8 +789,30 @@ function AgentsContent() {
     }
   };
 
+  const handleActivateIncluded = async (agent: Agent) => {
+    if (!user) return;
+    setActivatingId(agent.id);
+    try {
+      const { error } = await supabase.from("agent_leases").insert({
+        agent_id: agent.id,
+        user_id: user.id,
+        status: "active",
+        leased_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      toast({ title: `${agent.name} activated!`, description: "Included with your membership. Ready to run." });
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "Activation error", description: e.message, variant: "destructive" });
+    } finally {
+      setActivatingId(null);
+    }
+  };
+
   const categories = ["All", ...Array.from(new Set(agents.map((a) => a.category)))];
-  const filtered = selectedCategory === "All" ? agents : agents.filter((a) => a.category === selectedCategory);
+  const includedAgents = agents.filter((a) => a.included_with_membership);
+  const addOnAgents = agents.filter((a) => !a.included_with_membership);
+  const filteredAddOns = selectedCategory === "All" ? addOnAgents : addOnAgents.filter((a) => a.category === selectedCategory);
   const activeLeases = leases.filter((l) => l.status === "active");
 
   const getLastRun = (agentId: string) => runs.find((r) => r.agent_id === agentId) || null;
@@ -790,6 +832,29 @@ function AgentsContent() {
           <p className="text-muted-foreground max-w-2xl text-sm">
             Lease a specialized AI agent that works on your behalf. Each agent runs a dedicated pipeline — outreach, research, content, audits — so you can focus on building.
           </p>
+        </div>
+
+        {/* ── Included with Membership ── */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-xs tracking-[0.15em] text-primary uppercase font-semibold">Included with Your Membership</p>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 font-medium">$98/mo value — yours free</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {includedAgents.map((agent) => (
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                lease={getLease(agent.id)}
+                lastRun={getLastRun(agent.id)}
+                onLease={handleLease}
+                onRun={(a) => setRunModalAgent(a)}
+                onActivateIncluded={handleActivateIncluded}
+                leasing={leasingId === agent.id}
+                activating={activatingId === agent.id}
+              />
+            ))}
+          </div>
         </div>
 
         {/* My Active Agents strip */}
@@ -825,43 +890,48 @@ function AgentsContent() {
           </div>
         )}
 
-        {/* Category filter */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
-                selectedCategory === cat
-                  ? "bg-primary/20 text-primary border-primary/40"
-                  : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-muted"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Agent catalog */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filtered.map((agent) => (
-              <AgentCard
-                key={agent.id}
-                agent={agent}
-                lease={getLease(agent.id)}
-                lastRun={getLastRun(agent.id)}
-                onLease={handleLease}
-                onRun={(a) => setRunModalAgent(a)}
-                leasing={leasingId === agent.id}
-              />
+        {/* ── Add-On Agents ── */}
+        <div>
+          <p className="text-xs tracking-[0.15em] text-muted-foreground uppercase font-semibold mb-4">Add-On Agents</p>
+          {/* Category filter */}
+          <div className="flex gap-2 flex-wrap mb-6">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
+                  selectedCategory === cat
+                    ? "bg-primary/20 text-primary border-primary/40"
+                    : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-muted"
+                }`}
+              >
+                {cat}
+              </button>
             ))}
           </div>
-        )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredAddOns.map((agent) => (
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  lease={getLease(agent.id)}
+                  lastRun={getLastRun(agent.id)}
+                  onLease={handleLease}
+                  onRun={(a) => setRunModalAgent(a)}
+                  onActivateIncluded={handleActivateIncluded}
+                  leasing={leasingId === agent.id}
+                  activating={activatingId === agent.id}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Run History */}
         <RunHistory runs={runs} agents={agents} />

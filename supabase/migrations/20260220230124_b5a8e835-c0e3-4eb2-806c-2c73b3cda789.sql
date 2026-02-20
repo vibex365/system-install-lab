@@ -1,0 +1,1 @@
+ALTER TABLE public.agents ADD COLUMN IF NOT EXISTS included_with_membership boolean NOT NULL DEFAULT false;
