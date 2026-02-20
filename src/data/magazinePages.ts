@@ -3,15 +3,25 @@ export interface MagazinePage {
   chapter: string;
   title: string;
   subtitle?: string;
+  image?: string;
+  isCover?: boolean;
   sections: { heading?: string; body: string }[];
 }
 
 export const magazinePages: MagazinePage[] = [
   {
+    pageNumber: 0,
+    chapter: "PFSW",
+    title: "People Fail. Systems Work.",
+    isCover: true,
+    sections: [],
+  },
+  {
     pageNumber: 1,
     chapter: "Prologue",
-    title: "People Fail. Systems Work.",
+    title: "The Manifesto",
     subtitle: "The founding thesis of PFSW.",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         body: "Every builder who has ever failed didn't fail because of a lack of talent. They failed because they relied on motivation instead of systems. Motivation decays. Willpower depletes. Enthusiasm fades after the first week. But a system — a structured, repeatable, accountable operating rhythm — doesn't care how you feel. It runs regardless.",
@@ -20,7 +30,19 @@ export const magazinePages: MagazinePage[] = [
         body: "PFSW exists because we watched thousands of talented builders stall. Not because they lacked ideas, but because they lacked architecture. They had the vision but no blueprint. They had the ambition but no cadence. They had the tools but no protocol for using them.",
       },
       {
-        body: "This magazine is your orientation manual. It will walk you through every component of the system — what it does, why it exists, and how it produces results that motivation never could. By the end, you won't just understand PFSW. You'll understand why everything else you've tried hasn't worked.",
+        body: "This doctrine is your orientation manual. It will walk you through every component of the system — what it does, why it exists, and how it produces results that motivation never could. By the end, you won't just understand PFSW. You'll understand why everything else you've tried hasn't worked.",
+      },
+      {
+        heading: "People Fail.",
+        body: "Every individual is subject to emotional variance, cognitive bias, social pressure, and physical limitation. The most talented person in the room will still procrastinate. Still drift. Still rationalize inaction. This is not a moral failure — it is a human condition. Expecting individuals to consistently perform without structure is like expecting a car to drive without roads.",
+      },
+      {
+        heading: "Systems Work.",
+        body: "A system has no bad days. A system does not feel tired. A system does not get discouraged after a hard week. A system simply runs. When you are inside a well-designed system, your output is determined by the architecture, not by your emotional state on a given Tuesday. This is the entire premise of PFSW — replace personal willpower with institutional structure.",
+      },
+      {
+        heading: "No One Is Bigger Than The Program.",
+        body: "This is the law that governs everything inside PFSW. Not the most experienced member. Not the highest earner. Not the person who has been here the longest. The program is the authority. The protocol is the standard. Every deviation — regardless of who makes it — weakens the structure for everyone. No exceptions. No special treatment. The program is the constant. You are the variable.",
       },
     ],
   },
@@ -49,6 +71,7 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter II — The Solution",
     title: "An Institution, Not a Community",
     subtitle: "Why we built something different.",
+    image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "Communities vs. Institutions",
@@ -89,6 +112,7 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter IV — Membership Economics",
     title: "Why $197/Month Is the Price",
     subtitle: "The economics of commitment and infrastructure.",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "Not Cheap Enough to Ignore",
@@ -129,6 +153,7 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter VI — OpenClaw Standard",
     title: "The Universal Prompt Format",
     subtitle: "Standardization is what separates amateurs from architects.",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "Why Format Matters",
@@ -136,7 +161,7 @@ export const magazinePages: MagazinePage[] = [
       },
       {
         heading: "The OpenClaw Schema",
-        body: "Every OpenClaw prompt contains these mandatory sections: Project Objective (what you're building and why), Technology Stack (exact tools and versions), Route Architecture (every page and API endpoint), Database Schema (tables, columns, types, relationships), Row-Level Security (who can access what data), Application Flows (step-by-step user journeys), UI Specifications (layout, components, responsive breakpoints), External Integrations (APIs, webhooks, third-party services), Acceptance Criteria (how you know it's done), and Build Order (what to build first, second, third).",
+        body: "Every OpenClaw prompt contains these mandatory sections: Project Objective, Technology Stack, Route Architecture, Database Schema, Row-Level Security, Application Flows, UI Specifications, External Integrations, Acceptance Criteria, and Build Order. These ten sections are non-negotiable. Every section serves a purpose. None are optional.",
       },
       {
         heading: "Portable and Executable",
@@ -169,6 +194,7 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter VIII — Weekly Cohorts",
     title: "The Operating Rhythm",
     subtitle: "Execution is not optional. Neither is attendance.",
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "Why Weekly, Not Daily or Monthly",
@@ -209,10 +235,11 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter X — Architect Leads",
     title: "The Leadership Layer",
     subtitle: "Certified operators who run the protocol.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "Selection, Not Application",
-        body: "You cannot apply to become an Architect Lead. You are selected. The Chief Architect identifies members who demonstrate three qualities: (1) Consistent execution — they ship every week, without exception. (2) Protocol adherence — they follow the system without trying to customize it. (3) Accountable presence — they hold others to standard without ego or emotion. These qualities cannot be taught in a course. They are observed over time.",
+        body: "You cannot apply to become an Architect Lead. You are selected. The Chief Architect identifies members who demonstrate three qualities: (1) Consistent execution — they ship every week, without exception. (2) Protocol adherence — they follow the system without trying to customize it. (3) Accountable presence — they hold others to standard without ego or emotion. These qualities cannot be taught. They are observed over time.",
       },
       {
         heading: "The Lead's Mandate",
@@ -249,166 +276,166 @@ export const magazinePages: MagazinePage[] = [
     chapter: "Chapter XII — Session Memory",
     title: "Context That Compounds",
     subtitle: "Your AI doesn't forget you between sessions.",
+    image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
-        heading: "The Memory Architecture",
-        body: "Every time you use the Prompt Engine, your session context is saved. This includes your project parameters, stack preferences, previous generations, and iteration history. When you return — whether it's tomorrow or next month — the Engine picks up exactly where you left off. No re-explaining your project. No re-establishing your preferences. No starting from scratch.",
+        heading: "The Problem with Stateless AI",
+        body: "Every time you start a new chat with a consumer AI tool, you begin from zero. You re-explain your stack. You re-describe your project. You re-establish context that should never have been lost. This is not a feature — it's a fundamental design flaw. Stateless AI is a toy. Stateful AI is a tool.",
       },
       {
-        heading: "Why Memory Changes Everything",
-        body: "Without memory, every AI interaction is isolated. You spend the first 20% of every session re-establishing context. Over a year, that's hundreds of hours of redundant communication. With persistent memory, Session 50 has the full benefit of Sessions 1 through 49. Your prompts get sharper. Your outputs get more precise. Your architecture gets more sophisticated. This is compounding applied to AI-assisted development.",
+        heading: "How Session Memory Works",
+        body: "The Prompt Engine maintains a JSON context object for every project session you create. This context stores your product name, target user, offer structure, monetization model, integration stack, and constraints. Every generation reads from this context first. Your preferences and architectural decisions persist across every session, every week, indefinitely.",
       },
       {
-        heading: "Token Tracking and Usage",
-        body: "Every generation is tracked — tokens used, session ID, timestamp. This isn't just for billing. It gives you a complete audit trail of your architectural evolution. You can see how your prompts have matured. You can trace the lineage of your current architecture back to its first generation. Your development history becomes a structured dataset, not a scattered chat log.",
+        heading: "The Compounding Advantage",
+        body: "A builder using the Engine for six months has a fundamentally different tool than a new member. The context has been refined over dozens of sessions. The architectural patterns have been established. The output quality compounds because the input context compounds. This is not loyalty points — it's structural advantage built through consistent use of a memory-enabled system.",
       },
     ],
   },
   {
     pageNumber: 14,
-    chapter: "Chapter XIII — The Board",
-    title: "Structured Discourse, Not Social Media",
-    subtitle: "A discussion system built for operators.",
+    chapter: "Chapter XIII — The Chief Architect",
+    title: "The Authority at the Center",
+    subtitle: "One person. One standard. No committees.",
     sections: [
       {
-        heading: "Not a Forum, Not a Feed",
-        body: "The PFSW Board is not Slack. It's not Discord. It's not Reddit. It's a structured discussion platform where members post with intent. Every post has a title, a body, and tags. Posts are organized by board — dedicated spaces for different topics. There's no infinite scroll. No dopamine-optimized feed. No vanity metrics. Just structured discourse between operators.",
+        heading: "Why Centralized Authority Works",
+        body: "Committees produce mediocrity. When everyone has a vote, standards get diluted. When everyone has input, clarity gets lost. PFSW operates on a single-authority model. The Chief Architect sets the standard. The Chief Architect approves Leads. The Chief Architect maintains the library. The Chief Architect makes final calls on membership reviews. This is not a democracy. It's an institution.",
       },
       {
-        heading: "Moderation Architecture",
-        body: "Every post and comment is moderated. Not by algorithms — by the architecture team. Posts that don't meet quality standards are flagged. Comments that are off-topic or unconstructive are addressed. This creates an environment where signal-to-noise ratio is exceptionally high. When you read a post on the Board, you know it's been through a quality filter. Your attention is respected.",
+        heading: "The Responsibility Structure",
+        body: "The Chief Architect is not just an authority figure — they are accountable for every outcome. If the library quality declines, that is the Chief Architect's failure. If attendance systems fail, that is the Chief Architect's responsibility. If the protocol drifts, the Chief Architect corrects it. Authority and accountability are inseparable. This is what separates leadership from management.",
       },
       {
-        heading: "Voting and Signal",
-        body: "Members can upvote posts they find valuable. But unlike social platforms, votes don't determine visibility through an algorithm. They serve as signal — indicating which topics resonate with the membership. Highly-voted posts surface naturally because other members reference them. The voting system amplifies quality without creating a popularity contest.",
+        heading: "Accessibility Without Familiarity",
+        body: "The Chief Architect is accessible. You can reach them. You can submit work for their review. You can flag concerns through proper channels. But accessibility is not familiarity. The Chief Architect does not operate as a peer, a friend, or a mentor to individual members. They operate as the institutional authority — present, available, and impartial.",
       },
     ],
   },
   {
     pageNumber: 15,
-    chapter: "Chapter XIV — Security Architecture",
-    title: "Your Data, Your Architecture, Protected",
-    subtitle: "Enterprise-grade security for individual builders.",
+    chapter: "Chapter XIV — Moderation",
+    title: "Standards That Cannot Be Negotiated",
+    subtitle: "The invisible infrastructure of institutional integrity.",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
-        heading: "Row-Level Security",
-        body: "Every table in the PFSW database is protected by Row-Level Security (RLS) policies. This means your data is isolated at the database level — not just the application level. Even if someone bypassed the UI entirely and queried the database directly, they would only see their own data. Your prompts, your sessions, your context — all protected by cryptographic user isolation.",
+        heading: "Why Moderation Is Infrastructure",
+        body: "Every post in the board. Every comment in a thread. Every interaction on the platform. They either reinforce the institutional standard or they erode it. There is no neutral action. Moderation is not about censorship — it's about maintaining the signal-to-noise ratio that makes the platform valuable. One low-quality post pollutes the feed for every other member.",
       },
       {
-        heading: "Authentication Architecture",
-        body: "PFSW uses institutional-grade authentication. Email verification is mandatory — no auto-confirm shortcuts. Session tokens are managed with industry-standard JWT protocols. Password policies enforce minimum complexity. Every authentication event is logged. We don't cut corners on identity verification because your intellectual property deserves real protection.",
+        heading: "The Moderation Protocol",
+        body: "Violations are documented. Every action taken by a moderator is logged in the moderation ledger with timestamp, actor, target, and reason. This isn't bureaucracy — it's accountability for the accounters. If a moderation decision is ever disputed, the ledger provides the full context. Moderation without documentation is just power. Documented moderation is governance.",
       },
       {
-        heading: "Payment Security",
-        body: "All payment processing is handled through Stripe — the same infrastructure used by Amazon, Google, and Shopify. We never see your card number. We never store payment credentials. Every transaction is encrypted end-to-end. Your $5 application fee and your $197 monthly membership are processed through PCI-DSS Level 1 compliant infrastructure.",
+        heading: "Moderation as Quality Signal",
+        body: "The members of PFSW know their posts will be reviewed. This knowledge raises the quality of every submission. When people know their work will be evaluated against a standard, they meet that standard more often. The moderation layer doesn't just remove bad content — it elevates the quality of content that was never going to need removal.",
       },
     ],
   },
   {
     pageNumber: 16,
-    chapter: "Chapter XV — The Technology Stack",
-    title: "What Powers the Machine",
-    subtitle: "Modern infrastructure for modern builders.",
+    chapter: "Chapter XV — Data Architecture",
+    title: "Security By Design",
+    subtitle: "Row-level security, access control, and institutional data integrity.",
     sections: [
       {
-        heading: "Frontend Architecture",
-        body: "PFSW is built on React with TypeScript — the same stack used by Meta, Airbnb, and Stripe. The UI is built with Tailwind CSS for consistent design tokens, shadcn/ui for accessible components, and Framer Motion for intentional animations. Every interface element follows a strict design system. No random colors. No inconsistent spacing. No amateur aesthetics.",
+        heading: "Why RLS Matters",
+        body: "Row-Level Security is not an IT concern — it's an institutional design principle. In a system where membership status determines access, where role determines capability, where data belongs to individuals and institutions simultaneously, security cannot be bolted on after the fact. It must be designed in from the beginning. PFSW's entire data architecture was built around RLS as a first principle.",
       },
       {
-        heading: "Backend Infrastructure",
-        body: "The backend runs on Lovable Cloud — a managed infrastructure layer that provides database management, authentication, file storage, edge functions, and real-time capabilities. This means zero DevOps overhead. No server management. No database administration. No infrastructure anxiety. The platform handles the plumbing so you can focus on architecture.",
+        heading: "The Access Hierarchy",
+        body: "Every data operation in PFSW is governed by a three-tier access model: Members access their own data and shared institutional content. Architect Leads access cohort data and attendance records. The Chief Architect accesses everything. No role can exceed its permissions. No exception can be granted at runtime. The architecture enforces the hierarchy — not policies, not honor systems, not trust.",
       },
       {
-        heading: "AI Integration Layer",
-        body: "The Prompt Engine is powered by a multi-model AI gateway that routes requests to the optimal model for each task. Complex architectural reasoning uses frontier models. Simple classification tasks use efficient models. The system automatically selects the right model for the right job. You get the best output at the lowest latency without having to think about model selection.",
+        heading: "Your Data, Your Record",
+        body: "Your sessions, your generations, your submissions, your attendance record — this data belongs to you as a functional record of your membership. It compounds over time. It represents the proof of your execution. When you've been a member for a year, your data tells the story of your development as a builder more accurately than any testimonial you could write.",
       },
     ],
   },
   {
     pageNumber: 17,
-    chapter: "Chapter XVI — Workflow Architecture",
-    title: "A Day in the Life of a PFSW Member",
-    subtitle: "What structured execution actually looks like.",
+    chapter: "Chapter XVI — The Board",
+    title: "Structured Communication",
+    subtitle: "A member forum built for operators, not audiences.",
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
-        heading: "Monday: Session Day",
-        body: "Your cohort session is locked to the same time slot every week. You arrive. Roll is called. You report what you shipped. During Hot Seats, you present your current blocker or you support another member presenting theirs. At the end, you declare your commitment for the week. The session ends. You have your marching orders. No ambiguity. No 'I'll figure out what to work on later.' You know exactly what to build.",
+        heading: "Not a Social Network",
+        body: "The PFSW board is not Twitter. It's not a Slack channel. It's not a place to broadcast. It's a structured communication layer for active members to share work, ask specific questions, and receive feedback from peers who are operating at the same level. The board has categories. Every post belongs to a category. Misfiled or off-topic posts are corrected.",
       },
       {
-        heading: "Tuesday–Friday: Build Cycle",
-        body: "You open the Prompt Engine. Your context is loaded. You generate a structured prompt for your commitment. You paste it into your development environment. You build. When you hit a wall, you check the Library for relevant packages. When you need feedback, you post to the Board. When you need structured help, you prepare a Hot Seat brief for next week's session. Every action has a designated channel.",
+        heading: "Votes as Quality Signal",
+        body: "The voting system serves one purpose: surface the most useful content for other members. A high-voted post is not popular — it's valuable. The distinction matters. Popularity rewards engagement bait. Value rewards substance. PFSW's voting system is calibrated to distinguish between the two because members are builders, not audiences.",
       },
       {
-        heading: "Weekend: Review and Prepare",
-        body: "You review your output for the week. You prepare your Roll Call report — what you shipped, what you learned, what you're carrying forward. If you have a prompt worth submitting, you submit it through the pipeline. If you completed your commitment, you plan next week's scope. This is the rhythm. It doesn't vary. It doesn't depend on inspiration. It runs.",
+        heading: "The Rules of Engagement",
+        body: "Posts must be actionable or specific. Vague requests for 'feedback on my project' without context will be removed. Complaints without proposed solutions will be removed. Self-promotion without demonstrated value will be removed. The board is for operators sharing operational intelligence — not for building personal brands within the institution.",
       },
     ],
   },
   {
     pageNumber: 18,
-    chapter: "Chapter XVII — Results Architecture",
-    title: "What 90 Days Looks Like",
-    subtitle: "The compound effect of structured execution.",
+    chapter: "Chapter XVII — Long-Term Vision",
+    title: "Where PFSW Is Going",
+    subtitle: "The architecture of the next phase.",
     sections: [
       {
-        heading: "Month 1: Foundation",
-        body: "In your first month, you attend four cohort sessions. You make four public commitments. You ship four structured outputs. You generate your first batch of Engine prompts. You learn the protocol. You internalize the rhythm. You might resist the structure — that's normal. By week 3, you stop resisting and start operating. Most members report more output in Month 1 than the previous three months combined.",
+        heading: "Certification Programs",
+        body: "The long-term vision includes a formal certification track — not credentials for a resume, but demonstrated competency in structured prompt architecture. A certified PFSW Prompt Architect has produced a body of work that meets institutional standards, has been reviewed by the Chief Architect, and represents a verifiable level of technical and architectural capability. Certifications will be earned. Not purchased.",
       },
       {
-        heading: "Month 2: Acceleration",
-        body: "By Month 2, the Engine knows your project deeply. Your prompts are sharper. Your session context is rich. You're not explaining yourself anymore — you're iterating. Your cohort knows your project. Hot Seat feedback becomes surgical. You start seeing connections between other members' architectures and your own. The compound effect becomes tangible.",
+        heading: "Enterprise Integration",
+        body: "The OpenClaw standard was designed from the beginning to be enterprise-compatible. As the standard matures, PFSW will offer institutional access for development teams — bringing the same structured prompt architecture that individual members use to engineering organizations building production systems. The individual member is not the end state. The institution is.",
       },
       {
-        heading: "Month 3: Architecture",
-        body: "By Month 3, you have a body of work. Twelve sessions. Twelve commitments. Twelve shipped outputs. A library of generated prompts tied to your specific project. A track record of execution that you can see, measure, and build on. Some members have shipped entire MVPs. Others have restructured existing products from scratch. All of them have something they didn't have before: a system that works regardless of how they feel.",
+        heading: "Cohort Expansion",
+        body: "As the institution grows, the cohort model will expand with specialization tracks — SaaS builders, agency operators, internal tooling architects, and enterprise developers will operate in cohorts optimized for their specific execution context. The protocol remains constant. The content adapts. The standard never moves.",
       },
     ],
   },
   {
     pageNumber: 19,
-    chapter: "Chapter XVIII — Institutional Philosophy",
-    title: "The Beliefs That Drive the System",
-    subtitle: "First principles of the PFSW doctrine.",
+    chapter: "Chapter XVIII — Who Belongs Here",
+    title: "The Profile of a PFSW Member",
+    subtitle: "Not everyone. The right ones.",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
-        heading: "Belief 1: Execution > Ideas",
-        body: "Ideas are abundant. Execution is scarce. The world doesn't need more brainstorming — it needs more shipping. PFSW is built entirely around execution. We don't workshop ideas. We don't explore possibilities. We build things. Every tool, every process, every policy is designed to move you from concept to deployed output as fast as architecturally possible.",
+        heading: "The Builder Who Ships",
+        body: "You are already building something. Not planning to build. Not thinking about building. You are actively in the work. You have a product, a project, or a client system that you are responsible for shipping. PFSW is not an incubator for ideas — it is infrastructure for builders already in motion.",
       },
       {
-        heading: "Belief 2: Structure > Motivation",
-        body: "Motivation is a depreciating asset. It's highest at the start and decays over time. Structure is a constant. It produces the same result on Day 1 and Day 365. We don't try to motivate our members. We don't send inspirational emails. We don't host rah-rah calls. We provide a structure that produces output whether you're motivated or not. That's the entire point.",
+        heading: "The Person Who Can Be Held Accountable",
+        body: "You can receive direct feedback without interpreting it as personal attack. You can hear 'that approach won't work' without shutting down. You can be challenged on your decisions without requiring emotional management from the person challenging you. This isn't emotional toughness for its own sake — it's the prerequisite for operating in an accountable environment.",
       },
       {
-        heading: "Belief 3: Density > Scale",
-        body: "We will never optimize for member count. We will always optimize for member quality. A cohort of 8 committed operators produces more collective value than a Slack group of 8,000 lurkers. We maintain density by maintaining standards. The application filter, the attendance policy, the pricing — everything is designed to ensure that every person in the room is someone who ships.",
-      },
-      {
-        heading: "Belief 4: Systems > People",
-        body: "This is the founding thesis. Not that people don't matter — they do. But people are variable. People have bad days, bad weeks, bad months. Systems don't. A well-designed system produces consistent output regardless of the humans inside it. PFSW is the system. You are the operator. Together, we produce what neither could alone.",
+        heading: "The Operator Who Follows Protocol",
+        body: "You are not joining to redesign the system. You are not here to suggest improvements to the session format. You are not here to negotiate the attendance policy. You are here to operate within a structure that was designed to produce results. If you cannot follow a protocol you didn't design, PFSW is not the right institution for you. That is not a criticism. It is a precise match/mismatch assessment.",
       },
     ],
   },
   {
     pageNumber: 20,
-    chapter: "Epilogue",
-    title: "The Decision",
-    subtitle: "You've read the manual. Now choose.",
+    chapter: "Chapter XIX — The Decision",
+    title: "You Already Know.",
+    subtitle: "The only question is whether you'll act on it.",
     sections: [
       {
-        body: "You've now read the complete operating doctrine of PFSW. You understand the application process, the pricing rationale, the technology stack, the cohort structure, the accountability mechanisms, and the philosophical foundations. Nothing has been hidden. Nothing has been softened.",
+        heading: "You Wouldn't Be Here Otherwise",
+        body: "You have read 20 pages of doctrine. You have absorbed the philosophy, the architecture, the standards, the expectations, and the consequences. You did not skim. You did not close the browser. Something in this system resonates with the part of you that already knows: the way you've been working isn't working. You don't need more proof. You need a decision.",
       },
       {
-        body: "This is not a platform that will adapt to your preferences. This is a system that will hold you to a standard. It will not celebrate your intentions. It will measure your output. It will not applaud your plans. It will track your commitments.",
+        heading: "What Happens Next",
+        body: "If you activate your membership, you'll be assigned to a cohort within your first 48 hours. You'll receive your first session date. You'll access the Prompt Engine, the Library, and the Board immediately. You'll begin your first session by stating what you're building and what you shipped last week. The system starts working the moment you enter it.",
       },
       {
-        body: "If you've read this far, you're probably one of two people. The first person is looking for a reason to say no. They'll find one. The structure is too rigid. The price is too high. The attendance policy is too strict. They'll go back to what they were doing before — and get the same results they've always gotten.",
+        heading: "What Happens If You Don't",
+        body: "You go back to working the way you've been working. Maybe you find another system. Maybe you build something on your own. Maybe you execute perfectly without any of this. Some people do. But you've read 20 pages of doctrine on a platform you're not yet paying for, at a step in the process specifically designed to give you every reason to say yes. That's not a coincidence. That's evidence.",
       },
       {
-        body: "The second person recognizes themselves in these pages. They see the failure patterns and feel the sting of recognition. They understand that what they've been missing isn't another tool, another course, or another community. It's a system. An operating rhythm. An institution that demands execution and provides the architecture to achieve it.",
-      },
-      {
-        heading: "Your Move",
-        body: "The application takes five minutes. The fee is $5. The review takes 48 hours. If you're accepted, you'll activate your membership, choose your cohort, and begin operating within the system that has already been built for you. The infrastructure is running. The cohorts are active. The Engine is waiting. The only variable left is you.",
+        heading: "People Fail. Systems Work. No One Is Bigger Than The Program.",
+        body: "This is not a tagline. It is the operating principle of every decision made inside PFSW — from the application fee to the attendance policy to the moderation standards to the pricing. Everything is downstream of this principle. If you believe it — truly believe it, not just intellectually but operationally — then you already know what you're going to do.",
       },
     ],
   },

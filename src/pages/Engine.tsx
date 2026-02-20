@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthGate } from "@/components/AuthGate";
@@ -38,9 +38,10 @@ Return only the final build prompt — nothing else.`;
 const DAILY_LIMIT = 50;
 
 export default function Engine() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Left panel fields
   const [productName, setProductName] = useState("");
@@ -68,6 +69,18 @@ export default function Engine() {
     loadSessions();
     checkUsage();
   }, []);
+
+  // After payment verification, redirect to choose-cohort if no cohort assigned
+  useEffect(() => {
+    const membershipSessionId = searchParams.get("membership_session_id");
+    if (membershipSessionId && profile && !profile.cohort_id) {
+      // Give a moment for payment verification to complete, then redirect
+      const timer = setTimeout(() => {
+        navigate("/choose-cohort", { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, profile, navigate]);
 
   // Load library prompt into engine if navigated with ?loadPrompt=<id>
   useEffect(() => {
