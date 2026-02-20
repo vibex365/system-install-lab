@@ -64,7 +64,7 @@ serve(async (req) => {
     }
     const userId = authData.claims.sub;
 
-    const { agent_id, lease_id, input } = await req.json();
+    const { agent_id, lease_id, input, schedule } = await req.json();
 
     // Verify active lease
     const { data: lease } = await serviceSupabase
@@ -77,6 +77,27 @@ serve(async (req) => {
 
     if (!lease) {
       return new Response(JSON.stringify({ error: "No active lease found for this agent." }), { status: 403, headers: corsHeaders });
+    }
+
+    // If a schedule (cron expression) was provided, calculate next_run_at and persist to the lease
+    if (schedule) {
+      let nextRunAt: Date | null = null;
+      const now = new Date();
+      if (schedule === "0 9 * * *") {
+        // Daily at 9am UTC — next occurrence tomorrow
+        nextRunAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 9, 0, 0));
+      } else if (schedule === "0 9 * * 1") {
+        // Weekly on Monday at 9am UTC — find next Monday
+        const daysUntilMonday = (8 - now.getUTCDay()) % 7 || 7;
+        nextRunAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilMonday, 9, 0, 0));
+      }
+
+      if (nextRunAt) {
+        await serviceSupabase
+          .from("agent_leases")
+          .update({ schedule, next_run_at: nextRunAt.toISOString() })
+          .eq("id", lease_id);
+      }
     }
 
     // Get agent details
@@ -357,7 +378,20 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
       agent_run_id: run?.id,
     });
 
-    return new Response(JSON.stringify({ success: true, result, run_id: run?.id }), {
+    // Fetch updated lease to return next_run_at
+    const { data: updatedLease } = await serviceSupabase
+      .from("agent_leases")
+      .select("schedule, next_run_at")
+      .eq("id", lease_id)
+      .maybeSingle();
+
+    return new Response(JSON.stringify({
+      success: true,
+      result,
+      run_id: run?.id,
+      schedule: updatedLease?.schedule ?? null,
+      next_run_at: updatedLease?.next_run_at ?? null,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

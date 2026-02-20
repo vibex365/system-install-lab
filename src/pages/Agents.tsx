@@ -88,6 +88,8 @@ interface AgentLease {
   agent_id: string;
   status: string;
   leased_at: string;
+  schedule: string | null;
+  next_run_at: string | null;
 }
 
 interface AgentRun {
@@ -165,6 +167,7 @@ function RunAgentModal({
   const [copied, setCopied] = useState(false);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleFreq, setScheduleFreq] = useState<"daily" | "weekly">("weekly");
+  const [nextRunAt, setNextRunAt] = useState<string | null>(lease.next_run_at || null);
 
   const handleReset = () => {
     setResult(null);
@@ -192,8 +195,10 @@ function RunAgentModal({
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.result);
-      if (scheduleEnabled) {
-        toast({ title: `${agent.name} scheduled`, description: `Will run ${scheduleFreq} — you'll get a notification when it completes.` });
+      if (scheduleEnabled && data?.next_run_at) {
+        setNextRunAt(data.next_run_at);
+        const nextDate = new Date(data.next_run_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+        toast({ title: `${agent.name} scheduled`, description: `Next run: ${nextDate}` });
       }
       onRunComplete();
     } catch (e: any) {
@@ -308,6 +313,14 @@ function RunAgentModal({
                         {f.charAt(0).toUpperCase() + f.slice(1)}
                       </button>
                     ))}
+                  </div>
+                )}
+                {nextRunAt && !scheduleEnabled && (
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <Clock className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] text-primary font-medium">
+                      Next run: {new Date(nextRunAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })}
+                    </span>
                   </div>
                 )}
               </div>
