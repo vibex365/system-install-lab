@@ -16,6 +16,7 @@ import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
+  ArrowRight,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -98,30 +99,77 @@ interface AgentRun {
   input_payload: Record<string, string> | null;
 }
 
+// Parse lead prospector text output into structured rows
+function parseLeads(text: string): { name: string; phone: string; email: string; website: string; notes: string }[] {
+  const lines = text.split("\n");
+  const leads: { name: string; phone: string; email: string; website: string; notes: string }[] = [];
+  let current: Record<string, string> = {};
+
+  const flush = () => {
+    if (current.name) {
+      leads.push({
+        name: current.name || "",
+        phone: current.phone || "Research needed",
+        email: current.email || "Research needed",
+        website: current.website || "",
+        notes: current.notes || "",
+      });
+      current = {};
+    }
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^-?\s*Business Name[:\s]/i.test(trimmed)) {
+      flush();
+      current.name = trimmed.replace(/^-?\s*Business Name[:\s]*/i, "").trim();
+    } else if (/^-?\s*Phone[:\s]/i.test(trimmed)) {
+      current.phone = trimmed.replace(/^-?\s*Phone[:\s]*/i, "").trim();
+    } else if (/^-?\s*Email[:\s]/i.test(trimmed)) {
+      current.email = trimmed.replace(/^-?\s*Email[:\s]*/i, "").trim();
+    } else if (/^-?\s*Website[:\s]/i.test(trimmed)) {
+      current.website = trimmed.replace(/^-?\s*Website[:\s]*/i, "").trim();
+    } else if (/^-?\s*Notes[:\s]/i.test(trimmed)) {
+      current.notes = trimmed.replace(/^-?\s*Notes[:\s]*/i, "").trim();
+    }
+  }
+  flush();
+  return leads;
+}
+
 function RunAgentModal({
   agent,
   lease,
   open,
   onClose,
   onRunComplete,
+  onHandoffToProposal,
+  initialValues,
 }: {
   agent: Agent;
   lease: AgentLease;
   open: boolean;
   onClose: () => void;
   onRunComplete: () => void;
+  onHandoffToProposal?: (businessName: string, url: string) => void;
+  initialValues?: Record<string, string>;
 }) {
   const { toast } = useToast();
   const inputConfigs = AGENT_INPUTS[agent.slug] || [];
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [formValues, setFormValues] = useState<Record<string, string>>(initialValues || {});
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleReset = () => {
     setResult(null);
-    setFormValues({});
+    setFormValues(initialValues || {});
   };
+
+  // Sync initial values when switching agents (e.g. lead→proposal handoff)
+  useEffect(() => {
+    if (initialValues) setFormValues(initialValues);
+  }, [agent.id, JSON.stringify(initialValues)]);
 
   const handleClose = () => {
     handleReset();
@@ -245,7 +293,64 @@ function RunAgentModal({
                   </Button>
                 </div>
               </div>
-              <div className="bg-muted/50 border border-border rounded-md p-4 max-h-[400px] overflow-y-auto">
+
+              {/* Lead Prospector: parsed lead table with handoff buttons */}
+              {agent.slug === "lead-prospector" && (() => {
+                const leads = parseLeads(result!);
+                if (leads.length > 0) return (
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {leads.length} leads found — click → Proposal to generate a rebuild pitch
+                    </p>
+                    <div className="rounded-md border border-border overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/40">
+                            <th className="text-left p-2 text-[10px] font-semibold text-muted-foreground">Business</th>
+                            <th className="text-left p-2 text-[10px] font-semibold text-muted-foreground hidden sm:table-cell">Website</th>
+                            <th className="text-left p-2 text-[10px] font-semibold text-muted-foreground hidden md:table-cell">Phone</th>
+                            <th className="p-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {leads.map((lead, i) => (
+                            <tr key={i} className="hover:bg-muted/20 transition-colors">
+                              <td className="p-2 font-medium text-foreground">{lead.name}</td>
+                              <td className="p-2 text-muted-foreground hidden sm:table-cell max-w-[150px] truncate">
+                                {lead.website && lead.website !== "Research needed" ? (
+                                  <a href={lead.website} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                    {lead.website.replace(/^https?:\/\//, "").slice(0, 30)}
+                                  </a>
+                                ) : <span className="text-muted-foreground/50 italic">No website</span>}
+                              </td>
+                              <td className="p-2 text-muted-foreground hidden md:table-cell">{lead.phone}</td>
+                              <td className="p-2">
+                                {onHandoffToProposal && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 text-[10px] px-2 gap-1 border-primary/40 text-primary hover:bg-primary/10"
+                                    onClick={() => {
+                                      onHandoffToProposal(lead.name, lead.website || "");
+                                      onClose();
+                                    }}
+                                  >
+                                    → Proposal
+                                    <ArrowRight className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+                return null;
+              })()}
+
+              <div className="bg-muted/50 border border-border rounded-md p-4 max-h-[300px] overflow-y-auto">
                 <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-mono">
                   {result}
                 </pre>
@@ -492,6 +597,7 @@ function AgentsContent() {
   const [leasingId, setLeasingId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [runModalAgent, setRunModalAgent] = useState<Agent | null>(null);
+  const [proposalPrefill, setProposalPrefill] = useState<{ business_name: string; url: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -652,8 +758,18 @@ function AgentsContent() {
           agent={runModalAgent}
           lease={runModalLease}
           open={!!runModalAgent}
-          onClose={() => setRunModalAgent(null)}
+          onClose={() => { setRunModalAgent(null); setProposalPrefill(null); }}
           onRunComplete={fetchData}
+          initialValues={proposalPrefill || undefined}
+          onHandoffToProposal={(() => {
+            const proposalAgent = agents.find((a) => a.slug === "website-proposal");
+            const proposalLease = proposalAgent ? getActiveLease(proposalAgent.id) : null;
+            if (!proposalAgent || !proposalLease) return undefined;
+            return (businessName: string, url: string) => {
+              setProposalPrefill({ business_name: businessName, url });
+              setRunModalAgent(proposalAgent);
+            };
+          })()}
         />
       )}
     </div>
