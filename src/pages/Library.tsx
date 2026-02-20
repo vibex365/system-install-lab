@@ -16,7 +16,7 @@ export default function Library() {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<any[]>([]);
   const [prompts, setPrompts] = useState<any[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<string>("all");
+  const [selectedPkg, setSelectedPkg] = useState<string>("client-web");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "title">("newest");
   const [loading, setLoading] = useState(true);

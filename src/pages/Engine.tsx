@@ -325,7 +325,7 @@ export default function Engine() {
   const [mvpIntegrations, setMvpIntegrations] = useState("");
   const [constraints, setConstraints] = useState("");
   const [category, setCategory] = useState("");
-  const [packages, setPackages] = useState<{ id: string; slug: string; name: string }[]>([]);
+  // packages loaded statically — no DB fetch needed
 
   // ── Website Builder fields
   const [clientUrl, setClientUrl] = useState("");
@@ -373,7 +373,6 @@ export default function Engine() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    supabase.from("prompt_packages").select("id, slug, name").then(({ data }) => setPackages(data || []));
     loadSessions();
     checkUsage();
   }, []);
@@ -820,15 +819,18 @@ Generate a complete Lovable-ready UI/UX design improvement prompt.`;
                         <Field label="Constraints">
                           <Input value={constraints} onChange={(e) => setConstraints(e.target.value)} placeholder="e.g. No webhooks, MVP only" className="bg-background border-border" />
                         </Field>
-                        <Field label="Category">
+                        <Field label="Project Type">
                           <Select value={category} onValueChange={setCategory}>
                             <SelectTrigger className="bg-background border-border">
-                              <SelectValue placeholder="Select package" />
+                              <SelectValue placeholder="Select project type" />
                             </SelectTrigger>
                             <SelectContent>
-                              {packages.map((p) => (
-                                <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
-                              ))}
+                              <SelectItem value="client-web">Web Design — Client Sites</SelectItem>
+                              <SelectItem value="saas">Web Apps & SaaS</SelectItem>
+                              <SelectItem value="mvp">MVP Builds</SelectItem>
+                              <SelectItem value="ecom">E-Commerce & Shopify</SelectItem>
+                              <SelectItem value="agency">Agency & Lead Gen</SelectItem>
+                              <SelectItem value="internal-tools">Internal Tools & Dashboards</SelectItem>
                             </SelectContent>
                           </Select>
                         </Field>
