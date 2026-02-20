@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.verify-agent-lease]
 verify_jwt = false
+
+[functions.run-agent]
+verify_jwt = false
