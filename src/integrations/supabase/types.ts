@@ -14,6 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_leases: {
+        Row: {
+          agent_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          leased_at: string
+          status: string
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          leased_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          leased_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_leases_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_runs: {
+        Row: {
+          agent_id: string
+          id: string
+          input_payload: Json | null
+          job_id: string | null
+          lease_id: string
+          result_summary: string | null
+          status: string
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          input_payload?: Json | null
+          job_id?: string | null
+          lease_id: string
+          result_summary?: string | null
+          status?: string
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          input_payload?: Json | null
+          job_id?: string | null
+          lease_id?: string
+          result_summary?: string | null
+          status?: string
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_runs_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "agent_leases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          example_output: string | null
+          headline: string
+          icon_name: string
+          id: string
+          job_type: string
+          name: string
+          price_cents: number
+          slug: string
+          status: string
+          stripe_price_id: string | null
+          updated_at: string
+          use_cases: string[]
+          what_it_does: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          example_output?: string | null
+          headline: string
+          icon_name?: string
+          id?: string
+          job_type: string
+          name: string
+          price_cents?: number
+          slug: string
+          status?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+          use_cases?: string[]
+          what_it_does: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          example_output?: string | null
+          headline?: string
+          icon_name?: string
+          id?: string
+          job_type?: string
+          name?: string
+          price_cents?: number
+          slug?: string
+          status?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+          use_cases?: string[]
+          what_it_does?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           admin_notes: string | null
