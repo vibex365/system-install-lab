@@ -31,6 +31,8 @@ import AdminSubmissions from "./pages/admin/AdminSubmissions";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminModLog from "./pages/admin/AdminModLog";
+import AdminAgents from "./pages/admin/AdminAgents";
+import Agents from "./pages/Agents";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,7 @@ const App = () => (
             {/* Member routes */}
             <Route path="/engine" element={<Engine />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/agents" element={<Agents />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/magazine/inside" element={<MagazineInside />} />
             <Route path="/choose-cohort" element={<ChooseCohort />} />
@@ -77,6 +80,7 @@ const App = () => (
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/modlog" element={<AdminModLog />} />
+            <Route path="/admin/agents" element={<AdminAgents />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

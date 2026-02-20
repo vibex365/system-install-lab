@@ -39,6 +39,7 @@ export function Navbar() {
     <>
       <Link to="/engine" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
       <Link to="/library" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+      <Link to="/agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
       <Link to="/magazine/inside" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Magazine</Link>
     </>
   );
@@ -104,6 +105,7 @@ export function Navbar() {
               <>
                 <Link to="/engine" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
                 <Link to="/library" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+                <Link to="/agents" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
                 <Link to="/magazine/inside" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Magazine</Link>
               </>
             )}
