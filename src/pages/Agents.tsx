@@ -12,11 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
-  ArrowRight,
+  ArrowRight, Info,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -145,6 +146,7 @@ function RunAgentModal({
   onRunComplete,
   onHandoffToProposal,
   initialValues,
+  isHandoff,
 }: {
   agent: Agent;
   lease: AgentLease;
@@ -153,6 +155,7 @@ function RunAgentModal({
   onRunComplete: () => void;
   onHandoffToProposal?: (businessName: string, url: string) => void;
   initialValues?: Record<string, string>;
+  isHandoff?: boolean;
 }) {
   const { toast } = useToast();
   const inputConfigs = AGENT_INPUTS[agent.slug] || [];
@@ -160,6 +163,8 @@ function RunAgentModal({
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduleFreq, setScheduleFreq] = useState<"daily" | "weekly">("weekly");
 
   const handleReset = () => {
     setResult(null);
@@ -180,12 +185,16 @@ function RunAgentModal({
     setRunning(true);
     setResult(null);
     try {
+      const scheduleValue = scheduleEnabled ? (scheduleFreq === "daily" ? "0 9 * * *" : "0 9 * * 1") : undefined;
       const { data, error } = await supabase.functions.invoke("run-agent", {
-        body: { agent_id: agent.id, lease_id: lease.id, input: formValues },
+        body: { agent_id: agent.id, lease_id: lease.id, input: formValues, schedule: scheduleValue },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.result);
+      if (scheduleEnabled) {
+        toast({ title: `${agent.name} scheduled`, description: `Will run ${scheduleFreq} — you'll get a notification when it completes.` });
+      }
       onRunComplete();
     } catch (e: any) {
       toast({ title: "Agent error", description: e.message, variant: "destructive" });
@@ -217,6 +226,19 @@ function RunAgentModal({
         <div className="space-y-4">
           {!result ? (
             <>
+              {/* Handoff banner — shown when pre-filled from Lead Prospector */}
+              {isHandoff && initialValues?.business_name && (
+                <div className="flex items-start gap-2.5 bg-primary/10 border border-primary/30 rounded-md p-3">
+                  <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-primary">Pre-filled from Lead Prospector</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Business name and URL have been carried over for <span className="text-foreground font-medium">{initialValues.business_name}</span>. Review and run when ready.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">{agent.headline}</p>
 
               {inputConfigs.length === 0 ? (
@@ -262,6 +284,34 @@ function RunAgentModal({
                 </div>
               )}
 
+              {/* Schedule toggle */}
+              <div className="border border-border rounded-md p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">Schedule recurring runs</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Run automatically and notify you on Engine</p>
+                  </div>
+                  <Switch checked={scheduleEnabled} onCheckedChange={setScheduleEnabled} />
+                </div>
+                {scheduleEnabled && (
+                  <div className="flex gap-2">
+                    {(["daily", "weekly"] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setScheduleFreq(f)}
+                        className={`flex-1 py-1.5 rounded-md text-[11px] font-medium border transition-colors ${
+                          scheduleFreq === f
+                            ? "bg-primary/20 text-primary border-primary/40"
+                            : "bg-transparent text-muted-foreground border-border hover:text-foreground"
+                        }`}
+                      >
+                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <Button onClick={handleRun} disabled={running} className="w-full">
                 {running ? (
                   <>
@@ -271,7 +321,7 @@ function RunAgentModal({
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />
-                    Run {agent.name}
+                    {scheduleEnabled ? `Run & Schedule ${scheduleFreq}` : `Run ${agent.name}`}
                   </>
                 )}
               </Button>
@@ -761,6 +811,7 @@ function AgentsContent() {
           onClose={() => { setRunModalAgent(null); setProposalPrefill(null); }}
           onRunComplete={fetchData}
           initialValues={proposalPrefill || undefined}
+          isHandoff={!!proposalPrefill && runModalAgent.slug === "website-proposal"}
           onHandoffToProposal={(() => {
             const proposalAgent = agents.find((a) => a.slug === "website-proposal");
             const proposalLease = proposalAgent ? getActiveLease(proposalAgent.id) : null;
