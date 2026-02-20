@@ -8,8 +8,15 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import heroBg from "@/assets/hero-bg.png";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Login() {
+  useSEO({
+    title: "Member Login — PFSW",
+    description: "Sign in to your PFSW account to access the Prompt Engine, Library, and your weekly build cohort.",
+    canonical: "https://system-install-lab.lovable.app/login",
+    noIndex: true,
+  });
   const { toast } = useToast();
   const { login, signup } = useAuth();
   const navigate = useNavigate();

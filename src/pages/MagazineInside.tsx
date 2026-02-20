@@ -8,6 +8,7 @@ import { magazinePages } from "@/data/magazinePages";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import magazineCover from "@/assets/magazine-cover.jpg";
+import { useSEO } from "@/hooks/use-seo";
 
 const GoldDivider = () => (
   <div className="flex items-center justify-center py-8">
@@ -16,6 +17,11 @@ const GoldDivider = () => (
 );
 
 export default function MagazineInside() {
+  useSEO({
+    title: "The PFSW Doctrine — Prompt Architecture Field Manual",
+    description: "Read the PFSW doctrine: a field manual for serious builders on structured AI prompt architecture, systems thinking, and disciplined output. Private access.",
+    canonical: "https://system-install-lab.lovable.app/magazine/inside",
+  });
   const { user, profile, isChiefArchitect, loading } = useAuth();
   const navigate = useNavigate();
   const [page, setPage] = useState(0);

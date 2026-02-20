@@ -8,8 +8,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { CheckCircle } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Waitlist() {
+  useSEO({
+    title: "Join the Waitlist — PFSW",
+    description: "Applications are currently closed. Join the PFSW waitlist to be notified when the next cohort opens.",
+    canonical: "https://system-install-lab.lovable.app/waitlist",
+    noIndex: true,
+  });
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
