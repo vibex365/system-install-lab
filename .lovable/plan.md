@@ -1,163 +1,227 @@
 
-# Complete Platform Audit & Magazine Upgrade Plan
+# 4-Mode Prompt Engine + Firecrawl Website Scanner
 
-## Current State Assessment
+## Overview
 
-### The Full User Journey (What's Built)
+This implements everything from both approved plans in one build:
+1. Connect Firecrawl to unlock the website scanner
+2. New `scan-website` edge function using Firecrawl branding + markdown + summary
+3. Transform Engine.tsx into a 4-mode intelligence system (MVP Builder, Website Builder, Shopify, UI/UX Audit)
+4. Website Builder mode gets the URL scanner that auto-fills form fields from client's live site
+5. Fix Stripe prompt rule (no webhooks, checkout sessions only)
+6. Add Lovable connector awareness to MVP Builder system prompt
+
+---
+
+## Before Implementation: Connect Firecrawl
+
+The Firecrawl connection (`std_01kfs0g30aevy92kqye4qxdjda`) exists in the workspace but is not linked to this project. Linking it will inject `FIRECRAWL_API_KEY` into the project's edge functions automatically. This is required before the `scan-website` function can call the Firecrawl API.
+
+---
+
+## What Gets Built
+
+### The 4 Modes
 
 ```text
-Public: / → /apply ($5 fee) → /application-under-review
-                                     ↓
-Admin: /admin/applications → Approve (sets accepted_pending_payment)
-                                     ↓
-User: auto-redirect to /accepted (induction page) → Stripe $197/mo
-                                     ↓
-Post-payment: /engine?membership_session_id=... → verify → active
-                                     ↓
-Member: /engine, /library, /magazine/inside, /choose-cohort, /board
+[ MVP Builder ] [ Website Builder ] [ Shopify ] [ UI/UX Audit ]
 ```
 
-### What's Complete
-- Application funnel (4-step form + $5 Stripe fee)
-- Admin approve/reject + SMS trigger
-- Auth redirect logic (login → /accepted or /engine or /status)
-- Prompt Engine with session memory
-- Library with prompt packages
-- Board (posts, comments, votes)
-- Weekly cohorts + attendance
-- Lead dashboard
-- Admin panel (all 8 sub-pages)
-- 20-page magazine at `/magazine/inside`
-
-### Issues Identified
-
-**1. Magazine Placement Bug**
-The magazine is currently gated with `requireActive` — meaning only paid members can read it. But the user says it should be the "final step before purchase" — i.e., it should be accessible to accepted users BEFORE they pay. The correct gate should be accessible to either `accepted_pending_payment` OR `active` users.
-
-**2. Magazine Missing: Cover Page + Manifesto**
-- Page 1 currently jumps straight to content
-- Needs a full-screen cover page (using the uploaded image as background) with the manifesto: "People Fail. Systems Work." and "No one is bigger than the program"
-- Page 1 should be treated as a visually distinct cover/manifesto, separate from the chapter articles
-
-**3. Magazine Missing: Images**
-- The 20 pages are pure text — no visuals
-- Need atmospheric editorial imagery to break up long-form content and make it feel premium (using Unsplash URLs for relevant stock photography)
-
-**4. Magazine Flow in the User Journey**
-Looking at the `/accepted` page and the `/engine` redirect — the magazine isn't currently shown as a step between acceptance and payment. It should be offered as reading material on the `/accepted` page ("Read the full doctrine before you decide") so accepted users can read it and feel more informed about the purchase.
-
-**5. Accepted Page CTA Language**
-The accept button says "Accept My Founding Spot" regardless of `foundingOpen` state. When `foundingOpen` is false it should say "Activate Membership."
-
-**6. Post-Payment Flow Gap: /choose-cohort**
-After Stripe payment, users land on `/engine` which verifies the session. But there's no automatic redirect to `/choose-cohort` if the user hasn't selected a cohort yet. The Engine page should check `profile.cohort_id` and redirect to `/choose-cohort` if null.
+Each mode has its own:
+- System prompt (different AI persona + output structure per mode)
+- Left panel form fields
+- Quick-action buttons on the right
+- Session context (mode is stored in context_json so loaded sessions restore the correct mode)
 
 ---
 
-## What Will Be Built
+### Mode 1: MVP Builder (Enhanced from current)
 
-### Task 1 — Magazine: Cover Page + Manifesto (Page 0)
-Add a dedicated cover page as index 0 in `magazinePages.ts` with:
-- Full-screen black background with the uploaded user image as cover art
-- Large serif headline: "People Fail. Systems Work."
-- Secondary line: "No one is bigger than the program."
-- PFSW institutional tagline
-- "Begin Reading" CTA to page 1
+Keeps all existing fields. Two upgrades to the system prompt:
 
-Copy the uploaded image to `src/assets/magazine-cover.jpg` and import it in the component.
-
-### Task 2 — Magazine: Editorial Images Per Page
-Update `MagazinePage` interface to add optional `image?: string` field. Add curated Unsplash image URLs to selected pages (approx. every 3-4 pages) that match the editorial tone:
-- Dark, moody, architectural photography
-- Urban builder/creator imagery
-- System/machinery/structure visuals
-
-These render as full-width editorial images below the chapter label and above the title.
-
-### Task 3 — Magazine: Auth Gate Fix
-Change `MagazineInside.tsx` from:
-```tsx
-<AuthGate requireActive>
+**Stripe Rule (no webhooks):**
 ```
-To a custom check that allows both `active` AND `accepted_pending_payment` users:
-```tsx
-// Remove AuthGate, use manual redirect logic via useAuth + useEffect
-// Allow: active, accepted_pending_payment
-// Redirect to /login if not logged in
-// Redirect to /status if pending/rejected/inactive
+STRIPE RULE: NEVER use webhooks. ALWAYS use Stripe Checkout Sessions.
+success_url must include ?session_id={CHECKOUT_SESSION_ID}
+Verify payment by querying the session on return — not via webhook events.
 ```
 
-### Task 4 — Magazine Link on Accepted Page
-Add a subtle "Read the full doctrine" link on `/accepted` that opens `/magazine/inside` in a new tab or navigates there. Place it between the "What This Actually Is" section and the pricing section so users can go deeper before committing.
+**Lovable Connector Awareness:**
+```
+This is a Lovable project (React + Vite + Tailwind + TypeScript + Supabase Cloud).
+Available native connectors: Stripe, Shopify, Slack, Firecrawl, ElevenLabs, Perplexity.
+For AI: use Lovable AI Gateway via edge functions.
+For auth: Supabase Auth with RLS — never raw client SQL.
+```
 
-### Task 5 — Post-Payment Cohort Redirect
-In `Engine.tsx`, after membership verification succeeds (when `membership_session_id` is in URL), check if `profile?.cohort_id` is null and redirect to `/choose-cohort` automatically.
-
-### Task 6 — Accepted Page: Dynamic Button Text
-Fix the "Accept My Founding Spot" button to read "Activate Membership" when `foundingOpen` is false.
+Quick buttons: Generate, Refine, Simplify, + Stripe (Sessions), + Supabase, + Shopify connector, + Twilio
 
 ---
 
-## Technical Implementation Details
+### Mode 2: Website Builder (New — with Firecrawl scanner)
 
-### Magazine Cover Image
-- Copy `user-uploads://IMG_3582.jpeg` → `src/assets/magazine-cover.jpg`
-- Import as ES6 module in `MagazineInside.tsx`
-- Use as full-bleed cover with `object-cover` + dark overlay
+**Form fields:**
+- Client Website URL (with "Scan Site" button)
+- Site Name (auto-filled from scan)
+- Client Industry
+- Site Goal (auto-filled from scan summary)
+- Pages Needed
+- Style Direction
+- Color/Font Notes (auto-filled from scan branding)
+- Animations Level (None / Subtle / Rich — Select)
 
-### Updated MagazinePage Type
+**Scanner flow:**
+1. Member pastes client URL and clicks "Scan Site"
+2. Calls `scan-website` edge function
+3. Firecrawl returns `branding` (colors, fonts) + `summary` (AI summary) + `markdown` (content)
+4. Auto-fills: Site Name, Site Goal, Color/Font Notes, Style Direction
+5. A "Scan complete" banner appears showing extracted color swatches and fonts
+6. The raw brand context gets injected into the generation message
+
+**System prompt:**
+```
+You are PFSW — an elite Lovable website prompt architect.
+This is for CLIENT WEBSITES, not SaaS. No auth, no database, no RLS.
+Focus on visual excellence, conversion, and scroll experience.
+
+Output structure (5 sections):
+1. Site Goal & Target Audience
+2. Pages & Sections (with exact content per page)
+3. UI/UX Style (typography, color, spacing, components)
+4. Animations & Interactions (Framer Motion where appropriate)
+5. Copy Tone & Content Notes
+```
+
+Quick buttons: Generate, Refine, + Animations section, + SEO section, + Mobile notes
+
+---
+
+### Mode 3: Shopify Storefront (New)
+
+**Form fields:**
+- Store Name
+- Niche / Products
+- Target Customer
+- Pages Needed (checkbox-style text: Home, PDP, Cart, Collections, Blog)
+- Design Style
+- Custom Features
+
+**System prompt:**
+```
+You are PFSW — an elite Lovable Shopify storefront prompt architect.
+Use Lovable's native Shopify connector — NOT the raw Shopify API.
+Products and store data come from the connector.
+Checkout goes through Stripe Checkout Sessions (no webhooks) OR Shopify Checkout.
+
+Output structure (6 sections):
+1. Store Goal & Products
+2. Shopify Connector Setup
+3. Pages & Product Flows
+4. UI/UX Requirements
+5. Integrations
+6. Build Order
+```
+
+Quick buttons: Generate, Refine, + Product Grid, + Cart Flow, + SEO
+
+---
+
+### Mode 4: UI/UX Audit (New — 3-tier framework)
+
+**Form fields:**
+- Design Description (large textarea — paste description or URL)
+- Current Problems (what's broken or feels off)
+- Brand Colors (hex codes or description)
+- Audit Level selector: Foundation / Interaction / Premium / Full Report
+
+**System prompt:** Uses the full 3-prompt design framework:
+- Level 1 (Foundation): Typography scale, contrast/WCAG, spacing system, component standardization
+- Level 2 (Interaction): Micro-interactions, navigation flows, responsive/a11y, error states, performance
+- Level 3 (Premium): Visual effects, brand personality, data visualization, enterprise polish
+
+**Quick buttons:** Run Level 1 Audit, Run Level 2 Audit, Run Level 3 Audit, Full 3-Level Report
+
+The Full Report button calls generate() with all 3 levels concatenated as the refinement prompt, producing a comprehensive design critique in one pass.
+
+---
+
+## New Edge Function: `scan-website`
+
+Located at `supabase/functions/scan-website/index.ts`.
+
+Calls Firecrawl with `formats: ['branding', 'summary', 'markdown']` on the provided URL.
+
+Returns a structured object:
 ```typescript
-export interface MagazinePage {
-  pageNumber: number;
-  chapter: string;
-  title: string;
-  subtitle?: string;
-  image?: string;  // NEW: Unsplash URL
-  isCover?: boolean; // NEW: special cover treatment
-  sections: { heading?: string; body: string }[];
+{
+  colors: {
+    primary: string,
+    secondary: string,
+    accent: string,
+    background: string,
+    text: string
+  },
+  fonts: string[],       // e.g. ["Inter", "Georgia"]
+  summary: string,       // AI summary of site purpose
+  pageContent: string,   // First 3000 chars of markdown content
+  siteName: string       // From metadata title
 }
 ```
 
-### Magazine Auth Logic
-```tsx
-const { user, profile, isChiefArchitect, loading } = useAuth();
-const navigate = useNavigate();
-useEffect(() => {
-  if (loading) return;
-  if (!user) { navigate("/login"); return; }
-  const s = profile?.member_status as string;
-  const allowed = s === "active" || s === "accepted_pending_payment" || isChiefArchitect;
-  if (!allowed) { navigate("/status"); return; }
-}, [user, profile, loading]);
+The edge function normalizes URLs (adds `https://` if missing), reads `FIRECRAWL_API_KEY` from Deno env, and returns a clean error message if the connector isn't linked.
+
+---
+
+## Session System Updates
+
+The `context_json` object stored per session will now include a `mode` field:
+```json
+{
+  "mode": "website",
+  "siteName": "Acme Corp",
+  "clientIndustry": "Real estate",
+  "siteGoal": "Generate leads for luxury condos",
+  "colorFontNotes": "Primary: #C9A84C, Font: Playfair Display",
+  ...
+}
 ```
 
-### Files to Modify
-1. `src/assets/magazine-cover.jpg` — new (copy from uploads)
-2. `src/data/magazinePages.ts` — add cover page (index 0), add `image` fields to select pages
-3. `src/pages/MagazineInside.tsx` — cover page special rendering, image display, custom auth gate
-4. `src/pages/Accepted.tsx` — add doctrine link + fix button text
-5. `src/pages/Engine.tsx` — redirect to /choose-cohort if no cohort after payment
+When a session is loaded, the mode pill selector updates to match, and the correct form fields render. This means sessions are fully mode-aware — loading a Website session restores the Website Builder form; loading an MVP session restores the MVP form.
 
 ---
 
-## What's Not Missing (Already Complete)
-- User roles table (`user_roles`) — already exists, `has_role()` RLS function in use
-- Admin approve/reject flow — wired and working
-- SMS edge function — deployed
-- Auth redirect (login → /accepted or /engine) — working
-- All 20 magazine pages of content — complete
-- Stripe checkout for both application and membership — complete
-- Lead dashboard and attendance — complete
-- Board with posts/comments/votes — complete
-
----
-
-## Summary of Changes
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/assets/magazine-cover.jpg` | Copy uploaded image |
-| `src/data/magazinePages.ts` | Add cover page as index 0, add `image` field to 6 pages |
-| `src/pages/MagazineInside.tsx` | Cover page render, images, fix auth gate |
-| `src/pages/Accepted.tsx` | Add doctrine link, fix dynamic button text |
-| `src/pages/Engine.tsx` | Auto-redirect to /choose-cohort post-payment |
+| `supabase/functions/scan-website/index.ts` | New — Firecrawl branding + summary + markdown scrape |
+| `supabase/config.toml` | Add `[functions.scan-website]` entry |
+| `src/pages/Engine.tsx` | Full rewrite — 4-mode selector, all form fields, all system prompts, scanner UI, session mode-awareness |
+
+No database changes needed. The `prompt_sessions.context_json` column is already `jsonb` so it accepts any shape.
+
+---
+
+## UI Layout
+
+```text
+┌─ Header: Prompt Engine [mode pills] ──── New / Save / Export ─┐
+│                                                                 │
+│  ┌─ Left Panel ─────────────┐  ┌─ Right Panel ──────────────┐  │
+│  │ [Mode-specific form]     │  │ Generated Prompt (textarea) │  │
+│  │                          │  │                             │  │
+│  │ [Sessions list]          │  │ [Quick action buttons]      │  │
+│  └──────────────────────────┘  └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+In Website Builder mode, the top of the left form shows the URL scanner before the regular fields.
+
+---
+
+## Implementation Order
+
+1. Connect Firecrawl (done via connector prompt — no code needed)
+2. Create `supabase/functions/scan-website/index.ts`
+3. Add `[functions.scan-website]` to `supabase/config.toml`
+4. Rewrite `src/pages/Engine.tsx` with all 4 modes
