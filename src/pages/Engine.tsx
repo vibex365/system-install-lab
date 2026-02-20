@@ -12,9 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2, Trash2,
-  Download, Globe, ShoppingBag, Palette, Scan, CheckCircle2, X,
+  Download, Globe, ShoppingBag, Palette, Scan, CheckCircle2, X, Send,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -218,6 +220,12 @@ export default function Engine() {
 
   // ── Usage
   const [usageCount, setUsageCount] = useState(0);
+
+  // ── Submit to Library
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitTitle, setSubmitTitle] = useState("");
+  const [submitProblem, setSubmitProblem] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     supabase.from("prompt_packages").select("id, slug, name").then(({ data }) => setPackages(data || []));
@@ -536,6 +544,29 @@ Generate a complete Lovable-ready UI/UX design improvement prompt.`;
     toast({ title: "Copied to clipboard" });
   };
 
+  const submitToLibrary = async () => {
+    if (!user || !output || !submitTitle.trim()) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("prompt_submissions").insert({
+        submitted_by: user.id,
+        title: submitTitle.trim(),
+        raw_prompt: output,
+        problem: submitProblem.trim() || null,
+        status: "pending_review",
+      });
+      if (error) throw error;
+      toast({ title: "Submitted for review", description: "Your prompt has been sent to the admin queue." });
+      setSubmitOpen(false);
+      setSubmitTitle("");
+      setSubmitProblem("");
+    } catch (err: any) {
+      toast({ title: "Submission failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const sessionLabel = (s: any) => {
@@ -849,11 +880,79 @@ Generate a complete Lovable-ready UI/UX design improvement prompt.`;
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm">Generated Prompt</CardTitle>
-                      {output && (
-                        <Button size="sm" variant="ghost" onClick={copyOutput} className="text-xs h-7">
-                          <Copy className="h-3 w-3 mr-1" /> Copy
-                        </Button>
-                      )}
+                      <div className="flex gap-1">
+                        {output && (
+                          <Button size="sm" variant="ghost" onClick={copyOutput} className="text-xs h-7">
+                            <Copy className="h-3 w-3 mr-1" /> Copy
+                          </Button>
+                        )}
+                        {output && (
+                          <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs h-7 border-primary/40 text-primary hover:bg-primary/10"
+                                onClick={() => {
+                                  const defaultTitle =
+                                    mode === "mvp" ? productName :
+                                    mode === "website" ? siteName || clientUrl :
+                                    mode === "shopify" ? storeName :
+                                    designDescription.slice(0, 50) || "UI/UX Audit";
+                                  setSubmitTitle(defaultTitle);
+                                }}
+                              >
+                                <Send className="h-3 w-3 mr-1" /> Submit to Library
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md bg-card border-border">
+                              <DialogHeader>
+                                <DialogTitle className="text-sm">Submit to Prompt Library</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 pt-1">
+                                <p className="text-xs text-muted-foreground">
+                                  Submit this prompt for admin review. Once approved, it will be published to the Prompt Library for all members.
+                                </p>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">Prompt Title <span className="text-destructive">*</span></Label>
+                                  <Input
+                                    value={submitTitle}
+                                    onChange={(e) => setSubmitTitle(e.target.value)}
+                                    placeholder="e.g. SaaS MVP with Stripe Checkout"
+                                    className="bg-background border-border text-sm"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">Problem it solves (optional)</Label>
+                                  <Textarea
+                                    value={submitProblem}
+                                    onChange={(e) => setSubmitProblem(e.target.value)}
+                                    placeholder="What situation or pain point does this prompt address?"
+                                    className="bg-background border-border text-xs min-h-[72px]"
+                                  />
+                                </div>
+                                <div className="bg-muted/50 rounded p-2">
+                                  <p className="text-[10px] text-muted-foreground font-mono line-clamp-3">{output.slice(0, 200)}…</p>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button size="sm" variant="outline" onClick={() => setSubmitOpen(false)} className="border-border text-xs">
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={submitToLibrary}
+                                    disabled={submitting || !submitTitle.trim()}
+                                    className="text-xs"
+                                  >
+                                    {submitting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
+                                    Submit for Review
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
