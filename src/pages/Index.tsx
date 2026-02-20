@@ -42,33 +42,33 @@ const pillars = [
     icon: Brain,
     title: "Prompt Engine",
     description:
-      "AI-powered prompt architecture with persistent memory. Build structured, deployment-ready system prompts.",
+      "Lovable-ready system prompt architecture with persistent memory. Build structured, deployment-ready prompts that ship with your Lovable project.",
   },
   {
     icon: BookOpen,
     title: "Curated Library",
-    description: "Battle-tested prompt blueprints across MVP, SaaS, e-commerce, agency, and internal tools.",
+    description: "Battle-tested Lovable prompt blueprints across MVP, SaaS, e-commerce, agency, and internal tools — curated and approved by the institution.",
   },
   {
     icon: CalendarCheck,
     title: "Weekly Build Cohorts",
     description:
-      "Mandatory weekly sessions with structured roll call, hot seats, and commitments. No passive consumption.",
+      "Mandatory weekly sessions built for Lovable builders — structured roll call, hot seats, and shipping commitments. No passive consumption.",
   },
   {
     icon: Users,
     title: "Architect Leads",
-    description: "Certified leads run each cohort. Accountability through hierarchy, not motivation.",
+    description: "Certified leads run each cohort. Accountability through hierarchy, not motivation. Structure that Lovable builders can build inside.",
   },
   {
     icon: Shield,
     title: "Moderated Submissions",
-    description: "Members submit prompts for review. Approved work enters the institutional library.",
+    description: "Members submit Lovable-tested prompts for institutional review. Approved work enters the curated library for the full membership.",
   },
   {
     icon: Layers,
     title: "Session Memory",
-    description: "Every generation is tracked. Context persists across sessions. Your architecture compounds.",
+    description: "Every Lovable generation is tracked. Context persists across sessions. Your prompt architecture compounds over time.",
   },
 ];
 
@@ -194,7 +194,7 @@ export default function Index() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            Build Structured Systems With AI.
+            The Prompt Architecture System for Lovable Builders.
           </motion.p>
 
           <motion.p
