@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.scan-website]
 verify_jwt = false
+
+[functions.process-jobs]
+verify_jwt = false
