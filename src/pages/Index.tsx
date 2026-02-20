@@ -8,7 +8,7 @@ import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Brain, Users, CalendarCheck, BookOpen, Shield, Layers, Search, MessageSquare, Globe, Mail } from "lucide-react";
+import { Search, Globe, Mail, Phone, Layers, Users, CalendarCheck, BookOpen, Shield, Brain } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 import { useSEO } from "@/hooks/use-seo";
 
@@ -17,109 +17,119 @@ const featuredAgents = [
   {
     icon: Search,
     name: "Lead Prospector",
-    desc: "Parse ICP criteria and return a structured list of qualified leads with contact data.",
+    desc: "Enter a city and niche. Get back business names, phone numbers, emails, and website URLs — ready to pitch.",
   },
   {
     icon: Globe,
-    name: "Website Proposal Agent",
-    desc: "Scan any URL and generate a scoped project proposal with pricing and delivery timeline.",
-  },
-  {
-    icon: MessageSquare,
-    name: "Social Media Agent",
-    desc: "Generate a week of on-brand content from a single topic — Lovable-builder audiences included.",
+    name: "Website Auditor",
+    desc: "Scan any business site and generate a professional rebuild proposal with specific pain points and pricing.",
   },
   {
     icon: Mail,
-    name: "Email Drip Agent",
-    desc: "Build a 5-email onboarding or nurture sequence with subject lines and send cadence.",
+    name: "Cold Email Agent",
+    desc: "Turns audit findings into 3-part personalized email sequences with subject lines and booking CTA.",
+  },
+  {
+    icon: Phone,
+    name: "AI Voice Caller",
+    desc: "Calls business owners via AI voice. Pitches website problems. Books discovery calls automatically.",
   },
 ];
 
 const pillars = [
-
   {
-    icon: Brain,
-    title: "Prompt Engine",
+    icon: Search,
+    title: "Lead Prospector",
     description:
-      "Lovable-ready system prompt architecture with persistent memory. Build structured, deployment-ready prompts that ship with your Lovable project.",
+      "Scrape local business leads by city and niche. Get names, phones, emails, and website URLs in minutes. Your pipeline fills automatically.",
   },
   {
-    icon: BookOpen,
-    title: "Curated Library",
-    description: "Battle-tested Lovable prompt blueprints across MVP, SaaS, e-commerce, agency, and internal tools — curated and approved by the institution.",
+    icon: Globe,
+    title: "Website Auditor",
+    description:
+      "Scan any business website for mobile issues, load speed, missing CTAs, and design problems. Output a professional rebuild proposal.",
+  },
+  {
+    icon: Mail,
+    title: "Cold Email Outreach",
+    description:
+      "Generate personalized cold email sequences with audit-specific pain points baked in. Every email references real problems on their site.",
+  },
+  {
+    icon: Phone,
+    title: "AI Voice Caller",
+    description:
+      "The VAPI agent calls business owners, pitches their website problems, and books discovery calls — automatically, while you sleep.",
+  },
+  {
+    icon: Brain,
+    title: "Lovable Website Builder",
+    description:
+      "Generate production-ready Lovable prompts for 10+ niches. Close the client, paste the prompt, ship the site in days — not weeks.",
   },
   {
     icon: CalendarCheck,
-    title: "Weekly Build Cohorts",
+    title: "Weekly Hot Seats",
     description:
-      "Mandatory weekly sessions built for Lovable builders — structured roll call, hot seats, and shipping commitments. No passive consumption.",
-  },
-  {
-    icon: Users,
-    title: "Architect Leads",
-    description: "Certified leads run each cohort. Accountability through hierarchy, not motivation. Structure that Lovable builders can build inside.",
-  },
-  {
-    icon: Shield,
-    title: "Moderated Submissions",
-    description: "Members submit Lovable-tested prompts for institutional review. Approved work enters the curated library for the full membership.",
-  },
-  {
-    icon: Layers,
-    title: "Session Memory",
-    description: "Every Lovable generation is tracked. Context persists across sessions. Your prompt architecture compounds over time.",
+      "Live peer review sessions where members share pitches, Lovable builds, and outreach results. Real feedback from operators doing the same work.",
   },
 ];
 
 const process = [
-  { step: "01", title: "Apply", desc: "Submit your application with a $5 processing fee. We review within 48 hours." },
+  {
+    step: "01",
+    title: "Scrape",
+    desc: "Run the Lead Prospector. Enter a city and niche. Get a prospect list with phones, emails, and website URLs.",
+  },
   {
     step: "02",
-    title: "Get Accepted",
-    desc: "Accepted applicants activate membership at $197/month. No trials, no discounts.",
+    title: "Audit",
+    desc: "The Website Auditor scans each site and generates a rebuild proposal. The Cold Email Agent writes the outreach sequence.",
   },
   {
     step: "03",
-    title: "Choose Your Cohort",
-    desc: "Select a weekly build cohort. Attendance is mandatory. Structure is non-negotiable.",
+    title: "Call & Close",
+    desc: "The AI Voice Caller pitches website problems and books calls. You show up, close the deal.",
   },
   {
     step: "04",
-    title: "Build With Systems",
-    desc: "Access the Prompt Engine, Library, and weekly sessions. Ship structured output every week.",
+    title: "Build & Ship",
+    desc: "Paste a niche Lovable prompt, customize for the client, and ship a polished site in days. Not weeks.",
   },
 ];
 
 const institutionalFaqs = [
   {
-    q: "What is PFSW?",
-    a: "A private prompt architecture institution. We teach builders how to construct structured AI system prompts — and hold them accountable through mandatory weekly cohorts.",
+    q: "Who is PFSW for?",
+    a: "Web designers and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast. If you're doing outreach manually or not at all, this is the system that replaces that.",
   },
   {
     q: "Why does the application cost $5?",
-    a: "To filter. If $5 stops you, the program isn't for you. The fee ensures only serious operators enter the pipeline.",
+    a: "To filter. The $5 separates people who are browsing from people who are deciding. Every application is reviewed manually. We only accept serious web designers who will actually run the system.",
   },
   {
-    q: "How does PFSW help with Lovable specifically?",
-    a: "Most Lovable builders hit the same wall: vague prompts produce broken builds. PFSW gives you structured system prompt architecture built for Lovable projects — persistent memory, scoped context, and deployment-ready blueprints so your Lovable builds ship the first time. The curated library contains Lovable-tested prompt blueprints across MVP, SaaS, e-commerce, and internal tools.",
+    q: "Do I need to know how to code?",
+    a: "No. Lovable builds the sites from structured prompts. You need to understand client conversations and be able to customize a prompt for a specific niche. The build stack handles the rest.",
   },
   {
-    q: "What is the AI Agent Marketplace?",
-    a: "A catalog of specialized institutional AI agents available to active members. Each agent runs a defined job — lead prospecting, website proposals, social content, SMS follow-ups, competitor intelligence, and more. Agents are leased monthly and can run on demand or on a recurring schedule. No prompt engineering required; the architecture is built in.",
+    q: "How does the Lead Prospector work?",
+    a: "You enter a city and a niche — dental, restaurant, real estate, etc. The agent scrapes local business directories and returns a list with business name, phone, email, and website URL. A full prospecting run that would take 6-8 hours manually takes under 10 minutes.",
+  },
+  {
+    q: "What is the AI Voice Caller?",
+    a: "The VAPI agent makes outbound calls to your prospect list. It introduces itself as a web design outreach assistant, references specific audit findings for that business, and directs interested prospects to your booking calendar.",
+  },
+  {
+    q: "What are the weekly hot seats?",
+    a: "Weekly peer review sessions where members share active work — pitches, Lovable builds, audit reports, discovery call recordings. Your cohort gives structured feedback. Real critique from operators doing the same work. Attendance is mandatory.",
+  },
+  {
+    q: "Can I cancel?",
+    a: "Yes. No contracts. Cancel anytime. The agent runs, the prospect data, and the Lovable prompts you generate stay with you.",
   },
   {
     q: "What does $197/month include?",
-    a: "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, the member submission pipeline, and the AI Agent Marketplace.",
-  },
-  {
-    q: "What happens if I miss sessions?",
-    a: "Two consecutive missed sessions trigger a warning. Three triggers a review. Attendance is mandatory — this is an institution, not a community.",
-  },
-  { q: "Can I cancel?", a: "Yes. No contracts. But the prompts you build and the systems you install stay with you." },
-  {
-    q: "Is this coaching?",
-    a: "No. This is a structured operating environment. You get frameworks, architecture tools, disciplined cadence, and institutional AI agents — not advice.",
+    a: "Full access to all five agents (Lead Prospector, Website Auditor, Cold Email Agent, AI Voice Caller, Website Builder), the niche Lovable prompt library, weekly hot seat cohort, and the moderated member board.",
   },
 ];
 
@@ -130,14 +140,14 @@ export default function Index() {
   }, []);
 
   useSEO({
-    title: "Stop Struggling With Lovable Prompts — PFSW Has the System",
-    description: "Built for Lovable users who keep hitting walls. PFSW gives you structured AI system prompts, a curated Lovable prompt library, and weekly build cohorts so your projects actually ship. $197/month.",
+    title: "Land Website Clients With Lovable — PFSW",
+    description: "The client acquisition toolkit for web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and deliver Lovable-built websites. $197/month, application required.",
     canonical: "https://system-install-lab.lovable.app/",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "PFSW — Structured Prompt Architecture for Lovable Builders",
-      "description": "Built for Lovable users who keep hitting walls. Structured AI system prompts, a curated library, and weekly build cohorts so your Lovable projects actually ship.",
+      "name": "PFSW — Client Acquisition Toolkit for Web Designers",
+      "description": "The client acquisition toolkit for web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and ship websites fast.",
       "url": "https://system-install-lab.lovable.app/",
       "offers": {
         "@type": "Offer",
@@ -145,15 +155,14 @@ export default function Index() {
         "priceCurrency": "USD",
         "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1M" },
         "name": "PFSW Membership",
-        "description": "AI Prompt Engine, curated Lovable prompt library, weekly build cohorts, and member submissions pipeline. Built for serious Lovable builders."
+        "description": "Lead Prospector, Website Auditor, Cold Email Agent, AI Voice Caller, Niche Lovable Prompt Library, Weekly Hot Seat Cohort."
       },
       "mainEntity": {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "PFSW is built for Lovable users and AI builders who are tired of bad prompts producing broken results. We teach structured system prompt architecture and hold you accountable through mandatory weekly build cohorts." } },
-          { "@type": "Question", "name": "How does PFSW help with Lovable specifically?", "acceptedAnswer": { "@type": "Answer", "text": "Most Lovable builders hit the same wall: vague prompts produce broken builds. PFSW gives you structured system prompt architecture built for Lovable projects — persistent memory, scoped context, and deployment-ready blueprints so your Lovable builds ship the first time." } },
-          { "@type": "Question", "name": "What is the AI Agent Marketplace?", "acceptedAnswer": { "@type": "Answer", "text": "A catalog of specialized institutional AI agents available to active members. Each agent runs a defined job — lead prospecting, website proposals, social content, SMS follow-ups, competitor intelligence, and more. No prompt engineering required." } },
-          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the AI Prompt Engine, the curated Lovable prompt library, weekly build cohorts, the member submission pipeline, and the AI Agent Marketplace." } }
+          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "Web designers and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast." } },
+          { "@type": "Question", "name": "How does the Lead Prospector work?", "acceptedAnswer": { "@type": "Answer", "text": "Enter a city and niche. The agent scrapes local business directories and returns business names, phones, emails, and website URLs in under 10 minutes." } },
+          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "All five agents, the niche Lovable prompt library, weekly hot seat cohort, and the member board." } }
         ]
       }
     },
@@ -176,7 +185,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            A Private Prompt Architecture Institution
+            Built for Web Designers Who Build With Lovable
           </motion.p>
 
           <motion.h1
@@ -194,7 +203,7 @@ export default function Index() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            The Prompt Architecture System for Lovable Builders.
+            The Client Acquisition System for Web Designers.
           </motion.p>
 
           <motion.p
@@ -203,7 +212,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.7 }}
           >
-            Application required · $197/month upon acceptance
+            Scrape leads · Audit sites · Send the pitch · Close the client · Application required · $197/month
           </motion.p>
 
           <motion.div
@@ -219,18 +228,18 @@ export default function Index() {
               variant="outline"
               size="lg"
               className="tracking-wide text-lg px-10 py-6 font-bold border-primary/30 text-foreground hover:bg-primary/10"
-              onClick={() => scrollTo("#doctrine")}
+              onClick={() => scrollTo("#how-it-works")}
             >
-              Read the Doctrine
+              See How It Works
             </Button>
           </motion.div>
         </div>
       </section>
 
-      {/* ── What You Get ── */}
+      {/* ── Six Pillars ── */}
       <section className="py-20 md:py-28">
         <div className="container">
-          <SectionHeader id="pillars" title="What You Get" subtitle="Six pillars of structured prompt architecture." />
+          <SectionHeader id="pillars" title="What You Get" subtitle="Five automated agents and a weekly peer cohort. Everything you need to land and deliver web design clients." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pillars.map((p) => (
               <FeatureCard key={p.title} icon={p.icon} title={p.title} description={p.description} />
@@ -239,12 +248,12 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ── AI Agent Marketplace Teaser ── */}
+      {/* ── Agent Showcase ── */}
       <section className="py-20 md:py-28 border-t border-border bg-card/30">
         <div className="container">
           <SectionHeader
-            title="AI Agent Marketplace"
-            subtitle="Active members get access to a catalog of specialized institutional agents. Each one runs a defined job — no prompting required."
+            title="The Acquisition Stack"
+            subtitle="Active members get access to the full client acquisition system. Every agent runs a defined job — no manual work required."
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
             {featuredAgents.map((agent) => (
@@ -269,7 +278,7 @@ export default function Index() {
       {/* ── How It Works ── */}
       <section className="py-20 md:py-28 border-t border-border">
         <div className="container">
-          <SectionHeader id="doctrine" title="How It Works" subtitle="Four steps. No shortcuts." />
+          <SectionHeader id="how-it-works" title="How It Works" subtitle="Scrape. Audit. Call. Build. Four steps. No manual grind." />
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {process.map((p) => (
               <div key={p.step} className="rounded-2xl border border-border bg-card p-6 md:p-8">
@@ -293,12 +302,12 @@ export default function Index() {
               <span className="text-muted-foreground text-lg">/month</span>
             </div>
             <p className="text-sm text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto">
-              Prompt Engine · Curated Library · Weekly Cohort · Member Submissions · Session Memory
+              Lead Scraper · Website Auditor · Cold Email Agent · AI Voice Caller · Niche Prompt Library · Weekly Hot Seats
             </p>
             <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
               <Link to="/apply">Apply for Access</Link>
             </Button>
-            <p className="text-xs text-muted-foreground mt-6">$5 application fee · Accepted applicants only</p>
+            <p className="text-xs text-muted-foreground mt-6">$5 application fee · Serious web designers only</p>
           </div>
         </div>
       </section>
@@ -315,12 +324,12 @@ export default function Index() {
       <section className="border-t border-border">
         <div className="container">
           <CTASection
-            headline="Stop prompting randomly. Build with architecture."
+            headline="Stop chasing clients manually. Build the system that finds them for you."
             primaryLabel="Apply for Access"
             primaryTo="/apply"
-            secondaryLabel="Read the Doctrine"
+            secondaryLabel="Read the Playbook"
             secondaryTo="/magazine/inside"
-            disclaimer="PFSW is not for hobbyists. Application required. $197/month upon acceptance."
+            disclaimer="PFSW is for serious web designers. Application required. $197/month upon acceptance."
           />
         </div>
       </section>
