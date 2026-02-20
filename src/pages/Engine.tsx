@@ -16,8 +16,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import {
   Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2, Trash2,
-  Download, Globe, ShoppingBag, Palette, Scan, CheckCircle2, X, Send,
+  Download, Globe, ShoppingBag, Palette, Scan, CheckCircle2, X, Send, ExternalLink,
 } from "lucide-react";
+
+const LOVABLE_AFFILIATE_URL = "https://lovable.dev/invite/8HW4GFV";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -919,6 +921,27 @@ Generate a complete Lovable-ready UI/UX design improvement prompt.`;
                         })}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* ── Lovable CTA ── */}
+                <Card className="bg-card border border-primary/30">
+                  <CardContent className="p-4 space-y-3">
+                    <p className="text-xs font-semibold text-primary tracking-wide uppercase">
+                      New to Lovable?
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Every prompt generated here is Lovable-ready. No account yet? Create one free — it takes 60 seconds.
+                    </p>
+                    <a
+                      href={LOVABLE_AFFILIATE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Create Your Lovable Account
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
                   </CardContent>
                 </Card>
               </div>
