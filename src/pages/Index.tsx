@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Brain, Users, CalendarCheck, BookOpen, Shield, Layers } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
+import { useSEO } from "@/hooks/use-seo";
 
 /* ── Data ── */
 const pillars = [
@@ -95,6 +96,34 @@ export default function Index() {
   const scrollTo = useCallback((id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  useSEO({
+    title: "PFSW — People Fail, Systems Work | Private Prompt Architecture Institution",
+    description: "A private, invitation-only prompt architecture institution. AI-powered Prompt Engine, curated Library, and mandatory weekly build cohorts for serious builders. Application required. $197/month.",
+    canonical: "https://system-install-lab.lovable.app/",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "PFSW — People Fail, Systems Work",
+      "description": "A private prompt architecture institution for serious AI builders.",
+      "url": "https://system-install-lab.lovable.app/",
+      "offers": {
+        "@type": "Offer",
+        "price": "197",
+        "priceCurrency": "USD",
+        "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1M" },
+        "name": "PFSW Membership",
+        "description": "Prompt Engine, curated Library, weekly build cohorts, and member submissions pipeline."
+      },
+      "mainEntity": {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What is PFSW?", "acceptedAnswer": { "@type": "Answer", "text": "A private prompt architecture institution. We teach builders how to construct structured AI system prompts — and hold them accountable through mandatory weekly cohorts." } },
+          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, and the member submission pipeline." } }
+        ]
+      }
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background glossy-surface">

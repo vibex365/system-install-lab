@@ -1,7 +1,14 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Privacy() {
+  useSEO({
+    title: "Privacy Policy — PFSW",
+    description: "PFSW privacy policy. We collect only what's necessary to deliver the service and never sell your data.",
+    canonical: "https://system-install-lab.lovable.app/privacy",
+    noIndex: true,
+  });
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

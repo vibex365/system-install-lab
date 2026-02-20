@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /engine
+Disallow: /library
+Disallow: /board
+Disallow: /lead
+
+Sitemap: https://system-install-lab.lovable.app/sitemap.xml

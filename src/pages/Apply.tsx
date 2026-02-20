@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
+import { useSEO } from "@/hooks/use-seo";
 
 const TOTAL_STEPS = 4;
 const emotions = ["Overwhelm", "Fear", "Doubt", "Distraction", "Burnout", "Other"];
@@ -19,6 +20,12 @@ const emotions = ["Overwhelm", "Fear", "Doubt", "Distraction", "Burnout", "Other
 export default function Apply() {
   const { toast } = useToast();
   const { user } = useAuth();
+  useSEO({
+    title: "Apply for Access — PFSW",
+    description: "Apply to join PFSW, a private prompt architecture institution. $5 application fee. Accepted applicants gain access to the Prompt Engine, Library, and weekly build cohorts at $197/month.",
+    canonical: "https://system-install-lab.lovable.app/apply",
+    noIndex: false,
+  });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
