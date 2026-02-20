@@ -13,6 +13,7 @@ import Status from "./pages/Status";
 import Accepted from "./pages/Accepted";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Engine from "./pages/Engine";
 import Library from "./pages/Library";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/accepted" element={<Accepted />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/contact" element={<Contact />} />
 
             <Route path="/upgrade" element={<Upgrade />} />
 

@@ -64,6 +64,12 @@ const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | 
     { label: "Lead Name", key: "lead_name", type: "text", placeholder: "Dr. Chen" },
     { label: "Business Name", key: "business_name", type: "text", placeholder: "Atlanta Smiles Dental" },
   ],
+  "cold-email-outreach": [
+    { label: "Business Name", key: "business_name", type: "text", placeholder: "Atlanta Smiles Dental" },
+    { label: "Website URL", key: "url", type: "text", placeholder: "https://atlantasmiles.com" },
+    { label: "Audit Pain Points", key: "pain_points", type: "textarea", placeholder: "No mobile version, missing contact form, outdated design, no Google reviews widget..." },
+    { label: "Niche / Industry", key: "niche", type: "select", options: ["Dental", "Restaurant", "Real Estate", "Law Firm", "Fitness", "Auto Shop", "Plumbing", "Roofing", "Salon / Beauty", "Other Local Business"] },
+  ],
 };
 
 interface Agent {
