@@ -1,205 +1,163 @@
 
+# Complete Platform Audit & Magazine Upgrade Plan
 
-# PFSW Acceptance Funnel — Implementation Plan
+## Current State Assessment
 
-This plan builds the complete acceptance funnel: Stripe $5 application fee, admin approval with Twilio SMS, editorial `/accepted` induction page, founding member pricing, and membership activation via Stripe payment.
+### The Full User Journey (What's Built)
 
----
-
-## What Gets Built
-
-1. **Database changes** — New `system_meta` table, new `member_tier`/`invite_reputation_score`/`invite_multiplier` columns on `profiles`, new `accepted_pending_payment` enum value for `member_status`
-2. **Stripe $5 application fee** — Application form submits to Stripe Checkout first; webhook creates the application record on payment success
-3. **Twilio SMS scaffold** — Edge function that sends accept/reject SMS (wired to secrets, called from admin panel)
-4. **`/accepted` editorial induction page** — Gated to `accepted_pending_payment` status, no navbar, serif editorial layout with gold dividers
-5. **Stripe membership payment** — "Accept My Founding Spot" button triggers Stripe Checkout for membership; webhook activates profile
-6. **Admin panel updates** — Approve triggers `accepted_pending_payment` + SMS; reject triggers rejection SMS
-7. **Routing + auth flow updates** — Login redirects to `/accepted` when status is `accepted_pending_payment`; new route added
-
----
-
-## Phase 1: Database Migration
-
-**New enum value:**
-- Add `'accepted_pending_payment'` to `member_status` enum
-
-**New table: `system_meta`**
-- `id` uuid PK
-- `version` text default `'v1'`
-- `founding_access_open` boolean default `true`
-- `base_price` integer default `500` (cents)
-- `updated_at` timestamptz default `now()`
-- RLS: admin-only SELECT/UPDATE
-- Seed one row on creation
-
-**Profiles additions:**
-- `member_tier` text nullable (values: `founding`, `standard`)
-- `invite_reputation_score` integer default `100`
-- `invite_multiplier` float default `1.0`
-
----
-
-## Phase 2: Enable Stripe
-
-Use the Lovable Stripe integration tool to enable Stripe. This will:
-- Collect the Stripe secret key
-- Provide the tools to create products/prices
-- Enable webhook handling
-
-Two Stripe products needed:
-1. **"PFSW Application Review"** — $5 one-time
-2. **"PFSW Membership"** — price from `system_meta.base_price`
-
----
-
-## Phase 3: Application Flow with Stripe $5
-
-**`/apply` changes:**
-- Keep the 4-step wizard as-is
-- On step 4 submit: instead of inserting directly, call an edge function `create-application-checkout`
-- Edge function creates a Stripe Checkout session for $5, stores form data in session metadata
-- Redirect user to Stripe Checkout
-- On success: Stripe webhook edge function `stripe-webhook` receives `checkout.session.completed`, extracts metadata, inserts the application row with `payment_status = 'paid'` and `stripe_session_id`
-- On cancel: user returns to `/apply` with a message
-
-**Form data flow:**
 ```text
-Browser (form data) --> Edge Function (create checkout session with metadata) --> Stripe Checkout --> Webhook --> Insert application row
+Public: / → /apply ($5 fee) → /application-under-review
+                                     ↓
+Admin: /admin/applications → Approve (sets accepted_pending_payment)
+                                     ↓
+User: auto-redirect to /accepted (induction page) → Stripe $197/mo
+                                     ↓
+Post-payment: /engine?membership_session_id=... → verify → active
+                                     ↓
+Member: /engine, /library, /magazine/inside, /choose-cohort, /board
 ```
 
----
+### What's Complete
+- Application funnel (4-step form + $5 Stripe fee)
+- Admin approve/reject + SMS trigger
+- Auth redirect logic (login → /accepted or /engine or /status)
+- Prompt Engine with session memory
+- Library with prompt packages
+- Board (posts, comments, votes)
+- Weekly cohorts + attendance
+- Lead dashboard
+- Admin panel (all 8 sub-pages)
+- 20-page magazine at `/magazine/inside`
 
-## Phase 4: Twilio SMS Edge Function
+### Issues Identified
 
-**Edge function: `send-sms`**
-- Accepts `{ phone, message }` in body
-- Uses `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` secrets
-- Calls Twilio REST API to send SMS
-- Returns success/error
+**1. Magazine Placement Bug**
+The magazine is currently gated with `requireActive` — meaning only paid members can read it. But the user says it should be the "final step before purchase" — i.e., it should be accessible to accepted users BEFORE they pay. The correct gate should be accessible to either `accepted_pending_payment` OR `active` users.
 
-Secrets will be requested from the user via the secrets tool before proceeding.
+**2. Magazine Missing: Cover Page + Manifesto**
+- Page 1 currently jumps straight to content
+- Needs a full-screen cover page (using the uploaded image as background) with the manifesto: "People Fail. Systems Work." and "No one is bigger than the program"
+- Page 1 should be treated as a visually distinct cover/manifesto, separate from the chapter articles
 
----
+**3. Magazine Missing: Images**
+- The 20 pages are pure text — no visuals
+- Need atmospheric editorial imagery to break up long-form content and make it feel premium (using Unsplash URLs for relevant stock photography)
 
-## Phase 5: Admin Panel Updates
+**4. Magazine Flow in the User Journey**
+Looking at the `/accepted` page and the `/engine` redirect — the magazine isn't currently shown as a step between acceptance and payment. It should be offered as reading material on the `/accepted` page ("Read the full doctrine before you decide") so accepted users can read it and feel more informed about the purchase.
 
-**On approve:**
-1. Update `applications.status = 'accepted'`
-2. If user exists: update `profiles.member_status = 'accepted_pending_payment'`
-3. If user doesn't exist: show note (will activate on first login via email match)
-4. Call `send-sms` edge function with acceptance message
-5. Update `handle_new_user` trigger to set `member_status = 'accepted_pending_payment'` (instead of `active`) when matching an accepted application
+**5. Accepted Page CTA Language**
+The accept button says "Accept My Founding Spot" regardless of `foundingOpen` state. When `foundingOpen` is false it should say "Activate Membership."
 
-**On reject:**
-1. Update `applications.status = 'rejected'`
-2. Call `send-sms` edge function with rejection message
-
----
-
-## Phase 6: `/accepted` Editorial Induction Page
-
-**Access rule:** Only visible when `profile.member_status === 'accepted_pending_payment'`
-
-**Layout:**
-- No Navbar, no Footer
-- Full-screen black background
-- Narrow reading column (max-w-2xl centered)
-- Large serif headings (using `font-serif` class)
-- Gold `<hr>` dividers between sections
-- Scroll-based sections with generous spacing
-
-**Sections:**
-1. "You Were Selected" — confirmation with gravitas
-2. "Why You" — personalized framing
-3. "People Fail. Systems Work." — philosophy
-4. "What This Actually Is" — what PFSW delivers
-5. "What Changes" — transformation promise
-6. "The Founding Standard" — exclusivity framing
-7. "Founding Member Pricing" — price display (from `system_meta`)
-8. "Decision" — two buttons
-
-**Buttons:**
-- Primary: "Accept My Founding Spot" — triggers Stripe Checkout for membership
-- Secondary: "Release My Spot" — sets `member_status = 'inactive'`
-
-**Conditional logic:**
-- If `system_meta.founding_access_open = true`: show founding pricing
-- If `false`: show standard pricing language
+**6. Post-Payment Flow Gap: /choose-cohort**
+After Stripe payment, users land on `/engine` which verifies the session. But there's no automatic redirect to `/choose-cohort` if the user hasn't selected a cohort yet. The Engine page should check `profile.cohort_id` and redirect to `/choose-cohort` if null.
 
 ---
 
-## Phase 7: Membership Payment (Stripe)
+## What Will Be Built
 
-**Edge function: `create-membership-checkout`**
-- Reads `system_meta.base_price`
-- Creates Stripe Checkout session for that amount
-- Returns checkout URL
+### Task 1 — Magazine: Cover Page + Manifesto (Page 0)
+Add a dedicated cover page as index 0 in `magazinePages.ts` with:
+- Full-screen black background with the uploaded user image as cover art
+- Large serif headline: "People Fail. Systems Work."
+- Secondary line: "No one is bigger than the program."
+- PFSW institutional tagline
+- "Begin Reading" CTA to page 1
 
-**Webhook handling (in `stripe-webhook`):**
-- On membership payment success:
-  - Set `profiles.member_status = 'active'`
-  - If `system_meta.version = 'v1'`: set `member_tier = 'founding'`, `invite_multiplier = 1.5`
-  - Else: set `member_tier = 'standard'`, `invite_multiplier = 1.0`
+Copy the uploaded image to `src/assets/magazine-cover.jpg` and import it in the component.
+
+### Task 2 — Magazine: Editorial Images Per Page
+Update `MagazinePage` interface to add optional `image?: string` field. Add curated Unsplash image URLs to selected pages (approx. every 3-4 pages) that match the editorial tone:
+- Dark, moody, architectural photography
+- Urban builder/creator imagery
+- System/machinery/structure visuals
+
+These render as full-width editorial images below the chapter label and above the title.
+
+### Task 3 — Magazine: Auth Gate Fix
+Change `MagazineInside.tsx` from:
+```tsx
+<AuthGate requireActive>
+```
+To a custom check that allows both `active` AND `accepted_pending_payment` users:
+```tsx
+// Remove AuthGate, use manual redirect logic via useAuth + useEffect
+// Allow: active, accepted_pending_payment
+// Redirect to /login if not logged in
+// Redirect to /status if pending/rejected/inactive
+```
+
+### Task 4 — Magazine Link on Accepted Page
+Add a subtle "Read the full doctrine" link on `/accepted` that opens `/magazine/inside` in a new tab or navigates there. Place it between the "What This Actually Is" section and the pricing section so users can go deeper before committing.
+
+### Task 5 — Post-Payment Cohort Redirect
+In `Engine.tsx`, after membership verification succeeds (when `membership_session_id` is in URL), check if `profile?.cohort_id` is null and redirect to `/choose-cohort` automatically.
+
+### Task 6 — Accepted Page: Dynamic Button Text
+Fix the "Accept My Founding Spot" button to read "Activate Membership" when `foundingOpen` is false.
 
 ---
 
-## Phase 8: Auth Flow Updates
+## Technical Implementation Details
 
-**Login redirect logic (in `use-auth.tsx` / `Login.tsx`):**
-- After login, check `profile.member_status`:
-  - `active` -> `/dashboard`
-  - `accepted_pending_payment` -> `/accepted`
-  - else -> `/status`
+### Magazine Cover Image
+- Copy `user-uploads://IMG_3582.jpeg` → `src/assets/magazine-cover.jpg`
+- Import as ES6 module in `MagazineInside.tsx`
+- Use as full-bleed cover with `object-cover` + dark overlay
 
-**`handle_new_user` trigger update:**
-- When matching an accepted application, set `member_status = 'accepted_pending_payment'` instead of `active`
+### Updated MagazinePage Type
+```typescript
+export interface MagazinePage {
+  pageNumber: number;
+  chapter: string;
+  title: string;
+  subtitle?: string;
+  image?: string;  // NEW: Unsplash URL
+  isCover?: boolean; // NEW: special cover treatment
+  sections: { heading?: string; body: string }[];
+}
+```
 
-**`AuthGate` update:**
-- Add support for `requireAcceptedPending` prop for the `/accepted` route
+### Magazine Auth Logic
+```tsx
+const { user, profile, isChiefArchitect, loading } = useAuth();
+const navigate = useNavigate();
+useEffect(() => {
+  if (loading) return;
+  if (!user) { navigate("/login"); return; }
+  const s = profile?.member_status as string;
+  const allowed = s === "active" || s === "accepted_pending_payment" || isChiefArchitect;
+  if (!allowed) { navigate("/status"); return; }
+}, [user, profile, loading]);
+```
 
-**New route in `App.tsx`:**
-- `/accepted` -> `Accepted` page component
+### Files to Modify
+1. `src/assets/magazine-cover.jpg` — new (copy from uploads)
+2. `src/data/magazinePages.ts` — add cover page (index 0), add `image` fields to select pages
+3. `src/pages/MagazineInside.tsx` — cover page special rendering, image display, custom auth gate
+4. `src/pages/Accepted.tsx` — add doctrine link + fix button text
+5. `src/pages/Engine.tsx` — redirect to /choose-cohort if no cohort after payment
 
 ---
 
-## Phase 9: Status Page Update
-
-Update `/status` to handle the new `accepted_pending_payment` state:
-- Show "Accepted — Complete Payment" with link to `/accepted`
+## What's Not Missing (Already Complete)
+- User roles table (`user_roles`) — already exists, `has_role()` RLS function in use
+- Admin approve/reject flow — wired and working
+- SMS edge function — deployed
+- Auth redirect (login → /accepted or /engine) — working
+- All 20 magazine pages of content — complete
+- Stripe checkout for both application and membership — complete
+- Lead dashboard and attendance — complete
+- Board with posts/comments/votes — complete
 
 ---
 
-## Technical Details
+## Summary of Changes
 
-### Edge Functions Created
-1. `create-application-checkout` — Creates $5 Stripe Checkout for application
-2. `stripe-webhook` — Handles all Stripe webhook events (application payment + membership payment)
-3. `send-sms` — Sends SMS via Twilio API
-
-### Secrets Required
-- `STRIPE_SECRET_KEY` (collected via Stripe integration tool)
-- `TWILIO_ACCOUNT_SID` (will request from user)
-- `TWILIO_AUTH_TOKEN` (will request from user)
-- `TWILIO_PHONE_NUMBER` (will request from user)
-
-### Files Modified
-- `src/pages/Apply.tsx` — Submit calls edge function instead of direct insert
-- `src/pages/Admin.tsx` — Approve/reject triggers SMS + new status
-- `src/pages/Status.tsx` — Handle `accepted_pending_payment` state
-- `src/pages/Login.tsx` — Redirect logic based on member_status
-- `src/hooks/use-auth.tsx` — Expose member_status for routing
-- `src/components/AuthGate.tsx` — New gating option
-- `src/App.tsx` — Add `/accepted` route
-
-### Files Created
-- `src/pages/Accepted.tsx` — Editorial induction page
-- `supabase/functions/create-application-checkout/index.ts`
-- `supabase/functions/stripe-webhook/index.ts`
-- `supabase/functions/send-sms/index.ts`
-
-### Migration SQL (summary)
-- `ALTER TYPE member_status ADD VALUE 'accepted_pending_payment'`
-- `CREATE TABLE system_meta` with seed row
-- `ALTER TABLE profiles ADD COLUMN member_tier, invite_reputation_score, invite_multiplier`
-- Update `handle_new_user` trigger function
-
+| File | Change |
+|------|--------|
+| `src/assets/magazine-cover.jpg` | Copy uploaded image |
+| `src/data/magazinePages.ts` | Add cover page as index 0, add `image` field to 6 pages |
+| `src/pages/MagazineInside.tsx` | Cover page render, images, fix auth gate |
+| `src/pages/Accepted.tsx` | Add doctrine link, fix dynamic button text |
+| `src/pages/Engine.tsx` | Auto-redirect to /choose-cohort post-payment |
