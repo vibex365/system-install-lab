@@ -415,6 +415,69 @@ Output ONLY the SMS text, nothing else.`);
       result = `SMS STATUS: ${smsStatus}\nTO: ${phone}\nSID: ${smsSid}\n\nMESSAGE SENT:\n${trimmedSms}`;
     }
 
+    else if (agent.slug === "cold-call") {
+      const leadName = input.lead_name || "there";
+      const phone = input.phone || "";
+      const pitchContext = input.pitch_context || "";
+
+      if (!phone) {
+        return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
+      }
+
+      const VAPI_API_KEY = Deno.env.get("VAPI_API_KEY");
+      if (!VAPI_API_KEY) {
+        return new Response(JSON.stringify({ error: "VAPI_API_KEY not configured" }), { status: 500, headers: corsHeaders });
+      }
+
+      const systemPrompt = `You are a web design consultant making a warm outbound call to a small business owner about rebuilding their website.
+
+Lead name: ${leadName}
+Context: ${pitchContext}
+
+Your goal:
+1. Introduce yourself as a web designer who came across their business
+2. Reference something specific from the context about their business
+3. Mention 1-2 things that could be improved about their online presence (mobile experience, speed, modern design, booking/contact forms)
+4. Explain you build sites quickly using the latest tools — typically 3-5 days
+5. Ask if they'd be open to a 10-minute screen share to see what's possible
+6. If interested, confirm their email for a follow-up proposal
+
+Be natural, not salesy. You're a professional offering genuine value, not a telemarketer. Keep it under 3 minutes.`;
+
+      const firstMessage = `Hi, is this ${leadName}? Great — my name is Alex and I'm a web designer. I came across your business and had a few ideas that might help you get more customers online. Do you have 2 minutes?`;
+
+      const vapiPayload = {
+        customer: { number: phone },
+        assistantOverrides: {
+          firstMessage,
+          model: { provider: "openai", model: "gpt-4o", systemPrompt },
+          voice: { provider: "11labs", voiceId: "sarah" },
+          endCallMessage: "Thanks for your time. Have a great day!",
+          endCallPhrases: ["goodbye", "take care", "bye bye", "talk later", "not interested"],
+          maxDurationSeconds: 300,
+        },
+      };
+
+      const vapiRes = await fetch("https://api.vapi.ai/call/phone", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${VAPI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(vapiPayload),
+      });
+
+      const vapiData = await vapiRes.json();
+
+      if (!vapiRes.ok) {
+        console.error("[cold-call] VAPI error:", vapiData);
+        result = `CALL FAILED: ${vapiData?.message || "VAPI error"}\nSTATUS: ${vapiRes.status}`;
+      } else {
+        console.log(`[cold-call] Call initiated: ${vapiData.id} to ${phone}`);
+        result = `CALL STATUS: initiated\nCALL ID: ${vapiData.id}\nTO: ${phone}\nLEAD: ${leadName}\nVAPI STATUS: ${vapiData.status || "queued"}\n\nThe AI call is now in progress. Results will be available in the VAPI dashboard.`;
+      }
+    }
+
     else {
       result = `Agent "${agent.name}" is queued and will process your request. Job ID: ${job?.id}`;
     }
