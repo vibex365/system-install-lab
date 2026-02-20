@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -8,17 +8,52 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2, Trash2, Download } from "lucide-react";
+import {
+  Sparkles, RefreshCw, Minimize2, Plus, Save, Copy, Loader2, Trash2,
+  Download, Globe, ShoppingBag, Palette, Scan, CheckCircle2, X,
+} from "lucide-react";
 
-const SYSTEM_PROMPT = `You are PFSW — People Fail, Systems Work. You are an elite prompt architect.
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type EngineMode = "mvp" | "website" | "shopify" | "uiux";
+
+interface ScanResult {
+  siteName: string;
+  summary: string;
+  pageContent: string;
+  colors: { primary: string; secondary: string; accent: string; background: string; text: string };
+  fonts: string[];
+  logo: string | null;
+}
+
+// ─── System Prompts ──────────────────────────────────────────────────────────
+
+const SYSTEM_MVP = `You are PFSW — People Fail, Systems Work. You are an elite Lovable prompt architect.
+
+PLATFORM CONTEXT (Lovable):
+- React + Vite + Tailwind + TypeScript + Supabase Cloud
+- Available native connectors: Stripe, Shopify, Slack, Firecrawl, ElevenLabs, Perplexity
+- For AI: use Lovable AI Gateway (https://ai.gateway.lovable.dev) via edge functions
+- For auth: Supabase Auth with RLS — never raw client SQL
+
+STRIPE RULE (MANDATORY — NO EXCEPTIONS):
+- NEVER use webhooks for payment verification
+- ALWAYS use Stripe Checkout Sessions with mode: "payment" or mode: "subscription"
+- success_url MUST include ?session_id={CHECKOUT_SESSION_ID}
+- Verify payment by querying the session on return — not via webhook events
+- Use supabase.functions.invoke() to call edge functions for checkout creation
+
+SHOPIFY RULE:
+- Use Lovable's native Shopify connector (connector_id: shopify) — NOT the raw Shopify API
 
 Rules:
-- Tone: disciplined, premium, direct.
-- No hype. No emojis.
-- Output MUST follow this EXACT structure in this EXACT order. Include ALL sections. No extra commentary before or after.
+- Tone: disciplined, premium, direct. No hype. No emojis.
+- Output MUST follow this EXACT structure in this EXACT order. Include ALL sections.
+- No extra commentary before or after.
 
 1. Objective
 2. Stack
@@ -35,7 +70,97 @@ Use stored session context as truth unless overridden.
 Keep MVP minimal. Remove unnecessary features.
 Return only the final build prompt — nothing else.`;
 
+const SYSTEM_WEBSITE = `You are PFSW — an elite Lovable website prompt architect.
+
+CONTEXT:
+- This is for CLIENT WEBSITES, not SaaS products
+- No auth, no database schema, no RLS — unless explicitly requested
+- Focus on visual excellence, conversion, and scroll experience
+- Stack: React + Vite + Tailwind + Framer Motion + shadcn/ui
+
+Rules:
+- Tone: disciplined, direct, visual-first. No hype. No emojis.
+- Output MUST follow this EXACT 5-section structure. Include ALL sections.
+- No extra commentary before or after.
+
+1. Site Goal & Target Audience
+2. Pages & Sections (with exact content, headers, subtext, and CTA copy per page)
+3. UI/UX Style (typography, color palette, spacing, component choices)
+4. Animations & Interactions (Framer Motion specifics where appropriate)
+5. Copy Tone & Content Notes
+
+Rules:
+- No backend unless explicitly asked
+- Prioritize visual hierarchy, scroll experience, and conversion
+- Specify exact section content — not generic placeholders
+- Return only the final build prompt — nothing else.`;
+
+const SYSTEM_SHOPIFY = `You are PFSW — an elite Lovable Shopify storefront prompt architect.
+
+SHOPIFY CONNECTOR RULES (MANDATORY):
+- Use Lovable's native Shopify connector (connector_id: shopify) — NOT the raw Shopify API
+- Products, inventory, and store data come from the Shopify connector automatically
+- Checkout flows through Stripe Checkout Sessions (no webhooks) OR Shopify Checkout
+- The storefront is a React app connecting to the Shopify store via connector
+
+STRIPE RULE (if using Stripe checkout):
+- NEVER use webhooks — always Stripe Checkout Sessions
+- success_url must include ?session_id={CHECKOUT_SESSION_ID}
+
+Rules:
+- Tone: disciplined, direct. No hype. No emojis.
+- Output MUST follow this EXACT 6-section structure. Include ALL sections.
+- No extra commentary before or after.
+
+1. Store Goal & Products
+2. Shopify Connector Setup
+3. Pages & Product Flows
+4. UI/UX Requirements
+5. Integrations
+6. Build Order
+
+Return only the final build prompt — nothing else.`;
+
+const SYSTEM_UIUX = `You are PFSW — an elite UI/UX design consultant generating Lovable-ready design improvement prompts.
+
+You systematically address every aspect that separates remedial designs from top-tier products.
+You use a 3-level framework. Each level builds on the previous.
+
+LEVEL 1 — FOUNDATION FIX:
+- Visual Hierarchy & Typography: Typographic scale (1.25 ratio: 12/15/18/24/30/37/46px), font weights (300/400/600/700), line heights (1.2 headings, 1.5 body), letter spacing (-0.02em large, +0.05em small caps)
+- Color & Contrast: WCAG AA compliance (4.5:1 minimum), cohesive palette with variants (50–900), semantic color usage, dark mode
+- Spacing & Layout: 4px/8px base unit system (4/8/12/16/24/32/48/64px), border radius consistency (2/4/8/12/16px), grid alignment
+- Component Standardization: Button heights (32/40/48px), form inputs, icon sizing (16/20/24/32px), card/container styling
+
+LEVEL 2 — INTERACTION PERFECTION:
+- Micro-Interactions: 0.2s ease hover states, focus indicators, skeleton loaders, page transitions, micro-feedback, success animations, tooltips (0.3s delay)
+- Navigation & Flow: Breadcrumbs, smart search, onboarding hints, CTA hierarchy, form progression with validation, progress indicators
+- Responsive & Accessibility: 44px touch targets, thumb-friendly mobile nav, keyboard navigation, ARIA labels, screen reader support, gesture support
+- Error Handling: Error states with recovery paths, empty states, offline handling, timeout handling, confirmation dialogs, auto-save
+
+LEVEL 3 — PREMIUM POLISH:
+- Visual Effects: Multi-level shadow system, glassmorphism, gradient overlays (10-15% opacity), texture/grain, backdrop blur, parallax hero, premium cards
+- Brand Personality: Custom illustration style, branded loading animations, branded empty states, consistent copywriting voice, branded error pages
+- Data Visualization: Chart styling, interactive data displays, progress indicators, elegant tables, smart data formatting, dashboard layouts
+- Enterprise Polish: Role-based UI variations, print stylesheets, audit trails, onboarding flows, keyboard shortcuts, smart defaults, multi-device sync
+
+Rules:
+- Tone: precise, technical, premium. No hype.
+- Generate Lovable-ready improvement prompts — actionable instructions the AI can implement
+- Return only the final design prompt — nothing else.`;
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const DAILY_LIMIT = 50;
+
+const MODES: { id: EngineMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "mvp", label: "MVP Builder", icon: Sparkles },
+  { id: "website", label: "Website Builder", icon: Globe },
+  { id: "shopify", label: "Shopify", icon: ShoppingBag },
+  { id: "uiux", label: "UI/UX Audit", icon: Palette },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Engine() {
   const { user, profile } = useAuth();
@@ -43,25 +168,55 @@ export default function Engine() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Left panel fields
+  // ── Mode
+  const [mode, setMode] = useState<EngineMode>("mvp");
+
+  // ── MVP fields
   const [productName, setProductName] = useState("");
   const [targetUser, setTargetUser] = useState("");
   const [offer, setOffer] = useState("");
   const [monetization, setMonetization] = useState("");
-  const [integrations, setIntegrations] = useState("");
+  const [mvpIntegrations, setMvpIntegrations] = useState("");
   const [constraints, setConstraints] = useState("");
   const [category, setCategory] = useState("");
   const [packages, setPackages] = useState<{ id: string; slug: string; name: string }[]>([]);
 
-  // Right panel
+  // ── Website Builder fields
+  const [clientUrl, setClientUrl] = useState("");
+  const [siteName, setSiteName] = useState("");
+  const [clientIndustry, setClientIndustry] = useState("");
+  const [siteGoal, setSiteGoal] = useState("");
+  const [pagesNeeded, setPagesNeeded] = useState("");
+  const [styleDirection, setStyleDirection] = useState("");
+  const [colorFontNotes, setColorFontNotes] = useState("");
+  const [animationsLevel, setAnimationsLevel] = useState("subtle");
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [brandContext, setBrandContext] = useState("");
+
+  // ── Shopify fields
+  const [storeName, setStoreName] = useState("");
+  const [niche, setNiche] = useState("");
+  const [targetCustomer, setTargetCustomer] = useState("");
+  const [shopifyPages, setShopifyPages] = useState("Home, PDP, Cart, Collections");
+  const [designStyle, setDesignStyle] = useState("");
+  const [customFeatures, setCustomFeatures] = useState("");
+
+  // ── UI/UX Audit fields
+  const [designDescription, setDesignDescription] = useState("");
+  const [currentProblems, setCurrentProblems] = useState("");
+  const [brandColors, setBrandColors] = useState("");
+  const [auditLevel, setAuditLevel] = useState("foundation");
+
+  // ── Right panel
   const [output, setOutput] = useState("");
   const [generating, setGenerating] = useState(false);
 
-  // Sessions
+  // ── Sessions
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
-  // Usage
+  // ── Usage
   const [usageCount, setUsageCount] = useState(0);
 
   useEffect(() => {
@@ -70,19 +225,14 @@ export default function Engine() {
     checkUsage();
   }, []);
 
-  // After payment verification, redirect to choose-cohort if no cohort assigned
   useEffect(() => {
     const membershipSessionId = searchParams.get("membership_session_id");
     if (membershipSessionId && profile && !profile.cohort_id) {
-      // Give a moment for payment verification to complete, then redirect
-      const timer = setTimeout(() => {
-        navigate("/choose-cohort", { replace: true });
-      }, 3000);
+      const timer = setTimeout(() => navigate("/choose-cohort", { replace: true }), 3000);
       return () => clearTimeout(timer);
     }
   }, [searchParams, profile, navigate]);
 
-  // Load library prompt into engine if navigated with ?loadPrompt=<id>
   useEffect(() => {
     const loadPromptId = searchParams.get("loadPrompt");
     if (loadPromptId) {
@@ -126,23 +276,68 @@ export default function Engine() {
 
   const loadSession = (session: any) => {
     setActiveSessionId(session.id);
-    const ctx = session.context_json as Record<string, string> || {};
+    const ctx = (session.context_json as Record<string, string>) || {};
+    // Restore mode
+    if (ctx.mode) setMode(ctx.mode as EngineMode);
+    // MVP
     setProductName(ctx.productName || "");
     setTargetUser(ctx.targetUser || "");
     setOffer(ctx.offer || "");
     setMonetization(ctx.monetization || "");
-    setIntegrations(ctx.integrations || "");
+    setMvpIntegrations(ctx.mvpIntegrations || "");
     setConstraints(ctx.constraints || "");
     setCategory(ctx.category || "");
+    // Website
+    setClientUrl(ctx.clientUrl || "");
+    setSiteName(ctx.siteName || "");
+    setClientIndustry(ctx.clientIndustry || "");
+    setSiteGoal(ctx.siteGoal || "");
+    setPagesNeeded(ctx.pagesNeeded || "");
+    setStyleDirection(ctx.styleDirection || "");
+    setColorFontNotes(ctx.colorFontNotes || "");
+    setAnimationsLevel(ctx.animationsLevel || "subtle");
+    setBrandContext(ctx.brandContext || "");
+    // Shopify
+    setStoreName(ctx.storeName || "");
+    setNiche(ctx.niche || "");
+    setTargetCustomer(ctx.targetCustomer || "");
+    setShopifyPages(ctx.shopifyPages || "Home, PDP, Cart, Collections");
+    setDesignStyle(ctx.designStyle || "");
+    setCustomFeatures(ctx.customFeatures || "");
+    // UI/UX
+    setDesignDescription(ctx.designDescription || "");
+    setCurrentProblems(ctx.currentProblems || "");
+    setBrandColors(ctx.brandColors || "");
+    setAuditLevel(ctx.auditLevel || "foundation");
+
     setOutput(session.last_output || "");
+    setScanResult(null);
   };
+
+  const buildContext = () => ({
+    mode,
+    // MVP
+    productName, targetUser, offer, monetization, mvpIntegrations, constraints, category,
+    // Website
+    clientUrl, siteName, clientIndustry, siteGoal, pagesNeeded, styleDirection, colorFontNotes, animationsLevel, brandContext,
+    // Shopify
+    storeName, niche, targetCustomer, shopifyPages, designStyle, customFeatures,
+    // UI/UX
+    designDescription, currentProblems, brandColors, auditLevel,
+  });
 
   const saveSession = async () => {
     if (!user) return;
-    const ctx = { productName, targetUser, offer, monetization, integrations, constraints, category };
+    const ctx = buildContext();
+    const title =
+      mode === "mvp" ? productName :
+      mode === "website" ? siteName || clientUrl :
+      mode === "shopify" ? storeName :
+      designDescription.slice(0, 40) || "UI/UX Audit";
+
     if (activeSessionId) {
       await supabase.from("prompt_sessions").update({
-        title: productName || "Untitled",
+        title: title || "Untitled",
         context_json: ctx,
         last_output: output,
         updated_at: new Date().toISOString(),
@@ -150,7 +345,7 @@ export default function Engine() {
     } else {
       const { data } = await supabase.from("prompt_sessions").insert({
         user_id: user.id,
-        title: productName || "Untitled",
+        title: title || "Untitled",
         context_json: ctx,
         last_output: output,
       }).select().single();
@@ -162,10 +357,7 @@ export default function Engine() {
 
   const deleteSession = async (id: string) => {
     await supabase.from("prompt_sessions").delete().eq("id", id);
-    if (activeSessionId === id) {
-      setActiveSessionId(null);
-      newSession();
-    }
+    if (activeSessionId === id) { setActiveSessionId(null); newSession(); }
     toast({ title: "Session deleted" });
     loadSessions();
   };
@@ -173,18 +365,75 @@ export default function Engine() {
   const newSession = () => {
     setActiveSessionId(null);
     setProductName(""); setTargetUser(""); setOffer(""); setMonetization("");
-    setIntegrations(""); setConstraints(""); setCategory(""); setOutput("");
+    setMvpIntegrations(""); setConstraints(""); setCategory(""); setOutput("");
+    setClientUrl(""); setSiteName(""); setClientIndustry(""); setSiteGoal("");
+    setPagesNeeded(""); setStyleDirection(""); setColorFontNotes(""); setAnimationsLevel("subtle");
+    setScanResult(null); setBrandContext("");
+    setStoreName(""); setNiche(""); setTargetCustomer("");
+    setShopifyPages("Home, PDP, Cart, Collections"); setDesignStyle(""); setCustomFeatures("");
+    setDesignDescription(""); setCurrentProblems(""); setBrandColors(""); setAuditLevel("foundation");
   };
 
   const exportOutput = () => {
+    const fileName = mode === "mvp" ? productName : mode === "website" ? siteName : mode === "shopify" ? storeName : "uiux-audit";
     const blob = new Blob([output], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${productName || "prompt"}-blueprint.md`;
+    a.download = `${fileName || "prompt"}-blueprint.md`;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // ── Website Scanner ────────────────────────────────────────────────────────
+
+  const scanSite = async () => {
+    if (!clientUrl) { toast({ title: "Enter a URL first", variant: "destructive" }); return; }
+    setScanning(true);
+    setScanResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-website", {
+        body: { url: clientUrl },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const result = data as ScanResult;
+      setScanResult(result);
+
+      // Auto-fill fields
+      if (result.siteName) setSiteName(result.siteName);
+      if (result.summary) setSiteGoal(result.summary.slice(0, 200));
+
+      const colorParts: string[] = [];
+      if (result.colors.primary) colorParts.push(`Primary: ${result.colors.primary}`);
+      if (result.colors.secondary) colorParts.push(`Secondary: ${result.colors.secondary}`);
+      if (result.colors.accent) colorParts.push(`Accent: ${result.colors.accent}`);
+      if (result.colors.background) colorParts.push(`Background: ${result.colors.background}`);
+      if (result.fonts.length) colorParts.push(`Fonts: ${result.fonts.join(", ")}`);
+      if (colorParts.length) setColorFontNotes(colorParts.join(" · "));
+      if (result.fonts.length) setStyleDirection(`Match existing brand: ${result.fonts[0]} typography`);
+
+      // Build raw brand context for injection into prompt
+      const ctx = [
+        `[EXISTING CLIENT BRAND CONTEXT — extracted from ${clientUrl}]`,
+        result.siteName ? `Site Name: ${result.siteName}` : "",
+        result.summary ? `Current Site Summary: ${result.summary}` : "",
+        colorParts.length ? `Brand Colors & Fonts: ${colorParts.join(", ")}` : "",
+        result.pageContent ? `\nExisting Content Excerpt:\n${result.pageContent.slice(0, 1500)}` : "",
+        `\n[USE THIS AS TRUTH for Style Direction, Copy Tone, and Brand Identity]`,
+      ].filter(Boolean).join("\n");
+      setBrandContext(ctx);
+
+      toast({ title: "Scan complete", description: `Brand data extracted from ${result.siteName || clientUrl}` });
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message, variant: "destructive" });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // ── Generate ───────────────────────────────────────────────────────────────
 
   const generate = async (refinement?: string) => {
     if (usageCount >= DAILY_LIMIT) {
@@ -193,28 +442,72 @@ export default function Engine() {
     }
     setGenerating(true);
     try {
-      const userMessage = `
+      const systemPrompt =
+        mode === "mvp" ? SYSTEM_MVP :
+        mode === "website" ? SYSTEM_WEBSITE :
+        mode === "shopify" ? SYSTEM_SHOPIFY :
+        SYSTEM_UIUX;
+
+      let userMessage = "";
+
+      if (mode === "mvp") {
+        userMessage = `
 Product: ${productName}
 Target User: ${targetUser}
 Offer: ${offer}
 Monetization: ${monetization}
-Integrations: ${integrations}
+Integrations: ${mvpIntegrations}
 Constraints: ${constraints}
 Category: ${category}
 ${refinement ? `\nRefinement: ${refinement}` : ""}
 ${output ? `\nPrevious Output:\n${output}` : ""}
 
 Generate a complete Lovable-ready build prompt following the exact 10-section structure.`;
+      } else if (mode === "website") {
+        userMessage = `
+${brandContext ? brandContext + "\n\n" : ""}Site Name: ${siteName}
+Client Industry: ${clientIndustry}
+Site Goal: ${siteGoal}
+Pages Needed: ${pagesNeeded}
+Style Direction: ${styleDirection}
+Color & Font Notes: ${colorFontNotes}
+Animations Level: ${animationsLevel}
+${refinement ? `\nRefinement: ${refinement}` : ""}
+${output ? `\nPrevious Output:\n${output}` : ""}
+
+Generate a complete Lovable-ready website build prompt following the exact 5-section structure.`;
+      } else if (mode === "shopify") {
+        userMessage = `
+Store Name: ${storeName}
+Niche / Products: ${niche}
+Target Customer: ${targetCustomer}
+Pages Needed: ${shopifyPages}
+Design Style: ${designStyle}
+Custom Features: ${customFeatures}
+${refinement ? `\nRefinement: ${refinement}` : ""}
+${output ? `\nPrevious Output:\n${output}` : ""}
+
+Generate a complete Lovable-ready Shopify storefront build prompt following the exact 6-section structure.`;
+      } else {
+        userMessage = `
+Design Description: ${designDescription}
+Current Problems: ${currentProblems}
+Brand Colors: ${brandColors}
+Audit Level: ${auditLevel}
+${refinement ? `\nRefinement: ${refinement}` : ""}
+${output ? `\nPrevious Output:\n${output}` : ""}
+
+Generate a complete Lovable-ready UI/UX design improvement prompt.`;
+      }
 
       const response = await supabase.functions.invoke("generate-prompt", {
-        body: { system: SYSTEM_PROMPT, message: userMessage },
+        body: { system: systemPrompt, message: userMessage },
       });
 
       if (response.error) throw response.error;
       const result = response.data?.text || response.data?.content || "Generation failed.";
       setOutput(result);
 
-      // Log usage
       await supabase.from("prompt_generations").insert({
         user_id: user!.id,
         session_id: activeSessionId,
@@ -228,9 +521,27 @@ Generate a complete Lovable-ready build prompt following the exact 10-section st
     }
   };
 
+  const generateUIAudit = (level: "foundation" | "interaction" | "premium" | "full") => {
+    const prompts = {
+      foundation: "Generate a Level 1 Foundation Fix audit. Focus on: typographic scale, WCAG contrast, spacing system, and component standardization.",
+      interaction: "Generate a Level 2 Interaction Perfection audit. Focus on: micro-interactions, navigation flows, responsive design, accessibility, error handling, and performance.",
+      premium: "Generate a Level 3 Premium Polish audit. Focus on: advanced visual effects, brand personality injection, data visualization excellence, and enterprise-grade polish.",
+      full: "Generate a FULL 3-Level Report covering ALL three levels in sequence: Level 1 Foundation Fix, Level 2 Interaction Perfection, Level 3 Premium Polish. Include every sub-item from each level. This is a comprehensive design critique.",
+    };
+    generate(prompts[level]);
+  };
+
   const copyOutput = () => {
     navigator.clipboard.writeText(output);
     toast({ title: "Copied to clipboard" });
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  const sessionLabel = (s: any) => {
+    const ctx = s.context_json as Record<string, string> || {};
+    const modeLabel = ctx.mode ? MODES.find(m => m.id === ctx.mode)?.label?.split(" ")[0] : null;
+    return { title: s.title || "Untitled", mode: modeLabel };
   };
 
   return (
@@ -239,6 +550,7 @@ Generate a complete Lovable-ready build prompt following the exact 10-section st
         <Navbar />
         <main className="pt-20 pb-20">
           <div className="container max-w-7xl">
+            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-xl font-bold text-foreground">Prompt Engine</h1>
@@ -259,42 +571,236 @@ Generate a complete Lovable-ready build prompt following the exact 10-section st
               </div>
             </div>
 
+            {/* Mode Selector */}
+            <div className="flex gap-1 mb-6 p-1 bg-muted rounded-lg w-fit">
+              {MODES.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setMode(id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    mode === id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Left — Context */}
+              {/* ── Left Panel ── */}
               <div className="space-y-4">
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Build Context</CardTitle>
+                    <CardTitle className="text-sm">
+                      {mode === "mvp" && "Build Context"}
+                      {mode === "website" && "Website Context"}
+                      {mode === "shopify" && "Store Context"}
+                      {mode === "uiux" && "Design Context"}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Field label="Product Name">
-                      <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. TaskFlow" className="bg-background border-border" />
-                    </Field>
-                    <Field label="Target User">
-                      <Input value={targetUser} onChange={(e) => setTargetUser(e.target.value)} placeholder="e.g. Solo founders building SaaS" className="bg-background border-border" />
-                    </Field>
-                    <Field label="Offer">
-                      <Textarea value={offer} onChange={(e) => setOffer(e.target.value)} placeholder="What does this product deliver?" className="bg-background border-border min-h-[60px]" />
-                    </Field>
-                    <Field label="Monetization">
-                      <Input value={monetization} onChange={(e) => setMonetization(e.target.value)} placeholder="e.g. $29/mo subscription" className="bg-background border-border" />
-                    </Field>
-                    <Field label="Integrations">
-                      <Input value={integrations} onChange={(e) => setIntegrations(e.target.value)} placeholder="e.g. Stripe, Supabase, Twilio" className="bg-background border-border" />
-                    </Field>
-                    <Field label="Constraints">
-                      <Input value={constraints} onChange={(e) => setConstraints(e.target.value)} placeholder="e.g. No webhooks, MVP only" className="bg-background border-border" />
-                    </Field>
-                    <Field label="Category">
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select package" /></SelectTrigger>
-                        <SelectContent>
-                          {packages.map((p) => (
-                            <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
+
+                    {/* ── MVP Fields ── */}
+                    {mode === "mvp" && (
+                      <>
+                        <Field label="Product Name">
+                          <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="e.g. TaskFlow" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Target User">
+                          <Input value={targetUser} onChange={(e) => setTargetUser(e.target.value)} placeholder="e.g. Solo founders building SaaS" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Offer">
+                          <Textarea value={offer} onChange={(e) => setOffer(e.target.value)} placeholder="What does this product deliver?" className="bg-background border-border min-h-[60px]" />
+                        </Field>
+                        <Field label="Monetization">
+                          <Input value={monetization} onChange={(e) => setMonetization(e.target.value)} placeholder="e.g. $29/mo subscription (Stripe Checkout Sessions)" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Integrations">
+                          <Input value={mvpIntegrations} onChange={(e) => setMvpIntegrations(e.target.value)} placeholder="e.g. Stripe, Supabase, Twilio, Shopify connector" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Constraints">
+                          <Input value={constraints} onChange={(e) => setConstraints(e.target.value)} placeholder="e.g. No webhooks, MVP only" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Category">
+                          <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue placeholder="Select package" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {packages.map((p) => (
+                                <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                      </>
+                    )}
+
+                    {/* ── Website Fields ── */}
+                    {mode === "website" && (
+                      <>
+                        {/* URL Scanner */}
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground block">Client Website URL</label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={clientUrl}
+                              onChange={(e) => setClientUrl(e.target.value)}
+                              placeholder="https://client-site.com"
+                              className="bg-background border-border flex-1"
+                              onKeyDown={(e) => e.key === "Enter" && scanSite()}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={scanSite}
+                              disabled={scanning || !clientUrl}
+                              className="shrink-0 border-border"
+                            >
+                              {scanning
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <Scan className="h-3.5 w-3.5" />
+                              }
+                              <span className="ml-1">{scanning ? "Scanning..." : "Scan Site"}</span>
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Scan result banner */}
+                        {scanResult && (
+                          <div className="rounded-md border border-border bg-muted/40 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                Scan complete — brand data extracted
+                              </div>
+                              <button onClick={() => setScanResult(null)} className="text-muted-foreground hover:text-foreground">
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            {/* Color swatches */}
+                            {Object.values(scanResult.colors).some(Boolean) && (
+                              <div className="flex gap-1.5 flex-wrap">
+                                {Object.entries(scanResult.colors).filter(([, v]) => v).map(([k, v]) => (
+                                  <div key={k} className="flex items-center gap-1">
+                                    <div
+                                      className="w-4 h-4 rounded-sm border border-border shrink-0"
+                                      style={{ backgroundColor: v }}
+                                      title={`${k}: ${v}`}
+                                    />
+                                    <span className="text-[10px] text-muted-foreground">{v}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {/* Fonts */}
+                            {scanResult.fonts.length > 0 && (
+                              <div className="flex gap-1 flex-wrap">
+                                {scanResult.fonts.map((f) => (
+                                  <Badge key={f} variant="secondary" className="text-[10px] py-0">{f}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <Field label="Site Name">
+                          <Input value={siteName} onChange={(e) => setSiteName(e.target.value)} placeholder="e.g. Acme Corp" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Client Industry">
+                          <Input value={clientIndustry} onChange={(e) => setClientIndustry(e.target.value)} placeholder="e.g. Real estate, Law firm, Fitness" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Site Goal">
+                          <Textarea value={siteGoal} onChange={(e) => setSiteGoal(e.target.value)} placeholder="e.g. Generate leads for luxury condos" className="bg-background border-border min-h-[60px]" />
+                        </Field>
+                        <Field label="Pages Needed">
+                          <Input value={pagesNeeded} onChange={(e) => setPagesNeeded(e.target.value)} placeholder="e.g. Home, About, Services, Contact" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Style Direction">
+                          <Input value={styleDirection} onChange={(e) => setStyleDirection(e.target.value)} placeholder="e.g. Minimal luxury, Bold editorial, Warm organic" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Color & Font Notes">
+                          <Textarea value={colorFontNotes} onChange={(e) => setColorFontNotes(e.target.value)} placeholder="e.g. Primary: #1A1A2E · Fonts: Playfair Display, Inter" className="bg-background border-border min-h-[60px]" />
+                        </Field>
+                        <Field label="Animations Level">
+                          <Select value={animationsLevel} onValueChange={setAnimationsLevel}>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None — Static only</SelectItem>
+                              <SelectItem value="subtle">Subtle — Fade & slide transitions</SelectItem>
+                              <SelectItem value="rich">Rich — Full Framer Motion choreography</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                      </>
+                    )}
+
+                    {/* ── Shopify Fields ── */}
+                    {mode === "shopify" && (
+                      <>
+                        <Field label="Store Name">
+                          <Input value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="e.g. Ember Goods" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Niche / Products">
+                          <Textarea value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="e.g. Premium candles and home fragrance" className="bg-background border-border min-h-[60px]" />
+                        </Field>
+                        <Field label="Target Customer">
+                          <Input value={targetCustomer} onChange={(e) => setTargetCustomer(e.target.value)} placeholder="e.g. Women 25-45, home décor enthusiasts" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Pages Needed">
+                          <Input value={shopifyPages} onChange={(e) => setShopifyPages(e.target.value)} placeholder="e.g. Home, PDP, Cart, Collections, Blog" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Design Style">
+                          <Input value={designStyle} onChange={(e) => setDesignStyle(e.target.value)} placeholder="e.g. Warm minimalist, earthy tones" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Custom Features">
+                          <Textarea value={customFeatures} onChange={(e) => setCustomFeatures(e.target.value)} placeholder="e.g. Bundle builder, loyalty points, subscription products" className="bg-background border-border min-h-[60px]" />
+                        </Field>
+                      </>
+                    )}
+
+                    {/* ── UI/UX Audit Fields ── */}
+                    {mode === "uiux" && (
+                      <>
+                        <Field label="Design Description">
+                          <Textarea
+                            value={designDescription}
+                            onChange={(e) => setDesignDescription(e.target.value)}
+                            placeholder="Describe your current design, paste a URL, or describe the UI you want audited..."
+                            className="bg-background border-border min-h-[100px]"
+                          />
+                        </Field>
+                        <Field label="Current Problems">
+                          <Textarea
+                            value={currentProblems}
+                            onChange={(e) => setCurrentProblems(e.target.value)}
+                            placeholder="What's broken, feels off, or doesn't meet expectations?"
+                            className="bg-background border-border min-h-[80px]"
+                          />
+                        </Field>
+                        <Field label="Brand Colors">
+                          <Input value={brandColors} onChange={(e) => setBrandColors(e.target.value)} placeholder="e.g. #1A1A2E, #E94560 or 'navy and gold'" className="bg-background border-border" />
+                        </Field>
+                        <Field label="Audit Level">
+                          <Select value={auditLevel} onValueChange={setAuditLevel}>
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="foundation">Level 1 — Foundation Fix</SelectItem>
+                              <SelectItem value="interaction">Level 2 — Interaction Perfection</SelectItem>
+                              <SelectItem value="premium">Level 3 — Premium Polish</SelectItem>
+                              <SelectItem value="full">Full 3-Level Report</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -308,28 +814,36 @@ Generate a complete Lovable-ready build prompt following the exact 10-section st
                       <p className="text-xs text-muted-foreground py-2">No saved sessions yet.</p>
                     ) : (
                       <div className="space-y-1">
-                        {sessions.map((s) => (
-                          <div key={s.id} className="flex items-center gap-1">
-                            <button
-                              onClick={() => loadSession(s)}
-                              className={`flex-1 text-left px-3 py-2 rounded text-xs transition-colors ${
-                                s.id === activeSessionId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                              }`}
-                            >
-                              {s.title || "Untitled"}
-                            </button>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => deleteSession(s.id)}>
-                              <Trash2 className="h-3 w-3 text-muted-foreground" />
-                            </Button>
-                          </div>
-                        ))}
+                        {sessions.map((s) => {
+                          const { title, mode: sMode } = sessionLabel(s);
+                          return (
+                            <div key={s.id} className="flex items-center gap-1">
+                              <button
+                                onClick={() => loadSession(s)}
+                                className={`flex-1 text-left px-3 py-2 rounded text-xs transition-colors flex items-center gap-2 ${
+                                  s.id === activeSessionId
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                }`}
+                              >
+                                <span className="flex-1 truncate">{title}</span>
+                                {sMode && (
+                                  <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">{sMode}</Badge>
+                                )}
+                              </button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => deleteSession(s.id)}>
+                                <Trash2 className="h-3 w-3 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Right — Output */}
+              {/* ── Right Panel ── */}
               <div className="space-y-4">
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
@@ -352,23 +866,98 @@ Generate a complete Lovable-ready build prompt following the exact 10-section st
                   </CardContent>
                 </Card>
 
+                {/* Quick Action Buttons */}
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => generate()} disabled={generating || !productName} className="gold-glow-strong">
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                    Generate
-                  </Button>
-                  <Button variant="outline" onClick={() => generate("Refine and improve the output. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
-                    <RefreshCw className="h-3 w-3 mr-1" /> Refine
-                  </Button>
-                  <Button variant="outline" onClick={() => generate("Simplify. Remove unnecessary complexity. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
-                    <Minimize2 className="h-3 w-3 mr-1" /> Simplify
-                  </Button>
-                  <Button variant="outline" onClick={() => generate("Add Stripe integration with checkout sessions. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
-                    <Plus className="h-3 w-3 mr-1" /> + Stripe
-                  </Button>
-                  <Button variant="outline" onClick={() => generate("Add Supabase Auth + RLS policies. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
-                    <Plus className="h-3 w-3 mr-1" /> + Supabase
-                  </Button>
+                  {/* ── MVP Buttons ── */}
+                  {mode === "mvp" && (
+                    <>
+                      <Button onClick={() => generate()} disabled={generating || !productName} className="gold-glow-strong">
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        Generate
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Refine and improve the output. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <RefreshCw className="h-3 w-3 mr-1" /> Refine
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Simplify. Remove unnecessary complexity. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <Minimize2 className="h-3 w-3 mr-1" /> Simplify
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add Stripe integration using ONLY Checkout Sessions (mode: 'payment' or 'subscription'). NEVER webhooks. success_url must include ?session_id={CHECKOUT_SESSION_ID}. Verify payment by querying the session on return. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Stripe (Sessions)
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add Supabase Auth with RLS policies. Use supabase.auth for authentication, never raw SQL. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Supabase
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add Lovable Shopify connector integration (connector_id: shopify). Use the native connector, not raw Shopify API. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Shopify
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add Twilio SMS notifications for key user events. Use edge functions to call Twilio API. Keep the same 10-section structure.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Twilio
+                      </Button>
+                    </>
+                  )}
+
+                  {/* ── Website Buttons ── */}
+                  {mode === "website" && (
+                    <>
+                      <Button onClick={() => generate()} disabled={generating || (!siteName && !siteGoal)} className="gold-glow-strong">
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        Generate
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Refine and improve the output. Keep the same 5-section structure.")} disabled={generating || !output} className="border-border">
+                        <RefreshCw className="h-3 w-3 mr-1" /> Refine
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Expand the Animations & Interactions section with detailed Framer Motion specs: entrance animations, scroll-triggered effects, hover states, and page transitions.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Animations
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add a detailed SEO section: meta tags, OG tags, structured data (JSON-LD), sitemap, canonical URLs, and performance optimizations.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + SEO
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add detailed mobile-first notes: responsive breakpoints, touch targets, thumb zones, mobile navigation, and mobile-specific animations.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Mobile Notes
+                      </Button>
+                    </>
+                  )}
+
+                  {/* ── Shopify Buttons ── */}
+                  {mode === "shopify" && (
+                    <>
+                      <Button onClick={() => generate()} disabled={generating || !storeName} className="gold-glow-strong">
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        Generate
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Refine and improve the output. Keep the same 6-section structure.")} disabled={generating || !output} className="border-border">
+                        <RefreshCw className="h-3 w-3 mr-1" /> Refine
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Expand the product grid section: filterable grid, product cards, quick view, color swatches, size selectors, and image gallery specs.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Product Grid
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add a detailed cart and checkout flow: cart drawer, upsells, Stripe Checkout Session integration (no webhooks), order confirmation, and post-purchase flows.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + Cart Flow
+                      </Button>
+                      <Button variant="outline" onClick={() => generate("Add SEO optimization for the storefront: product schema markup, collection pages, blog SEO, meta tags, sitemap, and page speed considerations.")} disabled={generating || !output} className="border-border">
+                        <Plus className="h-3 w-3 mr-1" /> + SEO
+                      </Button>
+                    </>
+                  )}
+
+                  {/* ── UI/UX Audit Buttons ── */}
+                  {mode === "uiux" && (
+                    <>
+                      <Button onClick={() => generateUIAudit("foundation")} disabled={generating || !designDescription} className="gold-glow-strong text-xs">
+                        {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        Level 1: Fix Foundation
+                      </Button>
+                      <Button variant="outline" onClick={() => generateUIAudit("interaction")} disabled={generating || !designDescription} className="border-border text-xs">
+                        <Palette className="h-3 w-3 mr-1" /> Level 2: Interactions
+                      </Button>
+                      <Button variant="outline" onClick={() => generateUIAudit("premium")} disabled={generating || !designDescription} className="border-border text-xs">
+                        <Sparkles className="h-3 w-3 mr-1" /> Level 3: Premium Polish
+                      </Button>
+                      <Button onClick={() => generateUIAudit("full")} disabled={generating || !designDescription} className="border-border text-xs" variant="outline">
+                        <RefreshCw className="h-3 w-3 mr-1" /> Full 3-Level Report
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

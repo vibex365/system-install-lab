@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.jobs-report]
 verify_jwt = false
+
+[functions.scan-website]
+verify_jwt = false
