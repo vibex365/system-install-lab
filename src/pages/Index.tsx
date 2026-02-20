@@ -98,14 +98,14 @@ export default function Index() {
   }, []);
 
   useSEO({
-    title: "PFSW — People Fail, Systems Work | Private Prompt Architecture Institution",
-    description: "A private, invitation-only prompt architecture institution. AI-powered Prompt Engine, curated Library, and mandatory weekly build cohorts for serious builders. Application required. $197/month.",
+    title: "Stop Struggling With Lovable Prompts — PFSW Has the System",
+    description: "Built for Lovable users who keep hitting walls. PFSW gives you structured AI system prompts, a curated Lovable prompt library, and weekly build cohorts so your projects actually ship. $197/month.",
     canonical: "https://system-install-lab.lovable.app/",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "PFSW — People Fail, Systems Work",
-      "description": "A private prompt architecture institution for serious AI builders.",
+      "name": "PFSW — Structured Prompt Architecture for Lovable Builders",
+      "description": "Built for Lovable users who keep hitting walls. Structured AI system prompts, a curated library, and weekly build cohorts so your Lovable projects actually ship.",
       "url": "https://system-install-lab.lovable.app/",
       "offers": {
         "@type": "Offer",
@@ -113,13 +113,14 @@ export default function Index() {
         "priceCurrency": "USD",
         "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1M" },
         "name": "PFSW Membership",
-        "description": "Prompt Engine, curated Library, weekly build cohorts, and member submissions pipeline."
+        "description": "AI Prompt Engine, curated Lovable prompt library, weekly build cohorts, and member submissions pipeline. Built for serious Lovable builders."
       },
       "mainEntity": {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "What is PFSW?", "acceptedAnswer": { "@type": "Answer", "text": "A private prompt architecture institution. We teach builders how to construct structured AI system prompts — and hold them accountable through mandatory weekly cohorts." } },
-          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, and the member submission pipeline." } }
+          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "PFSW is built for Lovable users and AI builders who are tired of bad prompts producing broken results. We teach structured system prompt architecture and hold you accountable through mandatory weekly build cohorts." } },
+          { "@type": "Question", "name": "How does PFSW help with Lovable?", "acceptedAnswer": { "@type": "Answer", "text": "Our Prompt Engine generates Lovable-ready system prompts with persistent memory. The curated library contains battle-tested blueprints across MVP, SaaS, e-commerce, agency, and internal tools — all structured for Lovable's builder." } },
+          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the AI Prompt Engine, the curated Lovable prompt library, weekly build cohorts, and the member submission pipeline." } }
         ]
       }
     },
