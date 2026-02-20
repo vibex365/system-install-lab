@@ -1,8 +1,7 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AuthGate } from "@/components/AuthGate";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { useSEO } from "@/hooks/use-seo";
 
 // 👇 Swap this URL with your real Loom or YouTube embed link
 const UPGRADE_VIDEO_URL = "https://www.loom.com/embed/YOUR_VIDEO_ID_HERE";
@@ -14,11 +13,9 @@ const GoldDivider = () => (
 );
 
 export default function Upgrade() {
-  useSEO({
-    title: "Watch Before You Activate — PFSW",
-    description: "You've been accepted. Watch this short video before activating your membership.",
-    canonical: "https://system-install-lab.lovable.app/upgrade",
-  });
+  useEffect(() => {
+    document.title = "Watch Before You Activate | PFSW";
+  }, []);
 
   return (
     <AuthGate requireAcceptedPending>
@@ -44,16 +41,16 @@ export default function Upgrade() {
           {/* Video embed */}
           <section className="py-4">
             <div className="rounded-xl overflow-hidden border border-primary/20 bg-primary/5">
-              <AspectRatio ratio={16 / 9}>
+              <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
                 <iframe
                   src={UPGRADE_VIDEO_URL}
                   title="PFSW Membership Overview"
-                  className="w-full h-full"
+                  className="absolute inset-0 w-full h-full"
                   frameBorder="0"
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
                 />
-              </AspectRatio>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-3">
               No audio? Check your system volume and unmute the video.
@@ -72,13 +69,13 @@ export default function Upgrade() {
                 <span className="text-foreground font-medium">Five automated agents</span> — Lead Prospector, Website Auditor, Cold Email Outreach, AI Voice Caller, and the Niche Prompt Library. All running from one dashboard, on demand or on a schedule you define.
               </p>
               <p>
-                <span className="text-foreground font-medium">A weekly peer cohort</span> — real web designers, building with Lovable, holding each other accountable. Hot seat reviews of your pitches, your builds, and your results. The kind of feedback you can't get from YouTube.
+                <span className="text-foreground font-medium">A weekly peer cohort</span> — real web designers, building with Lovable, holding each other accountable. Hot seat reviews of your pitches, your builds, and your results.
               </p>
               <p>
                 <span className="text-foreground font-medium">Niche Lovable prompts</span> — battle-tested build prompts for dental, restaurant, real estate, law, fitness, and more. Copy, paste, ship. Cut your build time from weeks to days.
               </p>
               <p>
-                <span className="text-foreground font-medium">A compounding acquisition system</span> — the longer you run the agents, the smarter your targeting gets. Month three looks nothing like month one. The system learns from your runs. Your pipeline fills itself.
+                <span className="text-foreground font-medium">A compounding acquisition system</span> — the longer you run the agents, the smarter your targeting gets. Month three looks nothing like month one.
               </p>
             </div>
           </section>
