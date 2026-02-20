@@ -1,7 +1,14 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { useSEO } from "@/hooks/use-seo";
 
 export default function Terms() {
+  useSEO({
+    title: "Terms of Service — PFSW",
+    description: "Terms of service for the PFSW prompt architecture platform.",
+    canonical: "https://system-install-lab.lovable.app/terms",
+    noIndex: true,
+  });
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

@@ -65,8 +65,21 @@ Rules:
 6. Core User Flows
 7. UI/UX Requirements (black/gold editorial)
 8. Integrations
-9. Acceptance Criteria
-10. Build Order
+9. SEO Implementation (MANDATORY — include ALL of the following):
+   - React Helmet or document.title management for every route
+   - Unique title tag per page (under 60 chars, keyword-first)
+   - Unique meta description per page (under 160 chars, action-oriented)
+   - Open Graph tags: og:title, og:description, og:type, og:url, og:image (1200×630)
+   - Twitter Card tags: twitter:card=summary_large_image, twitter:title, twitter:description, twitter:image
+   - Canonical <link rel="canonical"> on every page
+   - JSON-LD structured data: Organization + WebSite on root; Product/Service schema where relevant; FAQPage schema if FAQ section exists
+   - Semantic HTML: single <h1> per page, logical h2/h3 hierarchy, <main>, <header>, <footer>, <section>, <article> where appropriate
+   - Image: descriptive alt attributes on all images; lazy loading on below-fold images
+   - /public/robots.txt: Allow all crawlers, reference /sitemap.xml
+   - /public/sitemap.xml: all public routes with <priority> and <changefreq>
+   - Performance: lazy-load below-fold sections with React.lazy; avoid render-blocking scripts
+10. Acceptance Criteria
+11. Build Order
 
 Use stored session context as truth unless overridden.
 Keep MVP minimal. Remove unnecessary features.
@@ -82,14 +95,27 @@ CONTEXT:
 
 Rules:
 - Tone: disciplined, direct, visual-first. No hype. No emojis.
-- Output MUST follow this EXACT 5-section structure. Include ALL sections.
+- Output MUST follow this EXACT 6-section structure. Include ALL sections.
 - No extra commentary before or after.
 
 1. Site Goal & Target Audience
 2. Pages & Sections (with exact content, headers, subtext, and CTA copy per page)
 3. UI/UX Style (typography, color palette, spacing, component choices)
 4. Animations & Interactions (Framer Motion specifics where appropriate)
-5. Copy Tone & Content Notes
+5. SEO Implementation (MANDATORY — include ALL of the following for this client site):
+   - Unique <title> per page (under 60 chars, keyword-first with brand name)
+   - Unique meta description per page (under 160 chars, benefit-focused)
+   - Open Graph: og:title, og:description, og:type=website, og:url, og:image (1200×630), og:site_name
+   - Twitter Card: twitter:card=summary_large_image, twitter:title, twitter:description, twitter:image
+   - Canonical <link rel="canonical"> on every page
+   - JSON-LD on homepage: Organization schema with name, url, logo, description; Local Business schema if applicable
+   - JSON-LD on service/product pages: Service or Product schema with name, description, offers
+   - Semantic HTML: single <h1> per page (brand + primary keyword), h2/h3 content hierarchy, <main>, <header>, <footer>, <section>
+   - Image SEO: descriptive alt text (keyword-natural), lazy loading on below-fold images, WebP format recommendation
+   - /public/robots.txt: Allow: /, reference Sitemap
+   - /public/sitemap.xml: all routes with <lastmod>, <changefreq>, <priority>
+   - Performance: Core Web Vitals — LCP target < 2.5s, CLS < 0.1, FID < 100ms; lazy-load below-fold sections
+6. Copy Tone & Content Notes
 
 Rules:
 - No backend unless explicitly asked
@@ -111,15 +137,26 @@ STRIPE RULE (if using Stripe checkout):
 
 Rules:
 - Tone: disciplined, direct. No hype. No emojis.
-- Output MUST follow this EXACT 6-section structure. Include ALL sections.
+- Output MUST follow this EXACT 7-section structure. Include ALL sections.
 - No extra commentary before or after.
 
 1. Store Goal & Products
 2. Shopify Connector Setup
 3. Pages & Product Flows
 4. UI/UX Requirements
-5. Integrations
-6. Build Order
+5. SEO Implementation (MANDATORY — storefront-specific):
+   - Unique title per page: "{Product/Collection} | {Store Name}" format, under 60 chars
+   - Meta descriptions per page: benefit-driven, under 160 chars, with primary keyword
+   - Open Graph + Twitter Card on all pages (especially product pages for social sharing)
+   - Canonical tags on all pages; handle pagination with rel=next/prev or canonical to page 1
+   - JSON-LD: Product schema on PDP (name, description, image, offers with price/currency/availability); BreadcrumbList on all interior pages; Organization on homepage
+   - Semantic HTML: h1 = product/collection name on interior pages, structured product content
+   - Image SEO: alt text = "{Product Name} — {Key Descriptor}", lazy load below fold, WebP
+   - Collection pages: unique h1, unique meta per collection
+   - /public/robots.txt + /public/sitemap.xml covering all routes
+   - Performance: lazy-load product images, skeleton loaders for data fetching
+6. Integrations
+7. Build Order
 
 Return only the final build prompt — nothing else.`;
 
@@ -145,6 +182,18 @@ LEVEL 3 — PREMIUM POLISH:
 - Brand Personality: Custom illustration style, branded loading animations, branded empty states, consistent copywriting voice, branded error pages
 - Data Visualization: Chart styling, interactive data displays, progress indicators, elegant tables, smart data formatting, dashboard layouts
 - Enterprise Polish: Role-based UI variations, print stylesheets, audit trails, onboarding flows, keyboard shortcuts, smart defaults, multi-device sync
+
+SEO LAYER (included in all audit levels):
+- Title tag audit: unique per page, under 60 chars, keyword-first
+- Meta description audit: unique per page, under 160 chars, action-oriented with primary keyword
+- Open Graph + Twitter Card coverage on all public routes
+- Canonical tag presence on every page
+- JSON-LD structured data: Organization/WebSite on root, content-type schemas on interior pages (FAQ, Product, Article, BreadcrumbList)
+- Semantic HTML audit: single h1 per page, h2/h3 hierarchy, semantic elements (<main>, <section>, <article>, <header>, <footer>)
+- Image SEO: alt text quality, lazy loading, format (WebP recommendation)
+- Performance: Core Web Vitals targets (LCP < 2.5s, CLS < 0.1, FID < 100ms), lazy-loading strategy
+- robots.txt and sitemap.xml presence and correctness
+- Internal linking: logical navigation structure, breadcrumbs on interior pages
 
 Rules:
 - Tone: precise, technical, premium. No hype.
