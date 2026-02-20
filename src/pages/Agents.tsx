@@ -17,14 +17,14 @@ import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
-  ArrowRight, Info,
+  ArrowRight, Info, Video,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
-  CalendarDays, Mail, Eye, UserCheck,
+  CalendarDays, Mail, Eye, UserCheck, Video,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
