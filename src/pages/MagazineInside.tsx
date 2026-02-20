@@ -22,7 +22,7 @@ export default function MagazineInside() {
     description: "Read the PFSW doctrine: a field manual for serious builders on structured AI prompt architecture, systems thinking, and disciplined output. Private access.",
     canonical: "https://system-install-lab.lovable.app/magazine/inside",
   });
-  const { user, profile, isChiefArchitect, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const current = magazinePages[page];
@@ -31,10 +31,7 @@ export default function MagazineInside() {
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/login", { replace: true }); return; }
-    const s = profile?.member_status as string;
-    const allowed = s === "active" || s === "accepted_pending_payment" || isChiefArchitect;
-    if (profile && !allowed) { navigate("/status", { replace: true }); return; }
-  }, [user, profile, loading, isChiefArchitect, navigate]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -194,9 +191,9 @@ export default function MagazineInside() {
                   <GoldDivider />
                   <div className="text-center py-8">
                     <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
-                      <Link to="/accepted">Activate My Membership</Link>
+                      <Link to="/apply">Apply Now</Link>
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-4">$197/month · Cohort assigned within 48 hours</p>
+                    <p className="text-xs text-muted-foreground mt-4">Application required · $5 processing fee · $197/month upon acceptance</p>
                   </div>
                 </>
               )}

@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const status = profile.member_status as string;
     if (status === "accepted_pending_payment") {
-      navigate("/accepted", { replace: true });
+      navigate("/upgrade", { replace: true });
     } else if (status === "active") {
       navigate("/engine", { replace: true });
     } else {
