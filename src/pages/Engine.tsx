@@ -300,9 +300,9 @@ const NICHE_PRESETS: Record<string, { industry: string; siteGoal: string; styleD
 };
 
 const MODES: { id: EngineMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "mvp", label: "MVP Builder", icon: Sparkles },
   { id: "website", label: "Website Builder", icon: Globe },
   { id: "shopify", label: "Shopify", icon: ShoppingBag },
+  { id: "mvp", label: "MVP Builder", icon: Sparkles },
   { id: "uiux", label: "UI/UX Audit", icon: Palette },
 ];
 
@@ -315,7 +315,7 @@ export default function Engine() {
   const navigate = useNavigate();
 
   // ── Mode
-  const [mode, setMode] = useState<EngineMode>("mvp");
+  const [mode, setMode] = useState<EngineMode>("website");
 
   // ── MVP fields
   const [productName, setProductName] = useState("");
