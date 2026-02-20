@@ -354,6 +354,67 @@ Generate:
 Make everything specific to ${memberName} and their ${productIdea}. No generic advice.`);
     }
 
+    else if (agent.slug === "sms-outreach") {
+      const leadName = input.lead_name || "there";
+      const phone = input.phone || "";
+      const pitchContext = input.pitch_context || "";
+
+      if (!phone) {
+        return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
+      }
+
+      // Generate the SMS copy
+      const smsBody = await callAI(`You are a cold outreach SMS specialist for a web designer/developer.
+
+Lead name: ${leadName}
+Pitch context: ${pitchContext}
+
+Write ONE cold SMS message. Rules:
+- MUST be under 155 characters (leave room for carrier overhead)
+- Personal — use their name
+- Specific — reference their business/situation from the pitch context
+- Include a soft CTA (question, not a hard sell)
+- No links, no emojis, no ALL CAPS
+- Sound human, not like a bot
+
+Output ONLY the SMS text, nothing else.`);
+
+      const trimmedSms = smsBody.trim().slice(0, 160);
+
+      // Send via Twilio
+      const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+      const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+      const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+      let smsStatus = "draft";
+      let smsSid = "";
+
+      if (accountSid && authToken && fromNumber) {
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+        const twilioAuth = btoa(`${accountSid}:${authToken}`);
+        const twilioRes = await fetch(twilioUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${twilioAuth}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: phone, From: fromNumber, Body: trimmedSms }),
+        });
+        const twilioData = await twilioRes.json();
+        if (twilioRes.ok) {
+          smsStatus = "sent";
+          smsSid = twilioData.sid || "";
+        } else {
+          smsStatus = "failed";
+          console.error("[sms-outreach] Twilio error:", twilioData);
+        }
+      } else {
+        smsStatus = "twilio_not_configured";
+      }
+
+      result = `SMS STATUS: ${smsStatus}\nTO: ${phone}\nSID: ${smsSid}\n\nMESSAGE SENT:\n${trimmedSms}`;
+    }
+
     else {
       result = `Agent "${agent.name}" is queued and will process your request. Job ID: ${job?.id}`;
     }
