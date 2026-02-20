@@ -33,6 +33,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminModLog from "./pages/admin/AdminModLog";
 import AdminAgents from "./pages/admin/AdminAgents";
 import Agents from "./pages/Agents";
+import Upgrade from "./pages/Upgrade";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,8 @@ const App = () => (
             <Route path="/accepted" element={<Accepted />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+
+            <Route path="/upgrade" element={<Upgrade />} />
 
             {/* Member routes */}
             <Route path="/engine" element={<Engine />} />
