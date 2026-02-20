@@ -8,12 +8,36 @@ import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Brain, Users, CalendarCheck, BookOpen, Shield, Layers } from "lucide-react";
+import { Brain, Users, CalendarCheck, BookOpen, Shield, Layers, Search, MessageSquare, Globe, Mail } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 import { useSEO } from "@/hooks/use-seo";
 
 /* ── Data ── */
+const featuredAgents = [
+  {
+    icon: Search,
+    name: "Lead Prospector",
+    desc: "Parse ICP criteria and return a structured list of qualified leads with contact data.",
+  },
+  {
+    icon: Globe,
+    name: "Website Proposal Agent",
+    desc: "Scan any URL and generate a scoped project proposal with pricing and delivery timeline.",
+  },
+  {
+    icon: MessageSquare,
+    name: "Social Media Agent",
+    desc: "Generate a week of on-brand content from a single topic — Lovable-builder audiences included.",
+  },
+  {
+    icon: Mail,
+    name: "Email Drip Agent",
+    desc: "Build a 5-email onboarding or nurture sequence with subject lines and send cadence.",
+  },
+];
+
 const pillars = [
+
   {
     icon: Brain,
     title: "Prompt Engine",
@@ -77,8 +101,16 @@ const institutionalFaqs = [
     a: "To filter. If $5 stops you, the program isn't for you. The fee ensures only serious operators enter the pipeline.",
   },
   {
+    q: "How does PFSW help with Lovable specifically?",
+    a: "Most Lovable builders hit the same wall: vague prompts produce broken builds. PFSW gives you structured system prompt architecture built for Lovable projects — persistent memory, scoped context, and deployment-ready blueprints so your Lovable builds ship the first time. The curated library contains Lovable-tested prompt blueprints across MVP, SaaS, e-commerce, and internal tools.",
+  },
+  {
+    q: "What is the AI Agent Marketplace?",
+    a: "A catalog of specialized institutional AI agents available to active members. Each agent runs a defined job — lead prospecting, website proposals, social content, SMS follow-ups, competitor intelligence, and more. Agents are leased monthly and can run on demand or on a recurring schedule. No prompt engineering required; the architecture is built in.",
+  },
+  {
     q: "What does $197/month include?",
-    a: "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, and the member submission pipeline.",
+    a: "Full access to the Prompt Engine with AI generation, the curated prompt library, weekly build cohorts, the member submission pipeline, and the AI Agent Marketplace.",
   },
   {
     q: "What happens if I miss sessions?",
@@ -87,7 +119,7 @@ const institutionalFaqs = [
   { q: "Can I cancel?", a: "Yes. No contracts. But the prompts you build and the systems you install stay with you." },
   {
     q: "Is this coaching?",
-    a: "No. This is a structured operating environment. You get frameworks, architecture tools, and disciplined cadence — not advice.",
+    a: "No. This is a structured operating environment. You get frameworks, architecture tools, disciplined cadence, and institutional AI agents — not advice.",
   },
 ];
 
@@ -119,8 +151,9 @@ export default function Index() {
         "@type": "FAQPage",
         "mainEntity": [
           { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "PFSW is built for Lovable users and AI builders who are tired of bad prompts producing broken results. We teach structured system prompt architecture and hold you accountable through mandatory weekly build cohorts." } },
-          { "@type": "Question", "name": "How does PFSW help with Lovable?", "acceptedAnswer": { "@type": "Answer", "text": "Our Prompt Engine generates Lovable-ready system prompts with persistent memory. The curated library contains battle-tested blueprints across MVP, SaaS, e-commerce, agency, and internal tools — all structured for Lovable's builder." } },
-          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the AI Prompt Engine, the curated Lovable prompt library, weekly build cohorts, and the member submission pipeline." } }
+          { "@type": "Question", "name": "How does PFSW help with Lovable specifically?", "acceptedAnswer": { "@type": "Answer", "text": "Most Lovable builders hit the same wall: vague prompts produce broken builds. PFSW gives you structured system prompt architecture built for Lovable projects — persistent memory, scoped context, and deployment-ready blueprints so your Lovable builds ship the first time." } },
+          { "@type": "Question", "name": "What is the AI Agent Marketplace?", "acceptedAnswer": { "@type": "Answer", "text": "A catalog of specialized institutional AI agents available to active members. Each agent runs a defined job — lead prospecting, website proposals, social content, SMS follow-ups, competitor intelligence, and more. No prompt engineering required." } },
+          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "Full access to the AI Prompt Engine, the curated Lovable prompt library, weekly build cohorts, the member submission pipeline, and the AI Agent Marketplace." } }
         ]
       }
     },
@@ -202,6 +235,33 @@ export default function Index() {
             {pillars.map((p) => (
               <FeatureCard key={p.title} icon={p.icon} title={p.title} description={p.description} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI Agent Marketplace Teaser ── */}
+      <section className="py-20 md:py-28 border-t border-border bg-card/30">
+        <div className="container">
+          <SectionHeader
+            title="AI Agent Marketplace"
+            subtitle="Active members get access to a catalog of specialized institutional agents. Each one runs a defined job — no prompting required."
+          />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+            {featuredAgents.map((agent) => (
+              <div key={agent.name} className="rounded-2xl border border-border bg-card p-6 hover:border-primary/30 transition-all">
+                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <agent.icon className="h-4 w-4 text-primary" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground tracking-tight mb-1">{agent.name}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{agent.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            <Button asChild size="sm" variant="outline" className="border-primary/30 text-foreground hover:bg-primary/10 tracking-wide">
+              <Link to="/agents">Explore All Agents</Link>
+            </Button>
+            <span className="text-xs text-muted-foreground">10+ agents · Active members only</span>
           </div>
         </div>
       </section>
