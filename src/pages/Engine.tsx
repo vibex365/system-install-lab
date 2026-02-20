@@ -240,6 +240,65 @@ Rules:
 
 const DAILY_LIMIT = 50;
 
+const NICHE_PRESETS: Record<string, { industry: string; siteGoal: string; styleDirection: string; pages: string; colorFontNotes: string }> = {
+  Dental: {
+    industry: "Dental practice",
+    siteGoal: "Book new patient appointments — conversion-optimized landing page with online booking widget, insurance info, and Google review trust signals",
+    styleDirection: "Clean clinical white with navy and gold accents — professional, trustworthy, friendly. Playfair Display headlines, Inter body.",
+    pages: "Home, Services, About, Patient Resources, Contact & Booking",
+    colorFontNotes: "Primary: #1B3A6B (navy) · Accent: #C9A84C (gold) · Background: #FFFFFF · Fonts: Playfair Display, Inter",
+  },
+  Restaurant: {
+    industry: "Restaurant / food & beverage",
+    siteGoal: "Drive table reservations and online orders — mouth-watering food photography hero, menu showcase, reservation CTA above the fold",
+    styleDirection: "Warm, editorial, food-magazine aesthetic. Deep burgundy, cream, and warm amber. Cormorant Garamond headlines, Lato body.",
+    pages: "Home, Menu, Reservations, About, Gallery, Contact",
+    colorFontNotes: "Primary: #6B1A1A (burgundy) · Accent: #D4A857 (amber) · Background: #FAF5E9 (cream) · Fonts: Cormorant Garamond, Lato",
+  },
+  "Real Estate": {
+    industry: "Real estate agency / realtor",
+    siteGoal: "Generate buyer and seller leads — property search, featured listings, agent bio, and lead capture form with neighborhood guides",
+    styleDirection: "Luxury property aesthetic. Charcoal, white, and gold. Serif headlines, clean sans body. Full-bleed property photography.",
+    pages: "Home, Listings, Neighborhoods, About, Contact",
+    colorFontNotes: "Primary: #1C1C1C (charcoal) · Accent: #B8962E (gold) · Background: #F8F8F8 · Fonts: Freight Display, DM Sans",
+  },
+  "Law Firm": {
+    industry: "Law firm / attorney",
+    siteGoal: "Generate case inquiry leads — build authority and trust, highlight practice areas, and drive free consultation bookings",
+    styleDirection: "Authoritative and understated. Dark navy, white, subtle gold. No bright colors. Garamond or Times New Roman for trust, Inter for clarity.",
+    pages: "Home, Practice Areas, Attorneys, Case Results, Contact",
+    colorFontNotes: "Primary: #0D1B2A (dark navy) · Accent: #C5A028 (gold) · Background: #FFFFFF · Fonts: EB Garamond, Inter",
+  },
+  Fitness: {
+    industry: "Gym / fitness studio / personal trainer",
+    siteGoal: "Drive membership sign-ups and class bookings — high energy hero, class schedule, trainer bios, transformation testimonials",
+    styleDirection: "High energy, dark athletic aesthetic. Black, electric yellow or orange, white. Impact or Bebas Neue headlines, DM Sans body.",
+    pages: "Home, Classes, Trainers, Membership, Testimonials, Contact",
+    colorFontNotes: "Primary: #0A0A0A (near black) · Accent: #F5A623 (electric orange) · Background: #111111 · Fonts: Bebas Neue, DM Sans",
+  },
+  Auto: {
+    industry: "Auto shop / auto repair / car dealership",
+    siteGoal: "Drive service appointments and car inquiries — trust signals, service menu, online appointment booking, financing options",
+    styleDirection: "Rugged industrial with a polished edge. Charcoal, red or orange accent, white. Strong sans-serifs, bold section dividers.",
+    pages: "Home, Services, Inventory, About, Appointment Booking, Contact",
+    colorFontNotes: "Primary: #2D2D2D (charcoal) · Accent: #E53E3E (red) · Background: #F4F4F4 · Fonts: Oswald, Open Sans",
+  },
+  Plumbing: {
+    industry: "Plumbing / home services",
+    siteGoal: "Drive service call bookings — emergency availability badge, clear service list, transparent pricing, strong local SEO signals",
+    styleDirection: "Clean, approachable, trustworthy. Blue and white. Professional but not corporate. Roboto or Source Sans Pro throughout.",
+    pages: "Home, Services, Service Area, About, Contact & Emergency Line",
+    colorFontNotes: "Primary: #1E5F9B (blue) · Accent: #F6A623 (orange/gold) · Background: #FFFFFF · Fonts: Roboto Slab, Roboto",
+  },
+  Salon: {
+    industry: "Hair salon / beauty studio / spa",
+    siteGoal: "Drive appointment bookings — portfolio of work, service menu with pricing, stylist profiles, online booking integration",
+    styleDirection: "Elevated, feminine, modern. Blush, black, and gold. Didot or Bodoni headlines, light sans body. Instagram-quality photo grid.",
+    pages: "Home, Services & Pricing, Our Team, Gallery, Book Online, Contact",
+    colorFontNotes: "Primary: #1A1A1A (near black) · Accent: #C9A0A0 (blush) · Accent2: #C9A84C (gold) · Background: #FAF7F5 · Fonts: Cormorant, Raleway",
+  },
+};
+
 const MODES: { id: EngineMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "mvp", label: "MVP Builder", icon: Sparkles },
   { id: "website", label: "Website Builder", icon: Globe },
@@ -280,6 +339,7 @@ export default function Engine() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [brandContext, setBrandContext] = useState("");
+  const [selectedNiche, setSelectedNiche] = useState("");
 
   // ── Shopify fields
   const [storeName, setStoreName] = useState("");
@@ -778,6 +838,37 @@ Generate a complete Lovable-ready UI/UX design improvement prompt.`;
                     {/* ── Website Fields ── */}
                     {mode === "website" && (
                       <>
+                        {/* Niche Selector */}
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground block">Quick-Fill by Niche</label>
+                          <Select
+                            value={selectedNiche}
+                            onValueChange={(val) => {
+                              setSelectedNiche(val);
+                              const preset = NICHE_PRESETS[val];
+                              if (preset) {
+                                setClientIndustry(preset.industry);
+                                setSiteGoal(preset.siteGoal);
+                                setStyleDirection(preset.styleDirection);
+                                setPagesNeeded(preset.pages);
+                                setColorFontNotes(preset.colorFontNotes);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="bg-background border-border">
+                              <SelectValue placeholder="Select a niche to auto-fill fields →" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.keys(NICHE_PRESETS).map((n) => (
+                                <SelectItem key={n} value={n}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedNiche && (
+                            <p className="text-[10px] text-primary">✓ Fields auto-filled for {selectedNiche} — customize as needed</p>
+                          )}
+                        </div>
+
                         {/* URL Scanner */}
                         <div className="space-y-2">
                           <label className="text-xs text-muted-foreground block">Client Website URL</label>
