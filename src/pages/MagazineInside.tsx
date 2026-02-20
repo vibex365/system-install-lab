@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,53 +18,34 @@ const GoldDivider = () => (
 
 export default function MagazineInside() {
   useSEO({
-    title: "The PFSW Doctrine — Prompt Architecture Field Manual",
-    description: "Read the PFSW doctrine: a field manual for serious builders on structured AI prompt architecture, systems thinking, and disciplined output. Private access.",
+    title: "The Web Designer's Toolkit — PFSW Field Manual",
+    description: "Read the PFSW product guide: how web designers use AI agents to scrape leads, audit sites, send cold emails, and close clients with Lovable-built websites.",
     canonical: "https://system-install-lab.lovable.app/magazine/inside",
   });
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const current = magazinePages[page];
   const total = magazinePages.length;
-
-  useEffect(() => {
-    if (loading) return;
-    if (!user) { navigate("/login", { replace: true }); return; }
-  }, [user, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   const go = (next: number) => {
     setPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Cover page rendering
+  // Cover page
   if (current.isCover) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <main>
           <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-            {/* Cover image */}
             <img
               src={magazineCover}
               alt="PFSW Magazine Cover"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            {/* Dark overlay */}
             <div className="absolute inset-0 bg-black/75" />
-
-            {/* Cover content */}
             <AnimatePresence mode="wait">
               <motion.div
                 key="cover"
@@ -74,7 +55,7 @@ export default function MagazineInside() {
                 className="relative z-10 text-center px-6 max-w-3xl mx-auto"
               >
                 <p className="text-xs uppercase tracking-[0.5em] text-primary mb-8">
-                  PFSW — Prompt Architecture Institution
+                  PFSW — Client Acquisition Toolkit for Web Designers
                 </p>
                 <h1 className="font-serif text-6xl sm:text-8xl font-bold text-white leading-none mb-6">
                   People Fail.
@@ -85,10 +66,10 @@ export default function MagazineInside() {
                   <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent" />
                 </div>
                 <p className="text-xl sm:text-2xl font-serif text-white/80 italic mb-4">
-                  "No one is bigger than the program."
+                  "The system finds the clients. You build the sites."
                 </p>
                 <p className="text-sm text-white/50 tracking-widest uppercase mb-16">
-                  The Institutional Doctrine · Volume I
+                  The Web Design Agency Playbook · Volume I
                 </p>
                 <Button
                   onClick={() => go(1)}
@@ -112,7 +93,7 @@ export default function MagazineInside() {
       <main className="pt-24 pb-20">
         <div className="max-w-2xl mx-auto px-6">
 
-          {/* Table of Contents toggle */}
+          {/* Table of Contents */}
           <details className="mb-8 group">
             <summary className="text-xs uppercase tracking-[0.3em] text-primary cursor-pointer select-none hover:text-primary/80 transition-colors">
               Table of Contents
@@ -129,7 +110,7 @@ export default function MagazineInside() {
                   }`}
                 >
                   {p.isCover ? (
-                    <span className="font-medium">Cover — Manifesto</span>
+                    <span className="font-medium">Cover</span>
                   ) : (
                     <>
                       <span className="text-[10px] text-muted-foreground mr-2">{String(p.pageNumber).padStart(2, "0")}</span>
@@ -149,10 +130,8 @@ export default function MagazineInside() {
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.35 }}
             >
-              {/* Chapter label */}
               <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">{current.chapter}</p>
 
-              {/* Editorial image */}
               {current.image && (
                 <div className="relative w-full h-56 sm:h-72 mb-8 overflow-hidden rounded-lg">
                   <img
@@ -164,7 +143,6 @@ export default function MagazineInside() {
                 </div>
               )}
 
-              {/* Page title */}
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground leading-tight mb-3">
                 {current.title}
               </h1>
@@ -172,7 +150,6 @@ export default function MagazineInside() {
                 <p className="text-muted-foreground leading-relaxed mb-2 text-lg">{current.subtitle}</p>
               )}
 
-              {/* Sections */}
               {current.sections.map((s, i) => (
                 <div key={i}>
                   <GoldDivider />
@@ -185,15 +162,26 @@ export default function MagazineInside() {
                 </div>
               ))}
 
-              {/* CTA on final page */}
+              {/* Final page CTA */}
               {page === total - 1 && (
                 <>
                   <GoldDivider />
                   <div className="text-center py-8">
-                    <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
-                      <Link to="/apply">Apply Now</Link>
-                    </Button>
-                    <p className="text-xs text-muted-foreground mt-4">Application required · $5 processing fee · $197/month upon acceptance</p>
+                    {user ? (
+                      <>
+                        <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
+                          <Link to="/apply">Apply Now</Link>
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-4">Application required · $5 processing fee · $197/month upon acceptance</p>
+                      </>
+                    ) : (
+                      <>
+                        <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
+                          <Link to="/login">Create Account to Apply</Link>
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-4">Free account required · $5 application fee · $197/month upon acceptance</p>
+                      </>
+                    )}
                   </div>
                 </>
               )}
@@ -230,7 +218,7 @@ export default function MagazineInside() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground tracking-wide pt-8 pb-4">
-            PFSW — Prompt Architecture Institution
+            PFSW — Client Acquisition Toolkit for Web Designers
           </p>
         </div>
       </main>
