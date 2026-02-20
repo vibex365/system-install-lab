@@ -17,7 +17,7 @@ import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
-  ArrowRight, Info, Video,
+  ArrowRight, Info, Video, Phone, Loader2 as PhoneLoader,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -168,6 +168,7 @@ function RunAgentModal({
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleFreq, setScheduleFreq] = useState<"daily" | "weekly">("weekly");
   const [nextRunAt, setNextRunAt] = useState<string | null>(lease.next_run_at || null);
+  const [callStatuses, setCallStatuses] = useState<Record<number, "calling" | "called" | "failed">>({});
 
   const handleReset = () => {
     setResult(null);
@@ -213,6 +214,29 @@ function RunAgentModal({
       navigator.clipboard.writeText(result);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const callLead = async (index: number, lead: { name: string; phone: string; website: string }) => {
+    if (!lead.phone || lead.phone === "Research needed") {
+      toast({ title: "No phone number", description: "Phone number not found for this lead.", variant: "destructive" });
+      return;
+    }
+    setCallStatuses((p) => ({ ...p, [index]: "calling" }));
+    try {
+      const { data, error } = await supabase.functions.invoke("vapi-call", {
+        body: {
+          phone_number: lead.phone,
+          call_type: "website_lead",
+          context: { business_name: lead.name, website: lead.website },
+        },
+      });
+      if (error || data?.error) throw new Error(error?.message || data?.error);
+      setCallStatuses((p) => ({ ...p, [index]: "called" }));
+      toast({ title: "Call initiated", description: `Calling ${lead.name}` });
+    } catch (e: any) {
+      setCallStatuses((p) => ({ ...p, [index]: "failed" }));
+      toast({ title: "Call failed", description: e.message, variant: "destructive" });
     }
   };
 
@@ -388,20 +412,42 @@ function RunAgentModal({
                               </td>
                               <td className="p-2 text-muted-foreground hidden md:table-cell">{lead.phone}</td>
                               <td className="p-2">
-                                {onHandoffToProposal && (
+                                <div className="flex items-center gap-1.5">
+                                  {onHandoffToProposal && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 gap-1 border-primary/40 text-primary hover:bg-primary/10"
+                                      onClick={() => {
+                                        onHandoffToProposal(lead.name, lead.website || "");
+                                        onClose();
+                                      }}
+                                    >
+                                      → Proposal
+                                      <ArrowRight className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-6 text-[10px] px-2 gap-1 border-primary/40 text-primary hover:bg-primary/10"
-                                    onClick={() => {
-                                      onHandoffToProposal(lead.name, lead.website || "");
-                                      onClose();
-                                    }}
+                                    className="h-6 text-[10px] px-2 gap-1 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                                    disabled={
+                                      !lead.phone ||
+                                      lead.phone === "Research needed" ||
+                                      callStatuses[i] === "calling"
+                                    }
+                                    onClick={() => callLead(i, lead)}
                                   >
-                                    → Proposal
-                                    <ArrowRight className="h-3 w-3" />
+                                    {callStatuses[i] === "calling" ? (
+                                      <PhoneLoader className="h-3 w-3 animate-spin" />
+                                    ) : callStatuses[i] === "called" ? (
+                                      <Phone className="h-3 w-3 text-emerald-400" />
+                                    ) : (
+                                      <Phone className="h-3 w-3" />
+                                    )}
+                                    {callStatuses[i] === "called" ? "Called" : callStatuses[i] === "calling" ? "Calling..." : "Call"}
                                   </Button>
-                                )}
+                                </div>
                               </td>
                             </tr>
                           ))}

@@ -6,7 +6,7 @@ import { StatusPill } from "@/components/StatusPill";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Phone, Loader2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Application = Tables<"applications">;
@@ -17,6 +17,7 @@ export default function AdminApplications() {
   const [selected, setSelected] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [smsStatus, setSmsStatus] = useState<Record<string, string>>({});
+  const [callStatus, setCallStatus] = useState<Record<string, string>>({});
 
   const fetch = async () => {
     setLoading(true);
@@ -26,6 +27,29 @@ export default function AdminApplications() {
   };
 
   useEffect(() => { fetch(); }, []);
+
+  const callApplicant = async (app: Application) => {
+    if (!app.phone_number) {
+      toast({ title: "No phone number", description: "This applicant has no phone number on file.", variant: "destructive" });
+      return;
+    }
+    setCallStatus((p) => ({ ...p, [app.id]: "calling" }));
+    try {
+      const { data, error } = await supabase.functions.invoke("vapi-call", {
+        body: {
+          phone_number: app.phone_number,
+          call_type: "applicant",
+          context: { name: app.name, product: app.product },
+        },
+      });
+      if (error || data?.error) throw new Error(error?.message || data?.error);
+      setCallStatus((p) => ({ ...p, [app.id]: "called" }));
+      toast({ title: "Call initiated", description: `Calling ${app.name} at ${app.phone_number}` });
+    } catch (e: any) {
+      setCallStatus((p) => ({ ...p, [app.id]: "failed" }));
+      toast({ title: "Call failed", description: e.message, variant: "destructive" });
+    }
+  };
 
   const sendSms = async (phone: string, message: string, appId: string) => {
     setSmsStatus((p) => ({ ...p, [appId]: "sending" }));
@@ -99,6 +123,12 @@ export default function AdminApplications() {
                 </p>
               )}
 
+              {callStatus[selected.id] && (
+                <p className={`text-xs rounded-lg p-2 border ${callStatus[selected.id] === "called" ? "text-emerald-400 border-emerald-500/20" : callStatus[selected.id] === "calling" ? "text-primary border-primary/20" : "text-destructive border-destructive/20"}`}>
+                  {callStatus[selected.id] === "called" ? "✓ Call initiated via VAPI" : callStatus[selected.id] === "calling" ? "Dialing..." : "✗ Call failed"}
+                </p>
+              )}
+
               <div className="flex flex-wrap gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => updateStatus(selected, "reviewing")} disabled={selected.status === "reviewing"} className="text-xs">
                   <Clock className="h-3 w-3 mr-1" /> Review
@@ -108,6 +138,20 @@ export default function AdminApplications() {
                 </Button>
                 <Button size="sm" variant="destructive" onClick={() => updateStatus(selected, "rejected")} disabled={selected.status === "rejected"} className="text-xs">
                   <XCircle className="h-3 w-3 mr-1" /> Reject
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => callApplicant(selected)}
+                  disabled={!selected.phone_number || callStatus[selected.id] === "calling"}
+                  className="text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                >
+                  {callStatus[selected.id] === "calling" ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Phone className="h-3 w-3 mr-1" />
+                  )}
+                  {callStatus[selected.id] === "calling" ? "Dialing..." : "Call Applicant"}
                 </Button>
               </div>
             </CardContent>
