@@ -106,7 +106,7 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
       customer: {
         number: phone_number,
       },
-      assistantOverrides: {
+      assistant: {
         firstMessage,
         model: {
           provider: "openai",
@@ -115,11 +115,11 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
         },
         voice: {
           provider: "11labs",
-          voiceId: "sarah", // Professional female voice
+          voiceId: "sarah",
         },
         endCallMessage: "Thanks for your time. Have a great day!",
         endCallPhrases: ["goodbye", "take care", "bye bye", "talk later", "not interested"],
-        maxDurationSeconds: 300, // 5 min max
+        maxDurationSeconds: 300,
       },
     };
 
