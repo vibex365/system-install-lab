@@ -136,22 +136,41 @@ serve(async (req) => {
     let result = "";
 
     if (agent.slug === "site-audit") {
-      const url = input.url || "";
-      const scraped = await scrapeUrl(url);
-      result = await callAI(`You are a UI/UX expert reviewing a Lovable-built web app.
+      const url = input.website || input.url || "";
+      const businessName = input.business_name || "";
+      const category = input.category || "";
+      const city = input.city || "";
+      const scraped = url ? await scrapeUrl(url) : "";
+      result = await callAI(`You are a local business website analyst specializing in lead generation and smart funnels.
 
-Site URL: ${url}
-Site content scraped:
-${scraped}
+Business: ${businessName}
+Category: ${category}
+Location: ${city}
+Website: ${url}
+Website content:
+${scraped || "No website content available — this business may not have a website or it could not be scraped."}
 
-Generate a detailed UI/UX audit in this format:
-1. Top 3 critical issues (with specific fix instructions formatted as Lovable prompts)
-2. Design improvements (typography, spacing, color consistency)
-3. Mobile experience assessment
-4. Conversion optimization recommendations
-5. One ready-to-paste Lovable prompt that addresses the most critical issue
+Analyze this business's online presence and produce a clear, actionable report. Write in plain text — no markdown, no asterisks, no hashtags, no bullet symbols. Use simple numbered lists and line breaks.
 
-Be specific, actionable, and frame fixes as Lovable prompts where possible.`);
+1. WEBSITE OVERVIEW
+Brief assessment of their current site — what it does well, what it's missing.
+
+2. LEAD CAPTURE GAPS
+Identify specific ways this business is losing leads: no contact form, no booking system, no follow-up automation, no intake questionnaire, slow load times, poor mobile experience, etc.
+
+3. SMART FUNNEL OPPORTUNITY
+Describe exactly what kind of Smart Funnel would work for this ${category} business:
+- What type of intake quiz or calculator would attract their ideal customers
+- How automated follow-up (SMS + email) would recover lost leads
+- What a booking integration would do for their conversion rate
+
+4. REVENUE IMPACT
+Estimate how many leads they may be losing monthly without proper capture and follow-up. Be specific to their niche.
+
+5. RECOMMENDATION
+One clear next step — whether it's building a funnel, fixing their site, or starting outreach.
+
+Keep it professional and specific to their business. No generic advice.`);
     }
 
     else if (agent.slug === "lead-prospector") {
@@ -447,9 +466,9 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
     }
 
     else if (agent.slug === "sms-outreach") {
-      const leadName = input.lead_name || "there";
+      const leadName = input.contact_name || input.lead_name || "there";
       const phone = input.phone || "";
-      const pitchContext = input.pitch_context || "";
+      const pitchContext = input.pitch_context || input.notes || "";
 
       if (!phone) {
         return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
@@ -520,9 +539,9 @@ Output ONLY the SMS text, nothing else.`);
     }
 
     else if (agent.slug === "cold-call") {
-      const leadName = input.lead_name || "there";
+      const leadName = input.contact_name || input.lead_name || "there";
       const phone = input.phone || "";
-      const pitchContext = input.pitch_context || "";
+      const pitchContext = input.pitch_context || input.notes || "";
 
       if (!phone) {
         return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
@@ -595,14 +614,14 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
     }
 
     else if (agent.slug === "email-drip") {
-      const leadName = input.lead_name || "there";
-      const leadEmail = input.lead_email || "";
+      const leadName = input.contact_name || input.lead_name || "there";
+      const leadEmail = input.email || input.lead_email || "";
       const businessName = input.business_name || "";
-      const websiteUrl = input.url || "";
-      const niche = input.niche || "";
+      const websiteUrl = input.website || input.url || "";
+      const niche = input.category || input.niche || "";
       const senderName = input.sender_name || "Your Web Designer";
       const senderEmail = input.sender_email || "";
-      const pitchContext = input.pitch_context || "";
+      const pitchContext = input.pitch_context || input.notes || "";
 
       if (!leadEmail) {
         return new Response(JSON.stringify({ error: "Lead email is required." }), { status: 400, headers: corsHeaders });
@@ -684,14 +703,14 @@ Rules:
     }
 
     else if (agent.slug === "cold-email-outreach") {
-      const leadName = input.lead_name || "there";
-      const leadEmail = input.lead_email || "";
+      const leadName = input.contact_name || input.lead_name || "there";
+      const leadEmail = input.email || input.lead_email || "";
       const businessName = input.business_name || "";
-      const websiteUrl = input.url || "";
-      const niche = input.niche || "";
+      const websiteUrl = input.website || input.url || "";
+      const niche = input.category || input.niche || "";
       const senderName = input.sender_name || "Your Smart Funnel Consultant";
       const senderEmail = input.sender_email || "";
-      const pitchContext = input.pitch_context || "";
+      const pitchContext = input.pitch_context || input.notes || "";
 
       if (!leadEmail) {
         return new Response(JSON.stringify({ error: "Lead email is required." }), { status: 400, headers: corsHeaders });
@@ -730,39 +749,12 @@ Body:
 ${bookingUrl ? "- Include the booking link naturally in the CTA" : ""}
 - No spam language, no hype, no ALL CAPS
 - Sound like a real person, not a template
+- Write in plain text only — no markdown, no asterisks, no hashtags
 
-Output the subject line and body clearly labeled.`);
+Output the subject line and body clearly labeled. Plain text only.`);
 
-      // Try to send via Resend
-      let sendStatus = "draft";
-      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      if (RESEND_API_KEY && senderEmail) {
-        try {
-          const subjectMatch = emailContent.match(/Subject:\s*(.+?)[\n\r]/i);
-          const bodyMatch = emailContent.match(/Body:\s*([\s\S]*?)$/i);
-          const subject = subjectMatch?.[1]?.trim() || `Quick idea for ${businessName}`;
-          const body = bodyMatch?.[1]?.trim() || emailContent.slice(0, 500);
-
-          const resendRes = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: `${senderName} <onboarding@resend.dev>`,
-              to: [leadEmail],
-              subject,
-              text: body,
-            }),
-          });
-          sendStatus = resendRes.ok ? "sent" : "failed";
-        } catch (e) {
-          sendStatus = "failed";
-          console.error("[cold-email-outreach] Resend error:", e);
-        }
-      } else {
-        sendStatus = "resend_not_configured";
-      }
-
-      result = `COLD EMAIL STATUS: ${sendStatus}\nTO: ${leadEmail}\n\n${emailContent}`;
+      // Draft only — do NOT auto-send. User reviews in CRM drawer first.
+      result = `COLD EMAIL DRAFT\nTO: ${leadEmail}\nSTATUS: ready_to_review\n\n${emailContent}`;
     }
 
     else if (agent.slug === "video-content") {

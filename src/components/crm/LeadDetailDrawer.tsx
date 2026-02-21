@@ -1,9 +1,21 @@
 import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock } from "lucide-react";
 import { format } from "date-fns";
+
+// Strip markdown symbols from AI output for clean display
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, "")       // headings
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1") // bold/italic
+    .replace(/^[-*]\s+/gm, "• ")        // list items to bullet
+    .replace(/^---+$/gm, "")            // horizontal rules
+    .replace(/`{1,3}[^`]*`{1,3}/g, (m) => m.replace(/`/g, "")) // code
+    .replace(/\n{3,}/g, "\n\n")         // excess newlines
+    .trim();
+}
 
 interface Lead {
   id: string;
@@ -94,6 +106,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-base">{lead.business_name}</SheetTitle>
+          <SheetDescription className="text-xs">Lead details and agent history</SheetDescription>
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
@@ -192,7 +205,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
                       {format(new Date(run.triggered_at), "MMM d, yyyy h:mm a")}
                     </div>
                     {run.result_summary && (
-                      <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap">{run.result_summary}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap">{stripMarkdown(run.result_summary)}</p>
                     )}
                   </div>
                 ))}
