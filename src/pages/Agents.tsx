@@ -835,6 +835,94 @@ function AgentsContent() {
           </p>
         </div>
 
+        {/* ── Lead-to-Close Pipeline ── */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-xs tracking-[0.15em] text-primary uppercase font-semibold">Lead-to-Close Pipeline</p>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 font-medium">One-click handoff</span>
+          </div>
+          <Card className="bg-card border-border">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-0 overflow-x-auto">
+                {[
+                  { slug: "lead-prospector", label: "Lead Prospector", icon: Search, desc: "Find leads" },
+                  { slug: "sms-outreach", label: "SMS Outreach", icon: MessageSquare, desc: "Send SMS" },
+                  { slug: "cold-call", label: "Cold Call", icon: Phone, desc: "AI phone call" },
+                  { slug: "website-proposal", label: "Website Proposal", icon: FileText, desc: "Send proposal" },
+                ].map((step, i, arr) => {
+                  const agent = agents.find((a) => a.slug === step.slug);
+                  const lease = agent ? getActiveLease(agent.id) : null;
+                  const lastRun = agent ? getLastRun(agent.id) : null;
+                  const isActive = !!lease;
+                  const isCompleted = !!lastRun && lastRun.status === "completed";
+                  const StepIcon = step.icon;
+
+                  return (
+                    <div key={step.slug} className="flex items-center shrink-0">
+                      <div className="flex flex-col items-center gap-2 min-w-[120px]">
+                        <button
+                          onClick={() => {
+                            if (agent && lease) setRunModalAgent(agent);
+                            else if (agent && !lease && agent.included_with_membership) handleActivateIncluded(agent);
+                          }}
+                          disabled={!agent}
+                          className={`relative p-3 rounded-xl border-2 transition-all ${
+                            isCompleted
+                              ? "border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/20"
+                              : isActive
+                                ? "border-primary/50 bg-primary/10 hover:bg-primary/20 cursor-pointer"
+                                : "border-border bg-muted/30 opacity-60"
+                          }`}
+                        >
+                          <StepIcon className={`h-5 w-5 ${
+                            isCompleted ? "text-emerald-400" : isActive ? "text-primary" : "text-muted-foreground"
+                          }`} />
+                          {isCompleted && (
+                            <div className="absolute -top-1 -right-1 bg-emerald-500 rounded-full p-0.5">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-background" />
+                            </div>
+                          )}
+                        </button>
+                        <div className="text-center">
+                          <p className={`text-[11px] font-semibold ${
+                            isCompleted ? "text-emerald-400" : isActive ? "text-foreground" : "text-muted-foreground"
+                          }`}>
+                            {step.label}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">{step.desc}</p>
+                          {!isActive && agent && (
+                            <Badge variant="outline" className="text-[9px] mt-1 h-4 px-1.5">
+                              {agent.included_with_membership ? "Activate" : "Lease"}
+                            </Badge>
+                          )}
+                          {isActive && !isCompleted && (
+                            <Badge className="text-[9px] mt-1 h-4 px-1.5 bg-primary/20 text-primary border border-primary/30">
+                              Ready
+                            </Badge>
+                          )}
+                          {isCompleted && lastRun && (
+                            <span className="text-[9px] text-emerald-400/70 mt-0.5 block">
+                              {new Date(lastRun.triggered_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div className={`w-8 h-0.5 mx-1 rounded-full shrink-0 ${
+                          isCompleted ? "bg-emerald-500/40" : "bg-border"
+                        }`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-4 text-center">
+                Run Lead Prospector first → then hand off leads to SMS, Call, or Proposal with one click
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* ── Included with Membership ── */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
