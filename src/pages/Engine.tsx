@@ -187,6 +187,14 @@ const NICHE_PRESETS: Record<string, { industry: string; quizTitle: string; resul
     ctaText: "Book Your Free Hair Consultation",
     colorFontNotes: "Primary: #1A1A1A (near black) · Accent: #C9A0A0 (blush) · Accent2: #C9A84C (gold) · Background: #FAF7F5 · Fonts: Cormorant, Raleway",
   },
+  PFSW: {
+    industry: "SaaS / tech community / builder collective",
+    quizTitle: "Are You Building Software the Hard Way?",
+    resultLabel: "Builder Readiness Score",
+    styleDirection: "Dark editorial, bold and premium. Near-black background, electric accent, sharp typography. Magazine-cover aesthetic.",
+    ctaText: "Apply to Join the Collective",
+    colorFontNotes: "Primary: #0A0A0A (near black) · Accent: #F5A623 (amber) · Secondary: #1A1A2E (dark navy) · Background: #111111 · Fonts: Bebas Neue, DM Sans",
+  },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
