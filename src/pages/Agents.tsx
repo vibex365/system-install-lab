@@ -86,6 +86,11 @@ const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | 
     { label: "Phone Number", key: "phone", type: "text", placeholder: "+14045551234" },
     { label: "Pitch Context", key: "pitch_context", type: "textarea", placeholder: "Dental practice in Atlanta, outdated website, no online booking..." },
   ],
+  "video-content": [
+    { label: "Topic / What You Built", key: "topic", type: "textarea", placeholder: "Built a SaaS dashboard with Stripe billing, appointment booking system..." },
+    { label: "Platform", key: "platform", type: "select", options: ["YouTube", "TikTok", "Instagram Reels", "All Platforms"] },
+    { label: "Tone", key: "tone", type: "select", options: ["Educational", "Hype / Energy", "Professional", "Behind-the-scenes"] },
+  ],
 };
 
 interface Agent {
@@ -577,6 +582,7 @@ function AgentCard({
   onActivateIncluded,
   leasing,
   activating,
+  isAdmin,
 }: {
   agent: Agent;
   lease: AgentLease | null;
@@ -586,6 +592,7 @@ function AgentCard({
   onActivateIncluded: (agent: Agent) => void;
   leasing: boolean;
   activating: boolean;
+  isAdmin: boolean;
 }) {
   const [exampleOpen, setExampleOpen] = useState(false);
   const IconComponent = ICON_MAP[agent.icon_name] || Package;
@@ -680,6 +687,11 @@ function AgentCard({
           {isActive ? (
             <Button size="sm" className="w-full" onClick={() => onRun(agent)}>
               <Play className="h-3.5 w-3.5 mr-1.5" /> Run Agent
+            </Button>
+          ) : isAdmin && agent.status === "active" ? (
+            <Button size="sm" className="w-full" onClick={() => onActivateIncluded(agent)} disabled={activating}>
+              {activating ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+              Activate — Admin Access
             </Button>
           ) : agent.included_with_membership ? (
             <Button size="sm" className="w-full" onClick={() => onActivateIncluded(agent)} disabled={activating}>
@@ -810,7 +822,7 @@ function RunHistory({ runs, agents }: { runs: AgentRun[]; agents: Agent[] }) {
 }
 
 function AgentsContent() {
-  const { user } = useAuth();
+  const { user, isChiefArchitect } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -1035,6 +1047,7 @@ function AgentsContent() {
                 onActivateIncluded={handleActivateIncluded}
                 leasing={leasingId === agent.id}
                 activating={activatingId === agent.id}
+                isAdmin={isChiefArchitect}
               />
             ))}
           </div>
@@ -1110,6 +1123,7 @@ function AgentsContent() {
                   onActivateIncluded={handleActivateIncluded}
                   leasing={leasingId === agent.id}
                   activating={activatingId === agent.id}
+                  isAdmin={isChiefArchitect}
                 />
               ))}
             </div>

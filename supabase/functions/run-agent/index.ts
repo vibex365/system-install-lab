@@ -646,6 +646,53 @@ Rules:
       result = `EMAIL DRIP STATUS: ${sendStatus}\nTO: ${leadEmail}\n\n${emailContent}`;
     }
 
+    else if (agent.slug === "video-content") {
+      const topic = input.topic || "web development project";
+      const platform = input.platform || "All Platforms";
+      const tone = input.tone || "Educational";
+
+      result = await callAI(`You are a video content strategist specializing in tech/SaaS content creation.
+
+Topic / What was built: ${topic}
+Target platform: ${platform}
+Tone: ${tone}
+
+Generate a complete video content package:
+
+📹 VIDEO SCRIPT (${platform === "TikTok" || platform === "Instagram Reels" ? "30-60 seconds" : "3-5 minutes"}):
+
+HOOK (first 3 seconds):
+[Attention-grabbing opening line — make them stop scrolling]
+
+BODY:
+[Scene-by-scene breakdown with timestamps, talking points, and visual directions. Match the ${tone} tone. Reference the specific build/topic.]
+
+CTA (last 10 seconds):
+[Clear call to action — follow, subscribe, link in bio, etc.]
+
+---
+
+🎨 THUMBNAIL TEXT (3 options):
+1. [Bold, curiosity-driven text for thumbnail]
+2. [Numbers/results focused]
+3. [Question-based hook]
+
+---
+
+📝 TITLE & DESCRIPTION:
+Title: [SEO-optimized, under 60 chars, includes power words]
+Description: [150-200 words with relevant keywords, timestamps if YouTube, and CTA]
+
+---
+
+#️⃣ HASHTAGS & POSTING STRATEGY:
+Hashtags: [10-15 relevant hashtags, mix of broad and niche]
+Best posting time: [Recommendation based on platform]
+Content series idea: [How to turn this into a recurring series]
+
+Make everything specific to the topic provided. No generic filler.`);
+    }
+
     else {
       result = `Agent "${agent.name}" is queued and will process your request. Job ID: ${job?.id}`;
     }
