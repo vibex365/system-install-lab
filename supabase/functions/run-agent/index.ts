@@ -184,41 +184,70 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
 
       // ── CRM Auto-Save: parse leads and insert into leads table ──
       try {
-        const leadLines = result.split("\n");
-        let currentLead: Record<string, string> = {};
         const parsedLeads: Record<string, string>[] = [];
-        const flushLead = () => {
-          if (currentLead.business_name) {
-            parsedLeads.push({ ...currentLead });
-            currentLead = {};
+
+        // Strategy 1: Parse markdown table format (| col1 | col2 | ...)
+        const tableRows = result.split("\n").filter((line) => line.trim().startsWith("|") && !line.includes("---"));
+        if (tableRows.length >= 2) {
+          const headerRow = tableRows[0];
+          const headers = headerRow.split("|").map((h) => h.trim().toLowerCase()).filter(Boolean);
+          for (let i = 1; i < tableRows.length; i++) {
+            const cells = tableRows[i].split("|").map((c) => c.trim()).filter(Boolean);
+            if (cells.length < 2) continue;
+            const lead: Record<string, string> = {};
+            headers.forEach((h, idx) => {
+              const val = cells[idx] || "";
+              if (/business\s*name/i.test(h)) lead.business_name = val;
+              else if (/phone/i.test(h)) lead.phone = val;
+              else if (/email/i.test(h)) lead.email = val;
+              else if (/website/i.test(h)) lead.website = val;
+              else if (/category/i.test(h)) lead.category = val;
+              else if (/notes/i.test(h)) lead.notes = val;
+            });
+            if (lead.business_name && lead.business_name !== "Business Name") parsedLeads.push(lead);
           }
-        };
-        for (const line of leadLines) {
-          const t = line.trim();
-          if (/^-?\s*Business Name[:\s]/i.test(t)) { flushLead(); currentLead.business_name = t.replace(/^-?\s*Business Name[:\s]*/i, "").trim(); }
-          else if (/^-?\s*Phone[:\s]/i.test(t)) currentLead.phone = t.replace(/^-?\s*Phone[:\s]*/i, "").trim();
-          else if (/^-?\s*Email[:\s]/i.test(t)) currentLead.email = t.replace(/^-?\s*Email[:\s]*/i, "").trim();
-          else if (/^-?\s*Website[:\s]/i.test(t)) currentLead.website = t.replace(/^-?\s*Website[:\s]*/i, "").trim();
-          else if (/^-?\s*Category[:\s]/i.test(t)) currentLead.category = t.replace(/^-?\s*Category[:\s]*/i, "").trim();
-          else if (/^-?\s*Notes[:\s]/i.test(t)) currentLead.notes = t.replace(/^-?\s*Notes[:\s]*/i, "").trim();
         }
-        flushLead();
+
+        // Strategy 2: Fallback to key-value line parsing (- Business Name: ...)
+        if (parsedLeads.length === 0) {
+          const leadLines = result.split("\n");
+          let currentLead: Record<string, string> = {};
+          const flushLead = () => {
+            if (currentLead.business_name) {
+              parsedLeads.push({ ...currentLead });
+              currentLead = {};
+            }
+          };
+          for (const line of leadLines) {
+            const t = line.trim();
+            if (/^-?\s*\*?\*?Business Name\*?\*?[:\s]/i.test(t)) { flushLead(); currentLead.business_name = t.replace(/^-?\s*\*?\*?Business Name\*?\*?[:\s]*/i, "").trim(); }
+            else if (/^-?\s*\*?\*?Phone\*?\*?[:\s]/i.test(t)) currentLead.phone = t.replace(/^-?\s*\*?\*?Phone\*?\*?[:\s]*/i, "").trim();
+            else if (/^-?\s*\*?\*?Email\*?\*?[:\s]/i.test(t)) currentLead.email = t.replace(/^-?\s*\*?\*?Email\*?\*?[:\s]*/i, "").trim();
+            else if (/^-?\s*\*?\*?Website\*?\*?[:\s]/i.test(t)) currentLead.website = t.replace(/^-?\s*\*?\*?Website\*?\*?[:\s]*/i, "").trim();
+            else if (/^-?\s*\*?\*?Category\*?\*?[:\s]/i.test(t)) currentLead.category = t.replace(/^-?\s*\*?\*?Category\*?\*?[:\s]*/i, "").trim();
+            else if (/^-?\s*\*?\*?Notes\*?\*?[:\s]/i.test(t)) currentLead.notes = t.replace(/^-?\s*\*?\*?Notes\*?\*?[:\s]*/i, "").trim();
+          }
+          flushLead();
+        }
 
         if (parsedLeads.length > 0) {
+          const clean = (v: string | undefined) => v && v !== "Research needed" && v !== "N/A" && v !== "—" && v !== "-" ? v : null;
           const leadsToInsert = parsedLeads.map((l) => ({
             user_id: userId,
             business_name: l.business_name || "",
-            phone: l.phone && l.phone !== "Research needed" ? l.phone : null,
-            email: l.email && l.email !== "Research needed" ? l.email : null,
-            website: l.website || null,
-            category: l.category || category || null,
+            phone: clean(l.phone),
+            email: clean(l.email),
+            website: clean(l.website),
+            category: clean(l.category) || category || null,
             city: city || null,
-            notes: l.notes || null,
+            notes: clean(l.notes),
             pipeline_status: "scraped",
             source: "lead-prospector",
           }));
           await serviceSupabase.from("leads").insert(leadsToInsert);
           console.log(`[lead-prospector] Auto-saved ${leadsToInsert.length} leads to CRM`);
+        } else {
+          console.log("[lead-prospector] No leads parsed from result — skipping CRM save");
         }
       } catch (crmErr) {
         console.error("[lead-prospector] CRM auto-save error:", crmErr);
