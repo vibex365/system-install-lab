@@ -17,14 +17,14 @@ import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
-  ArrowRight, Info, Video, Phone, Loader2 as PhoneLoader,
+  Info, Video, Phone,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
-  CalendarDays, Mail, Eye, UserCheck, Video,
+  CalendarDays, Mail, Eye, UserCheck, Video, Phone,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -69,6 +69,16 @@ const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | 
     { label: "Website URL", key: "url", type: "text", placeholder: "https://atlantasmiles.com" },
     { label: "Audit Pain Points", key: "pain_points", type: "textarea", placeholder: "No mobile version, missing contact form, outdated design, no Google reviews widget..." },
     { label: "Niche / Industry", key: "niche", type: "select", options: ["Dental", "Restaurant", "Real Estate", "Law Firm", "Fitness", "Auto Shop", "Plumbing", "Roofing", "Salon / Beauty", "Other Local Business"] },
+  ],
+  "sms-outreach": [
+    { label: "Lead Name", key: "lead_name", type: "text", placeholder: "Dr. Chen" },
+    { label: "Phone Number", key: "phone", type: "text", placeholder: "+14045551234" },
+    { label: "Pitch Context", key: "pitch_context", type: "textarea", placeholder: "Dental practice in Atlanta, outdated website, no online booking..." },
+  ],
+  "cold-call": [
+    { label: "Lead Name", key: "lead_name", type: "text", placeholder: "Dr. Chen" },
+    { label: "Phone Number", key: "phone", type: "text", placeholder: "+14045551234" },
+    { label: "Pitch Context", key: "pitch_context", type: "textarea", placeholder: "Dental practice in Atlanta, outdated website, no online booking..." },
   ],
 };
 
@@ -154,6 +164,8 @@ function RunAgentModal({
   onClose,
   onRunComplete,
   onHandoffToProposal,
+  onHandoffToSms,
+  onHandoffToCall,
   initialValues,
   isHandoff,
 }: {
@@ -163,6 +175,8 @@ function RunAgentModal({
   onClose: () => void;
   onRunComplete: () => void;
   onHandoffToProposal?: (businessName: string, url: string) => void;
+  onHandoffToSms?: (leadName: string, phone: string, pitchContext: string) => void;
+  onHandoffToCall?: (leadName: string, phone: string, pitchContext: string) => void;
   initialValues?: Record<string, string>;
   isHandoff?: boolean;
 }) {
@@ -175,7 +189,6 @@ function RunAgentModal({
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleFreq, setScheduleFreq] = useState<"daily" | "weekly">("weekly");
   const [nextRunAt, setNextRunAt] = useState<string | null>(lease.next_run_at || null);
-  const [callStatuses, setCallStatuses] = useState<Record<number, "calling" | "called" | "failed">>({});
 
   const handleReset = () => {
     setResult(null);
@@ -224,29 +237,6 @@ function RunAgentModal({
     }
   };
 
-  const callLead = async (index: number, lead: { name: string; phone: string; website: string }) => {
-    if (!lead.phone || lead.phone === "Research needed") {
-      toast({ title: "No phone number", description: "Phone number not found for this lead.", variant: "destructive" });
-      return;
-    }
-    setCallStatuses((p) => ({ ...p, [index]: "calling" }));
-    try {
-      const { data, error } = await supabase.functions.invoke("vapi-call", {
-        body: {
-          phone_number: lead.phone,
-          call_type: "website_lead",
-          context: { business_name: lead.name, website: lead.website },
-        },
-      });
-      if (error || data?.error) throw new Error(error?.message || data?.error);
-      setCallStatuses((p) => ({ ...p, [index]: "called" }));
-      toast({ title: "Call initiated", description: `Calling ${lead.name}` });
-    } catch (e: any) {
-      setCallStatuses((p) => ({ ...p, [index]: "failed" }));
-      toast({ title: "Call failed", description: e.message, variant: "destructive" });
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -263,13 +253,13 @@ function RunAgentModal({
           {!result ? (
             <>
               {/* Handoff banner — shown when pre-filled from Lead Prospector */}
-              {isHandoff && initialValues?.business_name && (
+              {isHandoff && (initialValues?.business_name || initialValues?.lead_name) && (
                 <div className="flex items-start gap-2.5 bg-primary/10 border border-primary/30 rounded-md p-3">
                   <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-semibold text-primary">Pre-filled from Lead Prospector</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Business name and URL have been carried over for <span className="text-foreground font-medium">{initialValues.business_name}</span>. Review and run when ready.
+                      Lead data carried over for <span className="text-foreground font-medium">{initialValues.business_name || initialValues.lead_name}</span>. Review and run when ready.
                     </p>
                   </div>
                 </div>
@@ -394,7 +384,7 @@ function RunAgentModal({
                 if (leads.length > 0) return (
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {leads.length} leads found — click → Proposal to generate a rebuild pitch
+                      {leads.length} leads found — hand off to Proposal, SMS, or Call
                     </p>
                     <div className="rounded-md border border-border overflow-hidden">
                       <table className="w-full text-xs">
@@ -419,7 +409,7 @@ function RunAgentModal({
                               </td>
                               <td className="p-2 text-muted-foreground hidden md:table-cell">{lead.phone}</td>
                               <td className="p-2">
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
                                   {onHandoffToProposal && (
                                     <Button
                                       size="sm"
@@ -431,29 +421,38 @@ function RunAgentModal({
                                       }}
                                     >
                                       → Proposal
-                                      <ArrowRight className="h-3 w-3" />
                                     </Button>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 text-[10px] px-2 gap-1 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
-                                    disabled={
-                                      !lead.phone ||
-                                      lead.phone === "Research needed" ||
-                                      callStatuses[i] === "calling"
-                                    }
-                                    onClick={() => callLead(i, lead)}
-                                  >
-                                    {callStatuses[i] === "calling" ? (
-                                      <PhoneLoader className="h-3 w-3 animate-spin" />
-                                    ) : callStatuses[i] === "called" ? (
-                                      <Phone className="h-3 w-3 text-emerald-400" />
-                                    ) : (
+                                  {onHandoffToSms && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 gap-1 border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+                                      disabled={!lead.phone || lead.phone === "Research needed"}
+                                      onClick={() => {
+                                        onHandoffToSms(lead.name, lead.phone, `${lead.name} — ${lead.website || "no website"} — ${lead.notes || ""}`);
+                                        onClose();
+                                      }}
+                                    >
+                                      <MessageSquare className="h-3 w-3" />
+                                      SMS
+                                    </Button>
+                                  )}
+                                  {onHandoffToCall && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 gap-1 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                                      disabled={!lead.phone || lead.phone === "Research needed"}
+                                      onClick={() => {
+                                        onHandoffToCall(lead.name, lead.phone, `${lead.name} — ${lead.website || "no website"} — ${lead.notes || ""}`);
+                                        onClose();
+                                      }}
+                                    >
                                       <Phone className="h-3 w-3" />
-                                    )}
-                                    {callStatuses[i] === "called" ? "Called" : callStatuses[i] === "calling" ? "Calling..." : "Call"}
-                                  </Button>
+                                      Call
+                                    </Button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -733,6 +732,8 @@ function AgentsContent() {
   const [runModalAgent, setRunModalAgent] = useState<Agent | null>(null);
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [proposalPrefill, setProposalPrefill] = useState<{ business_name: string; url: string } | null>(null);
+  const [outreachPrefill, setOutreachPrefill] = useState<{ lead_name: string; phone: string; pitch_context: string } | null>(null);
+  const [outreachTargetSlug, setOutreachTargetSlug] = useState<"sms-outreach" | "cold-call" | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -943,17 +944,50 @@ function AgentsContent() {
           agent={runModalAgent}
           lease={runModalLease}
           open={!!runModalAgent}
-          onClose={() => { setRunModalAgent(null); setProposalPrefill(null); }}
+          onClose={() => { setRunModalAgent(null); setProposalPrefill(null); setOutreachPrefill(null); setOutreachTargetSlug(null); }}
           onRunComplete={fetchData}
-          initialValues={proposalPrefill || undefined}
-          isHandoff={!!proposalPrefill && runModalAgent.slug === "website-proposal"}
+          initialValues={
+            proposalPrefill
+              ? proposalPrefill
+              : outreachPrefill && outreachTargetSlug === runModalAgent.slug
+                ? outreachPrefill
+                : undefined
+          }
+          isHandoff={
+            (!!proposalPrefill && runModalAgent.slug === "website-proposal") ||
+            (!!outreachPrefill && (runModalAgent.slug === "sms-outreach" || runModalAgent.slug === "cold-call"))
+          }
           onHandoffToProposal={(() => {
             const proposalAgent = agents.find((a) => a.slug === "website-proposal");
             const proposalLease = proposalAgent ? getActiveLease(proposalAgent.id) : null;
             if (!proposalAgent || !proposalLease) return undefined;
             return (businessName: string, url: string) => {
               setProposalPrefill({ business_name: businessName, url });
+              setOutreachPrefill(null);
+              setOutreachTargetSlug(null);
               setRunModalAgent(proposalAgent);
+            };
+          })()}
+          onHandoffToSms={(() => {
+            const smsAgent = agents.find((a) => a.slug === "sms-outreach");
+            const smsLease = smsAgent ? getActiveLease(smsAgent.id) : null;
+            if (!smsAgent || !smsLease) return undefined;
+            return (leadName: string, phone: string, pitchContext: string) => {
+              setOutreachPrefill({ lead_name: leadName, phone, pitch_context: pitchContext });
+              setOutreachTargetSlug("sms-outreach");
+              setProposalPrefill(null);
+              setRunModalAgent(smsAgent);
+            };
+          })()}
+          onHandoffToCall={(() => {
+            const callAgent = agents.find((a) => a.slug === "cold-call");
+            const callLease = callAgent ? getActiveLease(callAgent.id) : null;
+            if (!callAgent || !callLease) return undefined;
+            return (leadName: string, phone: string, pitchContext: string) => {
+              setOutreachPrefill({ lead_name: leadName, phone, pitch_context: pitchContext });
+              setOutreachTargetSlug("cold-call");
+              setProposalPrefill(null);
+              setRunModalAgent(callAgent);
             };
           })()}
         />
