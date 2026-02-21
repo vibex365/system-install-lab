@@ -512,27 +512,27 @@ Output ONLY the SMS text, nothing else.`);
         bookingUrlCall = `https://system-install-lab.lovable.app/book/${bsCall.booking_slug}`;
       }
 
-      const systemPrompt = `You are a web design consultant making a warm outbound call to a small business owner about rebuilding their website.
+      const systemPrompt = `You are a smart funnel consultant making a warm outbound call to a small business owner about upgrading their lead generation.
 
 Lead name: ${leadName}
 Context: ${pitchContext}
 ${bookingUrlCall ? `Booking link to share: ${bookingUrlCall}` : ""}
 
 Your goal:
-1. Introduce yourself as a web designer who came across their business
+1. Introduce yourself as a lead generation specialist who came across their business
 2. Reference something specific from the context about their business
-3. Mention 1-2 things that could be improved about their online presence (mobile experience, speed, modern design, booking/contact forms)
-4. Explain you build sites quickly using the latest tools — typically 3-5 days
+3. Explain that most small businesses lose leads because they don't have an automated funnel — no instant follow-up, no booking system, no lead capture
+4. Pitch a "Smart Funnel" — a done-for-you system with a lead quiz, automated follow-up, and a booking calendar, built in under a week
 5. Ask if they'd be open to a 10-minute screen share to see what's possible
 6. If interested, ${bookingUrlCall ? "give them the booking link to schedule a call" : "confirm their email for a follow-up proposal"}
 
 Be natural, not salesy. You're a professional offering genuine value, not a telemarketer. Keep it under 3 minutes.`;
 
-      const firstMessage = `Hi, is this ${leadName}? Great — my name is Alex and I'm a web designer. I came across your business and had a few ideas that might help you get more customers online. Do you have 2 minutes?`;
+      const firstMessage = `Hi, is this ${leadName}? Great — my name is Alex and I help local businesses capture more leads online with smart funnels. I came across your business and had a couple ideas. Do you have 2 minutes?`;
 
       const vapiPayload = {
         customer: { number: phone },
-        assistantOverrides: {
+        assistant: {
           firstMessage,
           model: { provider: "openai", model: "gpt-4o", systemPrompt },
           voice: { provider: "11labs", voiceId: "sarah" },
