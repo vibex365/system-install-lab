@@ -18,8 +18,9 @@ import {
   Plus, Search, Edit2, Loader2, Users, Phone, Mail, Globe, TrendingUp, X,
 } from "lucide-react";
 
-const PIPELINE_STATUSES = ["scraped", "audited", "emailed", "contacted", "called", "proposal_sent", "booked", "converted", "lost"];
+const PIPELINE_STATUSES = ["funnel_lead", "scraped", "audited", "emailed", "contacted", "called", "proposal_sent", "booked", "converted", "lost"];
 const STATUS_COLORS: Record<string, string> = {
+  funnel_lead: "bg-violet-500/20 text-violet-400 border-violet-500/30",
   scraped: "bg-muted text-muted-foreground",
   audited: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   emailed: "bg-purple-500/20 text-purple-400 border-purple-500/30",
@@ -85,13 +86,38 @@ function CRMContent() {
   const fetchLeads = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
+    // Fetch regular leads
+    const { data: regularLeads } = await supabase
       .from("leads")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(500);
-    setLeads((data as Lead[]) || []);
+    // Fetch funnel leads
+    const { data: funnelLeads } = await supabase
+      .from("funnel_leads" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    // Merge funnel leads into the leads format
+    const mappedFunnelLeads: Lead[] = ((funnelLeads as any[]) || []).map((fl: any) => ({
+      id: fl.id,
+      business_name: fl.name,
+      contact_name: fl.name,
+      phone: fl.phone,
+      email: fl.email,
+      website: null,
+      city: null,
+      category: fl.funnel_name || "Smart Funnel",
+      pipeline_status: "funnel_lead",
+      source: "smart_funnel",
+      notes: fl.tier ? `Score: ${fl.score}/100 (${fl.tier})` : null,
+      audit_summary: null,
+      rating: fl.score,
+      website_quality_score: null,
+      created_at: fl.created_at,
+    }));
+    setLeads([...(regularLeads as Lead[] || []), ...mappedFunnelLeads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     setLoading(false);
   };
 

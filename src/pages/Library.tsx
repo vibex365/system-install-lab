@@ -16,7 +16,7 @@ export default function Library() {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<any[]>([]);
   const [prompts, setPrompts] = useState<any[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<string>("client-web");
+  const [selectedPkg, setSelectedPkg] = useState<string>("smart-funnels");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "title">("newest");
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,7 @@ export default function Library() {
               <BookOpen className="h-5 w-5 text-primary" />
               <h1 className="text-xl font-bold text-foreground">Prompt Library</h1>
             </div>
-            <p className="text-sm text-muted-foreground mb-6">Curated, approved prompts ready for the Engine.</p>
+            <p className="text-sm text-muted-foreground mb-6">Curated smart funnel and website prompts ready for the Engine.</p>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Select value={selectedPkg} onValueChange={setSelectedPkg}>
