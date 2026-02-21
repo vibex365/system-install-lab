@@ -191,12 +191,19 @@ Keep it professional and specific to their business. No generic advice.`);
 
 ${scraped}
 
+CRITICAL RULES FOR BUSINESS NAME:
+- The "Business Name" MUST be the ACTUAL NAME of the practice/business (e.g. "RU Flossing", "Kaminsky Wolf Dental", "Noble Dental Group")
+- NEVER use the category or specialty as the business name (e.g. do NOT write "Cosmetic Dentistry", "Family Dentist", "General Dentistry")
+- Extract the real business name from the URL, page title, or listing. For example: ruflossing.com → "RU Flossing", kaiserrosendental.com → "Kaiser Rosen Dental"
+- If you cannot determine the actual business name, use the domain name formatted as a proper name
+
 Format as a clean lead list with these columns for each business found:
-- Business Name
+- Business Name (the ACTUAL practice/company name, NOT the category)
 - Phone (if found)
 - Email (if found)  
 - Website
-- Category
+- Address (full street address if found)
+- Category (their specialty/niche, e.g. "Cosmetic Dentistry", "Family Dentist")
 - Notes (anything notable about their web presence)
 
 If phone/email not found, mark as "Research needed". Include 5-10 leads. End with a summary of the best prospects and why.`);
@@ -220,6 +227,7 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
               else if (/phone/i.test(h)) lead.phone = val;
               else if (/email/i.test(h)) lead.email = val;
               else if (/website/i.test(h)) lead.website = val;
+              else if (/address/i.test(h)) lead.address = val;
               else if (/category/i.test(h)) lead.category = val;
               else if (/notes/i.test(h)) lead.notes = val;
             });
@@ -243,6 +251,7 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
             else if (/^-?\s*\*?\*?Phone\*?\*?[:\s]/i.test(t)) currentLead.phone = t.replace(/^-?\s*\*?\*?Phone\*?\*?[:\s]*/i, "").trim();
             else if (/^-?\s*\*?\*?Email\*?\*?[:\s]/i.test(t)) currentLead.email = t.replace(/^-?\s*\*?\*?Email\*?\*?[:\s]*/i, "").trim();
             else if (/^-?\s*\*?\*?Website\*?\*?[:\s]/i.test(t)) currentLead.website = t.replace(/^-?\s*\*?\*?Website\*?\*?[:\s]*/i, "").trim();
+            else if (/^-?\s*\*?\*?Address\*?\*?[:\s]/i.test(t)) currentLead.address = t.replace(/^-?\s*\*?\*?Address\*?\*?[:\s]*/i, "").trim();
             else if (/^-?\s*\*?\*?Category\*?\*?[:\s]/i.test(t)) currentLead.category = t.replace(/^-?\s*\*?\*?Category\*?\*?[:\s]*/i, "").trim();
             else if (/^-?\s*\*?\*?Notes\*?\*?[:\s]/i.test(t)) currentLead.notes = t.replace(/^-?\s*\*?\*?Notes\*?\*?[:\s]*/i, "").trim();
           }
@@ -257,6 +266,7 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
             phone: clean(l.phone),
             email: clean(l.email),
             website: clean(l.website),
+            address: clean(l.address),
             category: clean(l.category) || category || null,
             city: city || null,
             notes: clean(l.notes),
