@@ -172,6 +172,8 @@ function RunAgentModal({
   onHandoffToProposal,
   onHandoffToSms,
   onHandoffToCall,
+  onHandoffToAudit,
+  onHandoffToEmailDrip,
   initialValues,
   isHandoff,
 }: {
@@ -183,6 +185,8 @@ function RunAgentModal({
   onHandoffToProposal?: (businessName: string, url: string) => void;
   onHandoffToSms?: (leadName: string, phone: string, pitchContext: string) => void;
   onHandoffToCall?: (leadName: string, phone: string, pitchContext: string) => void;
+  onHandoffToAudit?: (url: string) => void;
+  onHandoffToEmailDrip?: (leadName: string, email: string, businessName: string, url: string, pitchContext: string) => void;
   initialValues?: Record<string, string>;
   isHandoff?: boolean;
 }) {
@@ -416,6 +420,20 @@ function RunAgentModal({
                               <td className="p-2 text-muted-foreground hidden md:table-cell">{lead.phone}</td>
                               <td className="p-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
+                                  {onHandoffToAudit && lead.website && lead.website !== "Research needed" && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 gap-1 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                                      onClick={() => {
+                                        onHandoffToAudit(lead.website);
+                                        onClose();
+                                      }}
+                                    >
+                                      <ScanLine className="h-3 w-3" />
+                                      Audit
+                                    </Button>
+                                  )}
                                   {onHandoffToProposal && (
                                     <Button
                                       size="sm"
@@ -470,6 +488,72 @@ function RunAgentModal({
                 );
                 return null;
               })()}
+
+              {/* Site Audit: handoff buttons to Email Drip, SMS, Call, Proposal */}
+              {agent.slug === "site-audit" && result && (
+                <div className="flex flex-wrap gap-2">
+                  <p className="w-full text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                    Hand off audit findings
+                  </p>
+                  {onHandoffToEmailDrip && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-3 gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                      onClick={() => {
+                        const url = formValues.url || "";
+                        onHandoffToEmailDrip("", "", "", url, result!.slice(0, 500));
+                        onClose();
+                      }}
+                    >
+                      <Mail className="h-3 w-3" />
+                      → Email Drip
+                    </Button>
+                  )}
+                  {onHandoffToSms && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-3 gap-1.5 border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+                      onClick={() => {
+                        onHandoffToSms("", "", result!.slice(0, 300));
+                        onClose();
+                      }}
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      → SMS
+                    </Button>
+                  )}
+                  {onHandoffToCall && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-3 gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                      onClick={() => {
+                        onHandoffToCall("", "", result!.slice(0, 300));
+                        onClose();
+                      }}
+                    >
+                      <Phone className="h-3 w-3" />
+                      → Call
+                    </Button>
+                  )}
+                  {onHandoffToProposal && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] px-3 gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                      onClick={() => {
+                        onHandoffToProposal("", formValues.url || "");
+                        onClose();
+                      }}
+                    >
+                      <FileText className="h-3 w-3" />
+                      → Proposal
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <div className="bg-muted/50 border border-border rounded-md p-4 max-h-[300px] overflow-y-auto">
                 <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-mono">
@@ -740,6 +824,8 @@ function AgentsContent() {
   const [proposalPrefill, setProposalPrefill] = useState<{ business_name: string; url: string } | null>(null);
   const [outreachPrefill, setOutreachPrefill] = useState<{ lead_name: string; phone: string; pitch_context: string } | null>(null);
   const [outreachTargetSlug, setOutreachTargetSlug] = useState<"sms-outreach" | "cold-call" | null>(null);
+  const [auditPrefill, setAuditPrefill] = useState<{ url: string } | null>(null);
+  const [emailDripPrefill, setEmailDripPrefill] = useState<Record<string, string> | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -1040,27 +1126,52 @@ function AgentsContent() {
           agent={runModalAgent}
           lease={runModalLease}
           open={!!runModalAgent}
-          onClose={() => { setRunModalAgent(null); setProposalPrefill(null); setOutreachPrefill(null); setOutreachTargetSlug(null); }}
+          onClose={() => { setRunModalAgent(null); setProposalPrefill(null); setOutreachPrefill(null); setOutreachTargetSlug(null); setAuditPrefill(null); setEmailDripPrefill(null); }}
           onRunComplete={fetchData}
           initialValues={
-            proposalPrefill
-              ? proposalPrefill
-              : outreachPrefill && outreachTargetSlug === runModalAgent.slug
-                ? outreachPrefill
-                : undefined
+            auditPrefill && runModalAgent.slug === "site-audit"
+              ? auditPrefill
+              : emailDripPrefill && runModalAgent.slug === "email-drip"
+                ? emailDripPrefill
+                : proposalPrefill
+                  ? proposalPrefill
+                  : outreachPrefill && outreachTargetSlug === runModalAgent.slug
+                    ? outreachPrefill
+                    : undefined
           }
           isHandoff={
             (!!proposalPrefill && runModalAgent.slug === "website-proposal") ||
-            (!!outreachPrefill && (runModalAgent.slug === "sms-outreach" || runModalAgent.slug === "cold-call"))
+            (!!outreachPrefill && (runModalAgent.slug === "sms-outreach" || runModalAgent.slug === "cold-call")) ||
+            (!!auditPrefill && runModalAgent.slug === "site-audit") ||
+            (!!emailDripPrefill && runModalAgent.slug === "email-drip")
           }
+          onHandoffToAudit={(() => {
+            const auditAgent = agents.find((a) => a.slug === "site-audit");
+            const auditLease = auditAgent ? getActiveLease(auditAgent.id) : null;
+            if (!auditAgent || !auditLease) return undefined;
+            return (url: string) => {
+              setAuditPrefill({ url });
+              setProposalPrefill(null); setOutreachPrefill(null); setOutreachTargetSlug(null); setEmailDripPrefill(null);
+              setRunModalAgent(auditAgent);
+            };
+          })()}
+          onHandoffToEmailDrip={(() => {
+            const dripAgent = agents.find((a) => a.slug === "email-drip");
+            const dripLease = dripAgent ? getActiveLease(dripAgent.id) : null;
+            if (!dripAgent || !dripLease) return undefined;
+            return (leadName: string, email: string, businessName: string, url: string, pitchContext: string) => {
+              setEmailDripPrefill({ lead_name: leadName, lead_email: email, business_name: businessName, url, pitch_context: pitchContext });
+              setProposalPrefill(null); setOutreachPrefill(null); setOutreachTargetSlug(null); setAuditPrefill(null);
+              setRunModalAgent(dripAgent);
+            };
+          })()}
           onHandoffToProposal={(() => {
             const proposalAgent = agents.find((a) => a.slug === "website-proposal");
             const proposalLease = proposalAgent ? getActiveLease(proposalAgent.id) : null;
             if (!proposalAgent || !proposalLease) return undefined;
             return (businessName: string, url: string) => {
               setProposalPrefill({ business_name: businessName, url });
-              setOutreachPrefill(null);
-              setOutreachTargetSlug(null);
+              setOutreachPrefill(null); setOutreachTargetSlug(null); setAuditPrefill(null); setEmailDripPrefill(null);
               setRunModalAgent(proposalAgent);
             };
           })()}
@@ -1071,7 +1182,7 @@ function AgentsContent() {
             return (leadName: string, phone: string, pitchContext: string) => {
               setOutreachPrefill({ lead_name: leadName, phone, pitch_context: pitchContext });
               setOutreachTargetSlug("sms-outreach");
-              setProposalPrefill(null);
+              setProposalPrefill(null); setAuditPrefill(null); setEmailDripPrefill(null);
               setRunModalAgent(smsAgent);
             };
           })()}
@@ -1082,7 +1193,7 @@ function AgentsContent() {
             return (leadName: string, phone: string, pitchContext: string) => {
               setOutreachPrefill({ lead_name: leadName, phone, pitch_context: pitchContext });
               setOutreachTargetSlug("cold-call");
-              setProposalPrefill(null);
+              setProposalPrefill(null); setAuditPrefill(null); setEmailDripPrefill(null);
               setRunModalAgent(callAgent);
             };
           })()}

@@ -181,18 +181,73 @@ Format as a clean lead list with these columns for each business found:
 - Notes (anything notable about their web presence)
 
 If phone/email not found, mark as "Research needed". Include 5-10 leads. End with a summary of the best prospects and why.`);
+
+      // ── CRM Auto-Save: parse leads and insert into leads table ──
+      try {
+        const leadLines = result.split("\n");
+        let currentLead: Record<string, string> = {};
+        const parsedLeads: Record<string, string>[] = [];
+        const flushLead = () => {
+          if (currentLead.business_name) {
+            parsedLeads.push({ ...currentLead });
+            currentLead = {};
+          }
+        };
+        for (const line of leadLines) {
+          const t = line.trim();
+          if (/^-?\s*Business Name[:\s]/i.test(t)) { flushLead(); currentLead.business_name = t.replace(/^-?\s*Business Name[:\s]*/i, "").trim(); }
+          else if (/^-?\s*Phone[:\s]/i.test(t)) currentLead.phone = t.replace(/^-?\s*Phone[:\s]*/i, "").trim();
+          else if (/^-?\s*Email[:\s]/i.test(t)) currentLead.email = t.replace(/^-?\s*Email[:\s]*/i, "").trim();
+          else if (/^-?\s*Website[:\s]/i.test(t)) currentLead.website = t.replace(/^-?\s*Website[:\s]*/i, "").trim();
+          else if (/^-?\s*Category[:\s]/i.test(t)) currentLead.category = t.replace(/^-?\s*Category[:\s]*/i, "").trim();
+          else if (/^-?\s*Notes[:\s]/i.test(t)) currentLead.notes = t.replace(/^-?\s*Notes[:\s]*/i, "").trim();
+        }
+        flushLead();
+
+        if (parsedLeads.length > 0) {
+          const leadsToInsert = parsedLeads.map((l) => ({
+            user_id: userId,
+            business_name: l.business_name || "",
+            phone: l.phone && l.phone !== "Research needed" ? l.phone : null,
+            email: l.email && l.email !== "Research needed" ? l.email : null,
+            website: l.website || null,
+            category: l.category || category || null,
+            city: city || null,
+            notes: l.notes || null,
+            pipeline_status: "scraped",
+            source: "lead-prospector",
+          }));
+          await serviceSupabase.from("leads").insert(leadsToInsert);
+          console.log(`[lead-prospector] Auto-saved ${leadsToInsert.length} leads to CRM`);
+        }
+      } catch (crmErr) {
+        console.error("[lead-prospector] CRM auto-save error:", crmErr);
+      }
     }
 
     else if (agent.slug === "website-proposal") {
       const url = input.url || "";
       const businessName = input.business_name || url;
       const scraped = await scrapeUrl(url);
+
+      // Fetch booking URL for CTA
+      let bookingUrl = "";
+      const { data: bsProposal } = await serviceSupabase
+        .from("booking_settings")
+        .select("booking_slug")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (bsProposal?.booking_slug) {
+        bookingUrl = `\n\nBooking link for CTA: https://system-install-lab.lovable.app/book/${bsProposal.booking_slug}`;
+      }
+
       result = await callAI(`You are a web design sales expert. Analyze this website and write a compelling rebuild proposal.
 
 Business: ${businessName}
 Website: ${url}
 Current site content:
 ${scraped}
+${bookingUrl}
 
 Write a professional website rebuild proposal including:
 1. Current State Analysis (specific problems with their site — design, mobile, speed, conversion)
@@ -200,7 +255,7 @@ Write a professional website rebuild proposal including:
 3. Business Impact (why this matters to their revenue/customers)
 4. Timeline (realistic, specific)
 5. Investment (suggest $800-$2,500 range based on complexity)
-6. Call to Action
+6. Call to Action${bookingUrl ? " — include the booking link so they can schedule a call" : ""}
 
 Make it feel personal and specific to THEIR business, not generic. Use their actual business context.`);
     }
@@ -363,11 +418,23 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
         return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
       }
 
+      // Fetch booking URL
+      let bookingUrlSms = "";
+      const { data: bsSms } = await serviceSupabase
+        .from("booking_settings")
+        .select("booking_slug")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (bsSms?.booking_slug) {
+        bookingUrlSms = `https://system-install-lab.lovable.app/book/${bsSms.booking_slug}`;
+      }
+
       // Generate the SMS copy
       const smsBody = await callAI(`You are a cold outreach SMS specialist for a web designer/developer.
 
 Lead name: ${leadName}
 Pitch context: ${pitchContext}
+${bookingUrlSms ? `Booking link (use if space allows): ${bookingUrlSms}` : ""}
 
 Write ONE cold SMS message. Rules:
 - MUST be under 155 characters (leave room for carrier overhead)
@@ -429,10 +496,22 @@ Output ONLY the SMS text, nothing else.`);
         return new Response(JSON.stringify({ error: "VAPI_API_KEY not configured" }), { status: 500, headers: corsHeaders });
       }
 
+      // Fetch booking URL for call CTA
+      let bookingUrlCall = "";
+      const { data: bsCall } = await serviceSupabase
+        .from("booking_settings")
+        .select("booking_slug")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (bsCall?.booking_slug) {
+        bookingUrlCall = `https://system-install-lab.lovable.app/book/${bsCall.booking_slug}`;
+      }
+
       const systemPrompt = `You are a web design consultant making a warm outbound call to a small business owner about rebuilding their website.
 
 Lead name: ${leadName}
 Context: ${pitchContext}
+${bookingUrlCall ? `Booking link to share: ${bookingUrlCall}` : ""}
 
 Your goal:
 1. Introduce yourself as a web designer who came across their business
@@ -440,7 +519,7 @@ Your goal:
 3. Mention 1-2 things that could be improved about their online presence (mobile experience, speed, modern design, booking/contact forms)
 4. Explain you build sites quickly using the latest tools — typically 3-5 days
 5. Ask if they'd be open to a 10-minute screen share to see what's possible
-6. If interested, confirm their email for a follow-up proposal
+6. If interested, ${bookingUrlCall ? "give them the booking link to schedule a call" : "confirm their email for a follow-up proposal"}
 
 Be natural, not salesy. You're a professional offering genuine value, not a telemarketer. Keep it under 3 minutes.`;
 
