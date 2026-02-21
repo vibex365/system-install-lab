@@ -42,72 +42,132 @@ CONTEXT:
 - Stack: React + Vite + Tailwind + Framer Motion + shadcn/ui + Supabase (Lovable Cloud)
 - If brand context is provided from a site scan, USE IT for colors, fonts, tone
 
-WHAT THIS FUNNEL DOES:
-1. Asks the prospect 5-8 niche-specific questions (multiple choice, weighted scoring)
-2. Teaches them something between questions (education slides with stats/facts)
-3. Collects their contact info (name, email, phone) BEFORE showing the result
-4. Calculates and displays a personalized result score (animated reveal)
-5. Ends with a CTA to book a call or take next steps
+ARCHITECTURE — The funnel is a SINGLE React component with 4 phases:
+  "landing" → "quiz" → "capture" → "result"
+State managed via useState, AnimatePresence for transitions.
 
-DESIGN PHILOSOPHY:
-- Modern, premium single-page React app with step-by-step flow
-- Framer Motion for all transitions between steps (smooth slide/fade)
-- Progress bar showing quiz completion
-- Bold, niche-appropriate color palette
-- Mobile-first, thumb-friendly (44px touch targets)
-- Typography: distinctive display font + refined sans body
+═══════════════════════════════════════════════════════
+PHASE 1: HERO LANDING PAGE (phase === "landing")
+═══════════════════════════════════════════════════════
+- Full-screen centered layout, dark gradient or branded background
+- Brand name / logo centered at top (persistent on ALL phases)
+- Pre-headline: small uppercase text (pattern interrupt question)
+- Main headline: large bold question targeting the prospect's pain point
+- Subtext: "Answer [N] quick questions. Get your [Result Label] in under 2 minutes."
+- Large CTA button: "TAKE THE FREE QUIZ NOW" (prominent, high-contrast)
+- Trust line below: star rating or "Trusted by X+ [niche] owners"
+- Framer Motion: fade-in stagger on all elements
 
-OUTPUT STRUCTURE — Follow this EXACT format:
+═══════════════════════════════════════════════════════
+PHASE 2: QUIZ (phase === "quiz")
+═══════════════════════════════════════════════════════
+- Persistent brand header at top (centered, small)
+- Progress section:
+  • Text above bar: "X steps remaining" (left) and "XX%" (right)
+  • Animated progress bar (Framer Motion width transition)
+- Question display: large readable question text
+- Answer options: large pill/card buttons, full-width, hover/active states
+  • Single-select: clicking an option auto-advances to next question
+  • Multi-select (optional): checkboxes, "Continue" button below, user picks multiple
+- Optional hint text below options (small italic helper text)
+- Framer Motion: slide-left transition between questions
+- Each answer has a score weight (0-3) for final calculation
+- QuizQuestion interface: { question, options: {label, value, score}[], multiSelect?, hint? }
+- 5-8 niche-specific questions, educational and relevant
+- 2-3 education slides interspersed ("Did you know..." format with compelling stat)
+  • These are separate steps with no options — just info + "Continue" button
 
-1. Funnel Concept
-   - Quiz title (engaging question format)
-   - Target audience
-   - Result metric name (e.g., "Risk Score", "Health Score", "Readiness Score")
-   - Scoring range (0-100) with 3-4 result tiers
+═══════════════════════════════════════════════════════
+PHASE 3: LEAD CAPTURE (phase === "capture")
+═══════════════════════════════════════════════════════
+- Persistent brand header
+- Headline: "Almost there! Where should we send your results?"
+- Subtitle: "Enter your details below to receive your personalized [Result Label]."
+- Form fields with BOLD labels:
+  • "Full Name" — text input
+  • "Email Address" — email input
+  • "Phone Number" — tel input
+- Privacy notice with lock icon: "Your information is secure and will never be shared with third parties."
+- CTA button: "Get My [Result Label]" (styled prominently in primary color, full-width)
+- "Go Back" link below the button
+- Form POSTs to a Supabase Edge Function (see BACKEND section)
 
-2. Quiz Questions (5-8)
-   - Each question: text, 3-4 answer options, score weight per option
-   - 2-3 education slides interspersed ("Did you know..." format with compelling stats)
+═══════════════════════════════════════════════════════
+PHASE 4: RESULTS (phase === "result")
+═══════════════════════════════════════════════════════
+- Persistent brand header
+- Personalized greeting: "Thank You, [Name]!" with emoji accents (🎉)
+- Subtitle: "Your [Result Label] Assessment is complete"
+- Score card (dark background, rounded, prominent):
+  • LEFT side: animated gauge/arc visualization (SVG arc, Framer Motion)
+    - Score number animating from 0 to final value
+    - Color-coded: red (0-40), amber (41-65), green (66-85), emerald (86-100)
+  • RIGHT side: Tier label (e.g., "Critical", "Needs Attention", "Good", "Excellent")
+    - 1-2 sentence tier description
+  • Bottom banner inside card: urgency message (e.g., "⚠️ Immediate Action Recommended")
+    - Color-coded to match score tier
+- "Why Your Score Is [X]" section:
+  • 2-4 dynamic insight cards based on which answers scored lowest
+  • Each card: colored left border, icon, bold title, explanation text
+  • Explains what their specific answers revealed
+- Primary CTA: "[Book/Schedule/Get] Your Free [Consultation/Assessment]"
+- Secondary recommendations section: 3 actionable tips
+- Trust signals: testimonial or credibility markers
 
-3. Lead Capture Form
-   - Fields: Name, Email, Phone
-   - Positioned AFTER quiz, BEFORE results
-   - Value proposition above form ("Get your personalized [Result] now")
+═══════════════════════════════════════════════════════
+BACKEND — FORM API & DATA HANDLING (CRITICAL)
+═══════════════════════════════════════════════════════
+Include in the prompt:
+- A Supabase table schema for storing quiz submissions:
+  • id (uuid, PK, default gen_random_uuid())
+  • guest_name (text)
+  • guest_email (text)
+  • guest_phone (text, nullable)
+  • quiz_answers (jsonb — stores all answers)
+  • score (integer)
+  • tier (text)
+  • created_at (timestamptz, default now())
+- Enable RLS on the table
+- An Edge Function endpoint that receives form submissions and inserts into the table
+- The lead capture form MUST POST to this endpoint
+- Include RLS policies so the business owner can view their leads
+- This is the client's OWN backend — NOT ours
 
-4. Results Page
-   - Animated score reveal (circular progress or counting animation)
-   - Score interpretation for each tier
-   - 3-4 personalized recommendations based on score
-   - Urgency messaging
+═══════════════════════════════════════════════════════
+DESIGN SYSTEM
+═══════════════════════════════════════════════════════
+- Typography: specific Google Fonts pairing (display + body)
+- Color palette: exact hex values (use brand context if available)
+  • Define as CSS custom properties in :root
+  • Dark mode support via .dark class
+- Component styling: buttons (large, rounded, high-contrast), cards (subtle border, shadow), progress bar
+- Framer Motion specs:
+  • Landing: stagger fade-in (0.1s delay per element)
+  • Quiz transitions: slide-left with opacity (0.3s, ease-out)
+  • Score reveal: countUp animation (1.5s) + gauge arc draw (1s)
+  • Results cards: stagger slide-up (0.15s delay per card)
+- Mobile-first: thumb-friendly (min 44px touch targets), responsive
+- Max-width container: 640px (focused, single-column quiz feel)
 
-5. CTA Section
-   - Primary: "Book Your Free Consultation" button
-   - Secondary: "Download Your Report" option
-   - Trust signals
-
-6. UI/UX Design System
-   - Typography: specific Google Fonts pairing
-   - Color palette: exact hex values (use brand context if available)
-   - Component styling: buttons, cards, progress bar
-   - Framer Motion specs: entrance, transitions, score reveal
-
-7. FORM API & DATA HANDLING (CRITICAL)
-   - Include a Supabase table schema for storing quiz submissions:
-     - guest_name, guest_email, guest_phone, quiz_answers (jsonb), score, created_at
-   - Include an Edge Function endpoint that receives form submissions
-   - The lead capture form MUST POST to this endpoint
-   - Include RLS policies so the business owner can view their leads
-   - This is the client's OWN backend — NOT ours
-
-8. Build Order
-   - Step-by-step component build sequence
-   - Note: this is a SINGLE PAGE app with step transitions, not multi-page
+═══════════════════════════════════════════════════════
+BUILD ORDER (include in prompt)
+═══════════════════════════════════════════════════════
+1. Set up the single-page component with phase state
+2. Build the landing hero
+3. Build quiz engine with progress bar and question transitions
+4. Build lead capture form
+5. Build results page with score gauge and insight cards
+6. Wire up scoring logic and tier calculation
+7. Add Supabase table + Edge Function + form submission
+8. Add Framer Motion animations to all phases
+9. Final polish: responsive, accessibility, SEO meta
 
 Rules:
 - Extract brand data from context if provided — match their colors, fonts, tone
 - Every quiz question must be relevant and educational, not filler
 - Scoring must feel legitimate and personalized
 - Result MUST feel valuable enough to justify giving contact info
+- The generated prompt should be PASTE-READY for Lovable — complete and self-contained
 - Return ONLY the final build prompt — nothing else.`;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
