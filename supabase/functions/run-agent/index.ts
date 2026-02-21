@@ -241,7 +241,7 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
         bookingUrl = `\n\nBooking link for CTA: https://system-install-lab.lovable.app/book/${bsProposal.booking_slug}`;
       }
 
-      result = await callAI(`You are a web design sales expert. Analyze this website and write a compelling rebuild proposal.
+      result = await callAI(`You are a smart funnel sales expert. Analyze this business's current website and write a compelling proposal for building them a Smart Funnel — a high-converting, AI-powered lead capture and sales system built with Lovable.
 
 Business: ${businessName}
 Website: ${url}
@@ -249,15 +249,20 @@ Current site content:
 ${scraped}
 ${bookingUrl}
 
-Write a professional website rebuild proposal including:
-1. Current State Analysis (specific problems with their site — design, mobile, speed, conversion)
-2. What You'll Build (specific features and improvements)
-3. Business Impact (why this matters to their revenue/customers)
-4. Timeline (realistic, specific)
-5. Investment (suggest $800-$2,500 range based on complexity)
-6. Call to Action${bookingUrl ? " — include the booking link so they can schedule a call" : ""}
+Write a professional Smart Funnel proposal including:
+1. Current State Analysis (specific problems with their site — no lead capture, no booking system, no intake funnel, poor mobile experience, no follow-up automation)
+2. What You'll Build — A SMART FUNNEL, not just a website. Include:
+   - AI-powered intake questionnaire that qualifies leads automatically
+   - Automated booking calendar integration
+   - SMS/email follow-up sequences triggered by form submissions
+   - Mobile-first, conversion-optimized landing pages
+   - Lead scoring and pipeline dashboard
+3. Business Impact (how many leads they're losing now, projected increase in conversions, time saved on manual follow-up)
+4. Timeline (typically 3-5 days with Lovable)
+5. Investment (suggest $1,500-$4,000 range based on complexity — this is a SYSTEM, not just a site)
+6. Call to Action${bookingUrl ? " — include the booking link so they can schedule a strategy call" : ""}
 
-Make it feel personal and specific to THEIR business, not generic. Use their actual business context.`);
+IMPORTANT: Position this as a SMART FUNNEL system, NOT a website redesign. You're selling a lead generation machine, not a pretty website. Use their actual business context to show exactly how the funnel would work for their specific niche.`);
     }
 
     else if (agent.slug === "social-media") {
