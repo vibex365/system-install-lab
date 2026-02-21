@@ -252,7 +252,11 @@ function CRMContent() {
 
       // Invoke run-agent
       await supabase.functions.invoke("run-agent", {
-        body: { runId: run!.id },
+        body: {
+          agent_id: agent.id,
+          lease_id: lease!.id,
+          input: inputPayload,
+        },
       });
 
       toast({ title: `${agentSlug.replace(/-/g, " ")} started`, description: lead.business_name });
