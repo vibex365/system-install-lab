@@ -3,8 +3,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronDown, ChevronUp, ScanSearch, Send, Eye } from "lucide-react";
+import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronUp, ScanSearch, Send, Eye, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 function stripMarkdown(text: string): string {
   return text
@@ -59,12 +60,10 @@ const STATUS_COLORS: Record<string, string> = {
   failed: "bg-destructive/20 text-destructive",
 };
 
-// Parse email draft from result_summary
 function parseEmailDraft(text: string): { subject: string; body: string; to: string } | null {
   if (!text.includes("COLD EMAIL DRAFT") && !text.includes("EMAIL DRIP")) return null;
   const toMatch = text.match(/TO:\s*(.+)/i);
   const subjectMatch = text.match(/Subject:\s*(.+)/i);
-  // Get body after "Body:" or after subject line
   let body = "";
   const bodyMatch = text.match(/Body:\s*([\s\S]*?)(?=EMAIL \d|$)/i);
   if (bodyMatch) {
@@ -81,13 +80,17 @@ function parseEmailDraft(text: string): { subject: string; body: string; to: str
 }
 
 export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerProps) {
+  const { toast } = useToast();
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loadingRuns, setLoadingRuns] = useState(false);
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!lead || !open) return;
     setExpandedRun(null);
+    setEmailSent(false);
     fetchRuns();
   }, [lead?.id, open]);
 
@@ -126,12 +129,33 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
     setLoadingRuns(false);
   };
 
-  // Get latest scan and email draft from runs
   const latestScan = runs.find((r) => r.agent_slug === "site-audit" && r.status === "completed");
   const latestEmailDraft = runs.find(
     (r) => (r.agent_slug === "cold-email-outreach" || r.agent_slug === "email-drip") && r.status === "completed"
   );
   const parsedEmail = latestEmailDraft?.result_summary ? parseEmailDraft(latestEmailDraft.result_summary) : null;
+
+  const handleSendEmail = async () => {
+    if (!parsedEmail || !parsedEmail.to || !parsedEmail.subject) return;
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-approved-email", {
+        body: {
+          to: parsedEmail.to,
+          subject: parsedEmail.subject,
+          body: parsedEmail.body,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setEmailSent(true);
+      toast({ title: "Email sent", description: `Sent to ${parsedEmail.to}` });
+    } catch (e: any) {
+      toast({ title: "Failed to send", description: e.message, variant: "destructive" });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   if (!lead) return null;
 
@@ -195,7 +219,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
             </p>
           </section>
 
-          {/* Scan Results (Latest) */}
+          {/* Scan Results */}
           {latestScan?.result_summary && (
             <section className="space-y-2">
               <div className="flex items-center gap-2">
@@ -211,7 +235,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
             </section>
           )}
 
-          {/* Audit Summary (from lead record, shown if no scan run) */}
+          {/* Audit Summary fallback */}
           {!latestScan && lead.audit_summary && (
             <section className="space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Audit Summary</h3>
@@ -221,13 +245,17 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
             </section>
           )}
 
-          {/* Email Draft Preview */}
+          {/* Email Draft Preview + Send Button */}
           {parsedEmail && (
             <section className="space-y-2">
               <div className="flex items-center gap-2">
                 <Send className="h-3.5 w-3.5 text-primary" />
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Draft</h3>
-                <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-400 ml-auto">Ready to review</Badge>
+                {emailSent ? (
+                  <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-400 ml-auto">Sent</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-400 ml-auto">Ready to review</Badge>
+                )}
               </div>
               <div className="rounded-md border border-border bg-muted/40 p-3 space-y-2">
                 <div className="text-[11px] text-muted-foreground">
@@ -242,6 +270,27 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
                   {parsedEmail.body}
                 </div>
               </div>
+              {!emailSent && (
+                <Button
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || !parsedEmail.to}
+                >
+                  {sendingEmail ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
+                  {sendingEmail ? "Sending..." : "Approve & Send Email"}
+                </Button>
+              )}
+              {emailSent && (
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Email sent successfully
+                </div>
+              )}
             </section>
           )}
 
