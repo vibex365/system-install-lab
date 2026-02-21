@@ -480,13 +480,16 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
     else if (agent.slug === "sms-outreach") {
       const leadName = input.contact_name || input.lead_name || "there";
       const phone = input.phone || "";
+      const businessName = input.business_name || "";
       const pitchContext = input.pitch_context || input.notes || "";
+      const auditSummary = input.audit_summary || "";
+      const category = input.category || "";
 
       if (!phone) {
         return new Response(JSON.stringify({ error: "Phone number is required." }), { status: 400, headers: corsHeaders });
       }
 
-      // Fetch booking URL
+      // Fetch booking URL for this specific user
       let bookingUrlSms = "";
       const { data: bsSms } = await serviceSupabase
         .from("booking_settings")
@@ -497,24 +500,44 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
         bookingUrlSms = `https://system-install-lab.lovable.app/book/${bsSms.booking_slug}`;
       }
 
+      // Check if there's a recent audit for this lead
+      let auditContext = auditSummary;
+      if (!auditContext && input.lead_id) {
+        const { data: recentAudit } = await serviceSupabase
+          .from("agent_runs")
+          .select("result_summary")
+          .contains("input_payload", { lead_id: input.lead_id })
+          .eq("status", "completed")
+          .order("triggered_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (recentAudit?.result_summary) {
+          auditContext = recentAudit.result_summary.slice(0, 500);
+        }
+      }
+
       // Generate the SMS copy
-      const smsBody = await callAI(`You are a cold outreach SMS specialist for a web designer/developer.
+      const smsBody = await callAI(`You are a local business outreach specialist. You just ran a website audit for a business and want to reach out via text.
 
 Lead name: ${leadName}
-Pitch context: ${pitchContext}
-${bookingUrlSms ? `Booking link (use if space allows): ${bookingUrlSms}` : ""}
+Business: ${businessName}
+Category: ${category}
+${auditContext ? `Audit findings (use 1-2 specific issues from this): ${auditContext.slice(0, 400)}` : "No audit available — mention you reviewed their online presence."}
+${bookingUrlSms ? `Booking link: ${bookingUrlSms}` : ""}
 
-Write ONE cold SMS message. Rules:
-- MUST be under 155 characters (leave room for carrier overhead)
-- Personal — use their name
-- Specific — reference their business/situation from the pitch context
-- Include a soft CTA (question, not a hard sell)
-- No links, no emojis, no ALL CAPS
-- Sound human, not like a bot
+Write ONE SMS message. Rules:
+- Start with "Hey ${leadName}" (or "Hi ${leadName}")
+- Reference that you just reviewed their website/online presence
+- Mention 1 specific issue you found (missing booking, no lead capture, outdated design, etc.)
+- ${bookingUrlSms ? `End with: "Want me to walk you through it? ${bookingUrlSms}"` : "End with a question like 'Mind if I send over what I found?'"}
+- Keep it under 300 characters total
+- Sound like a real person texting, not a bot
+- No emojis, no ALL CAPS, no spam language
+- Write in plain text only
 
 Output ONLY the SMS text, nothing else.`);
 
-      const trimmedSms = smsBody.trim().slice(0, 160);
+      const trimmedSms = smsBody.trim().slice(0, 320);
 
       // Send via Twilio
       const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");

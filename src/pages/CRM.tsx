@@ -242,6 +242,7 @@ function CRMContent() {
         contact_name: lead.contact_name,
         notes: lead.notes,
         address: lead.address,
+        audit_summary: lead.audit_summary,
       };
 
       const { data: run, error: runErr } = await supabase
