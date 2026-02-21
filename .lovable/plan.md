@@ -1,84 +1,57 @@
 
 
-# Redesign Intake Funnel to Match Reference
+# Activate All Agents + Build Video Content Agent
 
-## Overview
-Upgrade the `/intake-funnel` page to match the full reference funnel flow shown in the Guardian Insulation example, adapted for the PFSW brand. This involves adding a landing page, improving the quiz UI, upgrading the lead capture screen, and building a much richer results page.
+## Problem
 
-## Changes (all in `src/pages/IntakeFunnel.tsx`)
+Three fully-built agents (Cold Call, SMS Outreach, Cold Email Outreach) show "Coming Soon" buttons because they lack Stripe price IDs and aren't marked as included with membership. The Video Content Agent is the only one that should remain "Coming Soon" since it has no handler yet -- but per your request, it needs to be built out too.
 
-### 1. Add Landing Phase
-- New `"landing"` phase before the quiz begins
-- PFSW brand header centered at top
-- Pre-headline: "ARE YOU LEAVING MONEY ON THE TABLE?"
-- Main headline: "Are You Building Your Clients' Funnels The Hard Way?"
-- Subtext: "Answer 6 quick questions. Get your Funnel Efficiency Score in under 2 minutes."
-- Large CTA button: "TAKE THE FREE QUIZ NOW"
-- Trust line: "Trusted by 50+ agency owners"
+## Changes
 
-### 2. Persistent Brand Header
-- "PFSW" brand name centered at the top of every phase (quiz, capture, results) -- matching how "Guardian Insulation" appears on every screen in the reference
+### 1. Mark outreach agents as included with membership (database update)
 
-### 3. Improved Progress Bar
-- Add "X steps remaining" text on the left and percentage on the right, above the progress bar
-- Matches the reference layout exactly
+Set `included_with_membership = true` for Cold Call, SMS Outreach, and Cold Email Outreach. This makes them instantly usable by all active members without needing Stripe price IDs -- which makes sense since these are core outreach tools in the pipeline.
 
-### 4. Multi-Select Question Support
-- Add a `multiSelect` flag to the quiz question type
-- Multi-select questions show checkboxes instead of radio-style buttons
-- A "Continue" button appears below the options (user picks multiple then advances)
-- Add optional `hint` text below options (small italic helper text like "A healthy attic means healthier air...")
+### 2. Build out the Video Content Agent
 
-### 5. Enhanced Lead Capture Phase
-- Headline: "Almost there! Where should we send your results?"
-- Subtitle: "Enter your details below to receive your personalized Funnel Efficiency Score."
-- Bold field labels: "Full Name", "Email Address", "Phone Number"
-- Privacy notice with lock icon: "Your information is secure and will never be shared with third parties."
-- CTA button: "Get My Funnel Score" (styled prominently in primary color)
-- "Go Back" link below the button
+**Database**: Set `video-content` status to `active` and `included_with_membership = false` (it's a premium agent at $79/mo -- will still need a Stripe price ID to lease, or we can mark it included too).
 
-### 6. Rich Results Page
-- Personalized greeting: "Thank You, [Name]!" with emoji accents
-- Subtitle: "Your Funnel Efficiency Assessment is complete"
-- Score card with dark background containing:
-  - Gauge/arc visualization (already exists, will be enhanced)
-  - Tier label and description on the right side
-  - Urgency banner at bottom of card (e.g., "Immediate Action Recommended")
-- "Why Your Score Is X" section with answer-based insight cards (left-bordered colored cards with icon, bold title, and description)
-- Primary CTA: "Apply to Join the Collective"
-- Secondary recommendations section preserved
+**Frontend** (`src/pages/Agents.tsx`): Add input config for `video-content`:
+- Topic / Build (textarea)
+- Platform (select: YouTube, TikTok, Instagram Reels, All)
+- Tone (select: Educational, Hype/Energy, Professional, Behind-the-scenes)
 
-### 7. No New Files or Dependencies
-Everything stays in the single `IntakeFunnel.tsx` file. No database changes. No new packages needed.
+**Backend** (`supabase/functions/run-agent/index.ts`): Add `video-content` handler that generates:
+- Video script (hook, body, CTA) optimized for the selected platform
+- Thumbnail text suggestions (3 options)
+- Video title and description
+- Hashtags and posting notes
+
+### 3. Admin access
+
+Admin/Chief Architect RLS policies already exist on `agents`, `agent_leases`, and `agent_runs` tables. No changes needed there. However, the UI button logic needs a small fix so admins/chief architects can run agents without needing a lease (currently they'd still see "Coming Soon" or "Lease" buttons).
 
 ## Technical Details
 
-**Phase state type change:**
-```text
-"landing" | "quiz" | "capture" | "result"
-```
-Initial phase set to `"landing"`.
+### Database updates (via insert tool, not migration)
+```sql
+-- Make outreach agents included with membership
+UPDATE agents SET included_with_membership = true WHERE slug IN ('cold-call', 'sms-outreach', 'cold-email-outreach');
 
-**QuizQuestion interface update:**
-```text
-interface QuizQuestion {
-  question: string;
-  options: QuizOption[];
-  multiSelect?: boolean;
-  hint?: string;
-}
+-- Activate video content agent
+UPDATE agents SET status = 'active' WHERE slug = 'video-content';
 ```
 
-**Progress calculation update:**
-- Steps remaining = totalQuestions - answeredCount
-- Percentage displayed as text alongside the bar
+### Files to edit
 
-**Results score card:**
-- Horizontal layout: gauge on left, tier info on right
-- Dark card background (using secondary/card colors)
-- Alert-style banner below the score
+| File | Change |
+|------|--------|
+| `src/pages/Agents.tsx` | Add `video-content` to `AGENT_INPUTS` config |
+| `supabase/functions/run-agent/index.ts` | Add `else if (agent.slug === "video-content")` handler block before the generic fallback |
 
-**"Why Your Score" section:**
-- 2-3 dynamic insight cards based on which answers scored lowest
-- Each card has a colored left border, icon, bold title, and explanation text
+### Video Content handler logic
+- Takes `topic`, `platform`, `tone` from input
+- Calls `callAI()` with a system prompt for video content creation
+- Returns structured output: script, thumbnail text, title/description, hashtags
+- No external API needed (uses existing Lovable AI gateway)
 
