@@ -276,9 +276,20 @@ export default function IntakeFunnel() {
     }
     setSubmitting(true);
     try {
+      // Save to funnel_leads for CRM visibility
+      await supabase.from("funnel_leads" as any).insert({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        score: normalizedScore,
+        tier: tier.label,
+        answers: answers,
+        funnel_name: "intake",
+      });
+      // Also save to waitlist for backwards compatibility
       await supabase.from("waitlist").insert({
         email: email.trim(),
-        note: `[Intake Funnel] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label}) | Answers: ${JSON.stringify(answers)}`,
+        note: `[Smart Funnel] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label})`,
       });
       setPhase("result");
     } catch {

@@ -129,7 +129,7 @@ const institutionalFaqs = [
   },
   {
     q: "What does $197/month include?",
-    a: "Full access to all five agents (Lead Prospector, Website Auditor, Cold Email Agent, AI Voice Caller, Website Builder), the niche Lovable prompt library, weekly hot seat cohort, and the moderated member board.",
+    a: "Full access to the Smart Funnel Builder, all outreach agents (Lead Prospector, Website Auditor, Cold Email Agent, SMS Outreach, AI Voice Caller), the niche smart funnel prompt library, weekly hot seat cohort, and the moderated member board.",
   },
 ];
 
@@ -359,7 +359,7 @@ export default function Index() {
               <span className="text-muted-foreground text-lg">/month</span>
             </div>
             <p className="text-sm text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto">
-              Lead Scraper · Website Auditor · Cold Email Agent · AI Voice Caller · Niche Prompt Library · Weekly Hot Seats
+              Smart Funnel Builder · Lead Scraper · Website Auditor · Cold Email · SMS Outreach · AI Voice Caller · Smart Funnel Library · Weekly Hot Seats
             </p>
             <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
               <Link to="/apply">Apply for Access</Link>

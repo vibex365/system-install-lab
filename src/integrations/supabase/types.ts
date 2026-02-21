@@ -488,6 +488,45 @@ export type Database = {
           },
         ]
       }
+      funnel_leads: {
+        Row: {
+          answers: Json | null
+          created_at: string
+          email: string
+          funnel_name: string | null
+          funnel_owner_id: string | null
+          id: string
+          name: string
+          phone: string | null
+          score: number | null
+          tier: string | null
+        }
+        Insert: {
+          answers?: Json | null
+          created_at?: string
+          email: string
+          funnel_name?: string | null
+          funnel_owner_id?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          score?: number | null
+          tier?: string | null
+        }
+        Update: {
+          answers?: Json | null
+          created_at?: string
+          email?: string
+          funnel_name?: string | null
+          funnel_owner_id?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          score?: number | null
+          tier?: string | null
+        }
+        Relationships: []
+      }
       job_runs: {
         Row: {
           created_at: string

@@ -68,8 +68,8 @@ export const magazinePages: MagazinePage[] = [
         body: "People Fail Systems Work is a client acquisition operating system for web designers. It's not a course. It's not a community. It's a toolkit — five automated agents that handle the parts of your business you hate doing manually. You still do the creative work. The system handles the grunt work: finding leads, auditing websites, sending cold emails, calling prospects, and giving you battle-tested Lovable prompts to build the sites fast.",
       },
       {
-        heading: "The Five Tools",
-        body: "Lead Prospector — scrapes local business data by city and niche. Website Auditor — scans competitor sites and generates rebuild proposals. Cold Email Agent — writes personalized outreach emails with specific pain points. AI Voice Caller — calls business owners via AI and books discovery calls. Niche Prompt Library — pre-built Lovable prompts for dental, restaurant, real estate, and 10+ niches. Each tool runs on-demand or on a schedule from your member dashboard.",
+        heading: "The Six Tools",
+        body: "Smart Funnel Builder — generates interactive quiz funnels that convert cold traffic into booked calls for any niche. Lead Prospector — scrapes local business data by city and niche. Website Auditor — scans competitor sites and generates rebuild proposals. Cold Email Agent — writes personalized outreach emails with specific pain points. AI Voice Caller — calls business owners via AI and books discovery calls. Niche Prompt Library — pre-built smart funnel and website prompts for dental, restaurant, real estate, and 10+ niches. Each tool runs on-demand or on a schedule from your member dashboard.",
       },
       {
         heading: "Built on Lovable",
@@ -182,21 +182,21 @@ export const magazinePages: MagazinePage[] = [
   {
     pageNumber: 9,
     chapter: "Chapter VIII",
-    title: "Niche Prompt Library",
-    subtitle: "Pre-built Lovable prompts for the niches that buy websites.",
+    title: "Smart Funnel Library",
+    subtitle: "Pre-built smart funnel prompts for the niches that convert.",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
-        heading: "Why Niches Matter",
-        body: "The fastest path to closing a web design client is specialization. When you tell a dentist 'I build websites for dental practices,' your conversion rate doubles compared to 'I build websites for businesses.' Niches create instant credibility. The PFSW prompt library is organized by niche — each one battle-tested by members who have used it to close real clients.",
+        heading: "Why Smart Funnels Win",
+        body: "Static landing pages convert at 2–3%. Interactive quiz funnels convert at 8–12%. When you offer your client a smart funnel instead of a flat page, you're offering a tool that generates 3–5x more leads. The PFSW Smart Funnel Library gives you ready-to-deploy funnel prompts for every major niche — each one designed with scored questions, education slides, lead capture, and animated results.",
       },
       {
         heading: "What's in the Library",
-        body: "Current niche packages include: Dental & Medical, Restaurant & Hospitality, Real Estate & Mortgage, Law & Professional Services, Auto & Trades, Beauty & Wellness, Fitness & Health, Home Services, Retail & E-Commerce, and Financial Services. Each package includes a full Lovable build prompt, a sample client proposal template, and a cold email opener specific to that niche's pain points.",
+        body: "Current niche smart funnel packages include: Dental (Smile Health Score), Restaurant (Online Presence Quiz), Real Estate (Market Readiness Calculator), Law Firm (Case Evaluation Tool), Auto Shop (Vehicle Health Assessment), Beauty & Wellness (Skin Health Quiz), Fitness (Body Transformation Readiness), Home Services (Property Maintenance Score), and Financial Services (Financial Health Check). Each package includes a complete 4-phase funnel prompt, cold email openers, and pitch context specific to that niche.",
       },
       {
         heading: "Living Library",
-        body: "The library grows with the community. When a member closes a client in a new niche using a custom prompt, they can submit it for review. If it passes institutional review — tested, structured, Lovable-compatible — it enters the library and becomes available to all members. This is how institutional knowledge compounds. Every member's win becomes infrastructure for the next.",
+        body: "The library grows with the community. When a member closes a client using a custom smart funnel prompt, they can submit it for review. If it passes institutional review — tested, structured, Lovable-compatible — it enters the library and becomes available to all members. This is how institutional knowledge compounds. Every member's funnel win becomes infrastructure for the next.",
       },
     ],
   },
