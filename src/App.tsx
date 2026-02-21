@@ -38,6 +38,8 @@ import Upgrade from "./pages/Upgrade";
 import CRM from "./pages/CRM";
 import CalendarPage from "./pages/CalendarPage";
 import BookingPage from "./pages/BookingPage";
+import IntakeFunnel from "./pages/IntakeFunnel";
+import AdminMarketing from "./pages/admin/AdminMarketing";
 
 const queryClient = new QueryClient();
 
@@ -67,8 +69,9 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/calendar" element={<CalendarPage />} />
 
-            {/* Public booking */}
+            {/* Public booking & funnel */}
             <Route path="/book/:slug" element={<BookingPage />} />
+            <Route path="/intake-funnel" element={<IntakeFunnel />} />
             <Route path="/library" element={<Library />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/submit" element={<Submit />} />
@@ -94,6 +97,7 @@ const App = () => (
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/modlog" element={<AdminModLog />} />
             <Route path="/admin/agents" element={<AdminAgents />} />
+            <Route path="/admin/marketing" element={<AdminMarketing />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
