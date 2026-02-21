@@ -95,8 +95,9 @@ function CRMContent() {
       .limit(500);
     // Fetch funnel leads
     const { data: funnelLeads } = await supabase
-      .from("funnel_leads" as any)
+      .from("funnel_leads")
       .select("*")
+      .eq("funnel_owner_id", user.id)
       .order("created_at", { ascending: false })
       .limit(200);
     // Merge funnel leads into the leads format
