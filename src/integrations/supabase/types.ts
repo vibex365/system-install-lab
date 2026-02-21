@@ -295,6 +295,95 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_settings: {
+        Row: {
+          available_days: number[]
+          booking_slug: string
+          created_at: string
+          display_name: string
+          end_hour: number
+          id: string
+          slot_duration_minutes: number
+          start_hour: number
+          timezone: string
+          user_id: string
+        }
+        Insert: {
+          available_days?: number[]
+          booking_slug: string
+          created_at?: string
+          display_name?: string
+          end_hour?: number
+          id?: string
+          slot_duration_minutes?: number
+          start_hour?: number
+          timezone?: string
+          user_id: string
+        }
+        Update: {
+          available_days?: number[]
+          booking_slug?: string
+          created_at?: string
+          display_name?: string
+          end_hour?: number
+          id?: string
+          slot_duration_minutes?: number
+          start_hour?: number
+          timezone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          guest_email: string
+          guest_name: string
+          guest_phone: string | null
+          host_user_id: string
+          id: string
+          lead_id: string | null
+          notes: string | null
+          scheduled_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          guest_email: string
+          guest_name: string
+          guest_phone?: string | null
+          host_user_id: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          scheduled_at: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          guest_email?: string
+          guest_name?: string
+          guest_phone?: string | null
+          host_user_id?: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          scheduled_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cohort_members: {
         Row: {
           cohort_id: string
@@ -461,6 +550,69 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          address: string | null
+          audit_summary: string | null
+          business_name: string
+          category: string | null
+          city: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          pipeline_status: string
+          rating: number | null
+          source: string
+          updated_at: string
+          user_id: string
+          website: string | null
+          website_quality_score: number | null
+        }
+        Insert: {
+          address?: string | null
+          audit_summary?: string | null
+          business_name?: string
+          category?: string | null
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          pipeline_status?: string
+          rating?: number | null
+          source?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          website_quality_score?: number | null
+        }
+        Update: {
+          address?: string | null
+          audit_summary?: string | null
+          business_name?: string
+          category?: string | null
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          pipeline_status?: string
+          rating?: number | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          website_quality_score?: number | null
         }
         Relationships: []
       }
