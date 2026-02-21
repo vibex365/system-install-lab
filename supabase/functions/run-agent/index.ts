@@ -478,6 +478,95 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
       }
     }
 
+    else if (agent.slug === "email-drip") {
+      const leadName = input.lead_name || "there";
+      const leadEmail = input.lead_email || "";
+      const businessName = input.business_name || "";
+      const websiteUrl = input.url || "";
+      const niche = input.niche || "";
+      const senderName = input.sender_name || "Your Web Designer";
+      const senderEmail = input.sender_email || "";
+      const pitchContext = input.pitch_context || "";
+
+      if (!leadEmail) {
+        return new Response(JSON.stringify({ error: "Lead email is required." }), { status: 400, headers: corsHeaders });
+      }
+
+      // Fetch booking URL
+      let bookingUrl = "";
+      const { data: bookingSettings } = await serviceSupabase
+        .from("booking_settings")
+        .select("booking_slug")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (bookingSettings?.booking_slug) {
+        bookingUrl = `Book a call: https://system-install-lab.lovable.app/book/${bookingSettings.booking_slug}`;
+      }
+
+      const emailPrompt = `You are an expert cold email copywriter for web designers.
+
+Lead: ${leadName} at ${businessName}
+Website: ${websiteUrl}
+Niche: ${niche}
+Pitch context: ${pitchContext}
+Sender: ${senderName}
+${bookingUrl ? `Booking link: ${bookingUrl}` : ""}
+
+Write a 3-email drip sequence:
+
+EMAIL 1 (Day 1 - Introduction):
+Subject: [compelling subject line]
+Body: [personalized intro referencing their business, one specific observation about their web presence, soft CTA]
+
+EMAIL 2 (Day 3 - Value):
+Subject: [value-focused subject line]
+Body: [share a relevant stat or insight about their niche, position yourself as expert, medium CTA]
+
+EMAIL 3 (Day 5 - Close):
+Subject: [urgency subject line]
+Body: [recap value, create urgency, strong CTA to book a call${bookingUrl ? " using the booking link" : ""}]
+
+Rules:
+- Each email under 150 words
+- Personal, specific to their business
+- No spam language
+- Professional but warm tone
+- Include the booking link in the CTA if available`;
+
+      const emailContent = await callAI(emailPrompt);
+
+      // Try to send Email 1 via Resend
+      let sendStatus = "draft";
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (RESEND_API_KEY && senderEmail) {
+        try {
+          // Extract first email subject and body
+          const email1Match = emailContent.match(/EMAIL 1.*?Subject:\s*(.+?)[\n\r].*?Body:\s*([\s\S]*?)(?=EMAIL 2|$)/i);
+          const subject = email1Match?.[1]?.trim() || `Quick question about ${businessName}`;
+          const body = email1Match?.[2]?.trim() || emailContent.slice(0, 500);
+
+          const resendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: `${senderName} <onboarding@resend.dev>`,
+              to: [leadEmail],
+              subject,
+              text: body,
+            }),
+          });
+          sendStatus = resendRes.ok ? "sent" : "failed";
+        } catch (e) {
+          sendStatus = "failed";
+          console.error("[email-drip] Resend error:", e);
+        }
+      } else {
+        sendStatus = "resend_not_configured";
+      }
+
+      result = `EMAIL DRIP STATUS: ${sendStatus}\nTO: ${leadEmail}\n\n${emailContent}`;
+    }
+
     else {
       result = `Agent "${agent.name}" is queued and will process your request. Job ID: ${job?.id}`;
     }

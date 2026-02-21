@@ -62,7 +62,13 @@ const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | 
   ],
   "email-drip": [
     { label: "Lead Name", key: "lead_name", type: "text", placeholder: "Dr. Chen" },
+    { label: "Lead Email", key: "lead_email", type: "text", placeholder: "drchen@atlantasmiles.com" },
     { label: "Business Name", key: "business_name", type: "text", placeholder: "Atlanta Smiles Dental" },
+    { label: "Website URL", key: "url", type: "text", placeholder: "https://atlantasmiles.com" },
+    { label: "Niche", key: "niche", type: "select", options: ["Dental", "Restaurant", "Real Estate", "Law Firm", "Fitness", "Auto Shop", "Plumbing", "Roofing", "Salon / Beauty", "Other"] },
+    { label: "Your Name", key: "sender_name", type: "text", placeholder: "Your Name" },
+    { label: "Your Email", key: "sender_email", type: "text", placeholder: "you@yourdomain.com" },
+    { label: "Pitch Context", key: "pitch_context", type: "textarea", placeholder: "Outdated website, no online booking, missing mobile version..." },
   ],
   "cold-email-outreach": [
     { label: "Business Name", key: "business_name", type: "text", placeholder: "Atlanta Smiles Dental" },
@@ -846,6 +852,8 @@ function AgentsContent() {
               <div className="flex items-center gap-0 overflow-x-auto">
                 {[
                   { slug: "lead-prospector", label: "Lead Prospector", icon: Search, desc: "Find leads" },
+                  { slug: "site-audit", label: "Site Audit", icon: ScanLine, desc: "Audit site" },
+                  { slug: "email-drip", label: "Email Drip", icon: Mail, desc: "3-email sequence" },
                   { slug: "sms-outreach", label: "SMS Outreach", icon: MessageSquare, desc: "Send SMS" },
                   { slug: "cold-call", label: "Cold Call", icon: Phone, desc: "AI phone call" },
                   { slug: "website-proposal", label: "Website Proposal", icon: FileText, desc: "Send proposal" },

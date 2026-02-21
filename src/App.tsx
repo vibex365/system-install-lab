@@ -35,6 +35,9 @@ import AdminModLog from "./pages/admin/AdminModLog";
 import AdminAgents from "./pages/admin/AdminAgents";
 import Agents from "./pages/Agents";
 import Upgrade from "./pages/Upgrade";
+import CRM from "./pages/CRM";
+import CalendarPage from "./pages/CalendarPage";
+import BookingPage from "./pages/BookingPage";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,11 @@ const App = () => (
 
             {/* Member routes */}
             <Route path="/engine" element={<Engine />} />
+            <Route path="/crm" element={<CRM />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+
+            {/* Public booking */}
+            <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/library" element={<Library />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/submit" element={<Submit />} />
