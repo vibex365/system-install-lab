@@ -1011,7 +1011,7 @@ function AgentsContent() {
                 })}
               </div>
               <p className="text-[10px] text-muted-foreground mt-4 text-center">
-                Run Lead Prospector first → then hand off leads to SMS, Call, or Proposal with one click
+                Lead Prospector → Site Audit → Email Drip → SMS → Call → Proposal
               </p>
             </CardContent>
           </Card>
