@@ -258,14 +258,9 @@ export default function Index() {
                   </div>
                 ))}
               </div>
-              <div className="flex gap-3">
-                <Button asChild size="sm" className="gold-glow-strong">
-                  <Link to="/engine">Try the Funnel Builder</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline" className="border-primary/30 text-foreground hover:bg-primary/10">
-                  <Link to="/intake-funnel">See Live Demo</Link>
-                </Button>
-              </div>
+              <Button asChild size="sm" className="gold-glow-strong">
+                <Link to="/intake-funnel">See Live Demo</Link>
+              </Button>
             </div>
             <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
               <div className="flex items-center gap-2 mb-2">
