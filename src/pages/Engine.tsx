@@ -189,8 +189,8 @@ const NICHE_PRESETS: Record<string, { industry: string; quizTitle: string; resul
   },
   PFSW: {
     industry: "SaaS / tech community / builder collective",
-    quizTitle: "Are You Building Software the Hard Way?",
-    resultLabel: "Builder Readiness Score",
+    quizTitle: "Are You Building Your Clients' Funnels The Hard Way?",
+    resultLabel: "Funnel Efficiency Score",
     styleDirection: "Dark editorial, bold and premium. Near-black background, electric accent, sharp typography. Magazine-cover aesthetic.",
     ctaText: "Apply to Join the Collective",
     colorFontNotes: "Primary: #0A0A0A (near black) · Accent: #F5A623 (amber) · Secondary: #1A1A2E (dark navy) · Background: #111111 · Fonts: Bebas Neue, DM Sans",
