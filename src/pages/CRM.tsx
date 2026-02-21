@@ -16,8 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Table imports removed - using card layout
 import {
   Plus, Search, Loader2, Users, Phone, Mail, Globe, TrendingUp, X,
-  ScanSearch, PhoneCall, MessageSquare, Send,
+  ScanSearch, PhoneCall, MessageSquare, Send, MapPin,
 } from "lucide-react";
+import { LeadDetailDrawer } from "@/components/crm/LeadDetailDrawer";
 
 const PIPELINE_STATUSES = ["funnel_lead", "scraped", "audited", "emailed", "contacted", "called", "proposal_sent", "booked", "converted", "lost"];
 const STATUS_COLORS: Record<string, string> = {
@@ -41,6 +42,7 @@ interface Lead {
   email: string | null;
   website: string | null;
   city: string | null;
+  address: string | null;
   category: string | null;
   pipeline_status: string;
   source: string;
@@ -68,6 +70,7 @@ function CRMContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [drawerLead, setDrawerLead] = useState<Lead | null>(null);
 
   // Add form
   const [formName, setFormName] = useState("");
@@ -110,6 +113,7 @@ function CRMContent() {
       email: fl.email,
       website: null,
       city: null,
+      address: null,
       category: fl.funnel_name || "Smart Funnel",
       pipeline_status: "funnel_lead",
       source: "smart_funnel",
@@ -351,7 +355,7 @@ function CRMContent() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0 space-y-1.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold text-foreground truncate">{lead.business_name}</span>
+                              <button onClick={() => setDrawerLead(lead)} className="text-sm font-semibold text-foreground truncate hover:text-primary transition-colors text-left">{lead.business_name}</button>
                               {lead.city && <span className="text-[10px] text-muted-foreground">· {lead.city}</span>}
                               <Select value={lead.pipeline_status} onValueChange={(v) => updateStatus(lead.id, v)}>
                                 <SelectTrigger className="h-5 text-[10px] w-auto border-0 p-0 gap-0">
@@ -382,9 +386,14 @@ function CRMContent() {
                                   <Globe className="h-3 w-3 shrink-0" /> {lead.website.replace(/https?:\/\/(www\.)?/, "")}
                                 </a>
                               )}
-                              {lead.contact_name && (
+                            {lead.contact_name && (
                                 <span className="flex items-center gap-1">
                                   <Users className="h-3 w-3" /> {lead.contact_name}
+                                </span>
+                              )}
+                              {lead.address && (
+                                <span className="flex items-center gap-1 truncate max-w-[200px]">
+                                  <MapPin className="h-3 w-3 shrink-0" /> {lead.address}
                                 </span>
                               )}
                             </div>
@@ -495,6 +504,9 @@ function CRMContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Lead Detail Drawer */}
+      <LeadDetailDrawer lead={drawerLead} open={!!drawerLead} onOpenChange={(o) => !o && setDrawerLead(null)} />
     </div>
   );
 }
