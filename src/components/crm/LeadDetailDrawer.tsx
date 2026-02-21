@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock } from "lucide-react";
+import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronDown, ChevronUp, ScanSearch, Send, Eye } from "lucide-react";
 import { format } from "date-fns";
 
-// Strip markdown symbols from AI output for clean display
 function stripMarkdown(text: string): string {
   return text
-    .replace(/^#{1,6}\s+/gm, "")       // headings
-    .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1") // bold/italic
-    .replace(/^[-*]\s+/gm, "• ")        // list items to bullet
-    .replace(/^---+$/gm, "")            // horizontal rules
-    .replace(/`{1,3}[^`]*`{1,3}/g, (m) => m.replace(/`/g, "")) // code
-    .replace(/\n{3,}/g, "\n\n")         // excess newlines
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1")
+    .replace(/^[-*]\s+/gm, "• ")
+    .replace(/^---+$/gm, "")
+    .replace(/`{1,3}[^`]*`{1,3}/g, (m) => m.replace(/`/g, ""))
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -42,6 +42,8 @@ interface AgentRun {
   triggered_at: string;
   result_summary: string | null;
   agent_name: string;
+  agent_slug: string;
+  input_payload: Record<string, any> | null;
 }
 
 interface LeadDetailDrawerProps {
@@ -57,12 +59,35 @@ const STATUS_COLORS: Record<string, string> = {
   failed: "bg-destructive/20 text-destructive",
 };
 
+// Parse email draft from result_summary
+function parseEmailDraft(text: string): { subject: string; body: string; to: string } | null {
+  if (!text.includes("COLD EMAIL DRAFT") && !text.includes("EMAIL DRIP")) return null;
+  const toMatch = text.match(/TO:\s*(.+)/i);
+  const subjectMatch = text.match(/Subject:\s*(.+)/i);
+  // Get body after "Body:" or after subject line
+  let body = "";
+  const bodyMatch = text.match(/Body:\s*([\s\S]*?)(?=EMAIL \d|$)/i);
+  if (bodyMatch) {
+    body = bodyMatch[1].trim();
+  } else if (subjectMatch) {
+    const afterSubject = text.split(/Subject:.+/i)[1] || "";
+    body = afterSubject.replace(/^[\s\n]+/, "").trim();
+  }
+  return {
+    to: toMatch?.[1]?.trim() || "",
+    subject: subjectMatch?.[1]?.trim() || "",
+    body: stripMarkdown(body),
+  };
+}
+
 export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerProps) {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loadingRuns, setLoadingRuns] = useState(false);
+  const [expandedRun, setExpandedRun] = useState<string | null>(null);
 
   useEffect(() => {
     if (!lead || !open) return;
+    setExpandedRun(null);
     fetchRuns();
   }, [lead?.id, open]);
 
@@ -71,7 +96,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
     setLoadingRuns(true);
     const { data } = await supabase
       .from("agent_runs")
-      .select("id, status, triggered_at, result_summary, agent_id")
+      .select("id, status, triggered_at, result_summary, agent_id, input_payload")
       .contains("input_payload", { lead_id: lead.id })
       .order("triggered_at", { ascending: false })
       .limit(20);
@@ -80,9 +105,9 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
       const agentIds = [...new Set(data.map((r) => r.agent_id))];
       const { data: agents } = await supabase
         .from("agents")
-        .select("id, name")
+        .select("id, name, slug")
         .in("id", agentIds);
-      const agentMap = Object.fromEntries((agents || []).map((a) => [a.id, a.name]));
+      const agentMap = Object.fromEntries((agents || []).map((a) => [a.id, { name: a.name, slug: a.slug }]));
 
       setRuns(
         data.map((r) => ({
@@ -90,7 +115,9 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
           status: r.status,
           triggered_at: r.triggered_at,
           result_summary: r.result_summary,
-          agent_name: agentMap[r.agent_id] || "Agent",
+          agent_name: agentMap[r.agent_id]?.name || "Agent",
+          agent_slug: agentMap[r.agent_id]?.slug || "",
+          input_payload: r.input_payload as Record<string, any> | null,
         }))
       );
     } else {
@@ -99,6 +126,13 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
     setLoadingRuns(false);
   };
 
+  // Get latest scan and email draft from runs
+  const latestScan = runs.find((r) => r.agent_slug === "site-audit" && r.status === "completed");
+  const latestEmailDraft = runs.find(
+    (r) => (r.agent_slug === "cold-email-outreach" || r.agent_slug === "email-drip") && r.status === "completed"
+  );
+  const parsedEmail = latestEmailDraft?.result_summary ? parseEmailDraft(latestEmailDraft.result_summary) : null;
+
   if (!lead) return null;
 
   return (
@@ -106,7 +140,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-base">{lead.business_name}</SheetTitle>
-          <SheetDescription className="text-xs">Lead details and agent history</SheetDescription>
+          <SheetDescription className="text-xs">Lead details, scan results, and agent history</SheetDescription>
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
@@ -161,13 +195,53 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
             </p>
           </section>
 
-          {/* Audit Summary */}
-          {lead.audit_summary && (
+          {/* Scan Results (Latest) */}
+          {latestScan?.result_summary && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ScanSearch className="h-3.5 w-3.5 text-primary" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scan Results</h3>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  {format(new Date(latestScan.triggered_at), "MMM d, yyyy")}
+                </span>
+              </div>
+              <div className="text-sm text-foreground whitespace-pre-wrap bg-muted/40 rounded-md p-3 border border-border max-h-[300px] overflow-y-auto">
+                {stripMarkdown(latestScan.result_summary)}
+              </div>
+            </section>
+          )}
+
+          {/* Audit Summary (from lead record, shown if no scan run) */}
+          {!latestScan && lead.audit_summary && (
             <section className="space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Audit Summary</h3>
               <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/40 rounded-md p-3 border border-border">
-                {lead.audit_summary}
+                {stripMarkdown(lead.audit_summary)}
               </p>
+            </section>
+          )}
+
+          {/* Email Draft Preview */}
+          {parsedEmail && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Send className="h-3.5 w-3.5 text-primary" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Draft</h3>
+                <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-400 ml-auto">Ready to review</Badge>
+              </div>
+              <div className="rounded-md border border-border bg-muted/40 p-3 space-y-2">
+                <div className="text-[11px] text-muted-foreground">
+                  To: <span className="text-foreground">{parsedEmail.to}</span>
+                </div>
+                {parsedEmail.subject && (
+                  <div className="text-[11px] text-muted-foreground">
+                    Subject: <span className="text-foreground font-medium">{parsedEmail.subject}</span>
+                  </div>
+                )}
+                <div className="border-t border-border pt-2 text-sm text-foreground whitespace-pre-wrap">
+                  {parsedEmail.body}
+                </div>
+              </div>
             </section>
           )}
 
@@ -192,23 +266,45 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
               <p className="text-xs text-muted-foreground">No agent runs yet.</p>
             ) : (
               <div className="space-y-2">
-                {runs.map((run) => (
-                  <div key={run.id} className="rounded-md border border-border bg-muted/30 p-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-foreground">{run.agent_name}</span>
-                      <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[run.status] || ""}`}>
-                        {run.status}
-                      </Badge>
+                {runs.map((run) => {
+                  const isExpanded = expandedRun === run.id;
+                  return (
+                    <div key={run.id} className="rounded-md border border-border bg-muted/30 p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{run.agent_name}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[run.status] || ""}`}>
+                            {run.status}
+                          </Badge>
+                          {run.result_summary && (
+                            <button
+                              onClick={() => setExpandedRun(isExpanded ? null : run.id)}
+                              className="p-0.5 rounded hover:bg-muted transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-3 w-3 text-muted-foreground" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {format(new Date(run.triggered_at), "MMM d, yyyy h:mm a")}
+                      </div>
+                      {!isExpanded && run.result_summary && (
+                        <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{stripMarkdown(run.result_summary).slice(0, 120)}...</p>
+                      )}
+                      {isExpanded && run.result_summary && (
+                        <div className="mt-2 text-[11px] text-foreground whitespace-pre-wrap bg-background/50 rounded p-2 border border-border max-h-[250px] overflow-y-auto">
+                          {stripMarkdown(run.result_summary)}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(run.triggered_at), "MMM d, yyyy h:mm a")}
-                    </div>
-                    {run.result_summary && (
-                      <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap">{stripMarkdown(run.result_summary)}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
