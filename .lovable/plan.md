@@ -1,178 +1,249 @@
 
-# Magazine Funnel Pivot + Post-Acceptance Video Page
 
-## What You're Asking For
+# Full Build Plan: CRM + Smart Calendar + Smart Funnel Engine + Email Drip + Pipeline Upgrade
 
-Three connected changes:
+## Overview
 
-1. **Rewrite the magazine content** — instead of PFSW doctrine/philosophy, it now showcases the actual product: the agent marketplace, tools (Lead Prospector, VAPI Caller, Website Proposal, Cold Email), the weekly hot seats, and the web design workflow. The magazine becomes a product tour, not a manifesto.
+This is a consolidated plan covering everything discussed. Five major features built together:
 
-2. **Change the magazine's final CTA** — instead of "Activate My Membership" → `/accepted`, the last page now says "Apply Now" → `/apply`. The magazine becomes a top-of-funnel sales piece, not a post-acceptance closer.
-
-3. **Add a new video sales page** (`/upgrade`) — this is the new post-acceptance page that sits between admin approval and payment. When a member is `accepted_pending_payment`, logging in redirects them to `/upgrade` first (instead of `/accepted`). The upgrade page features a video embed (e.g. Loom or YouTube), a strong pitch for the $197/month membership, then a "Activate My Membership" button that goes to the Stripe checkout on `/accepted`.
+1. **CRM Dashboard** -- Members manage all their leads in one place with pipeline status tracking
+2. **Smart Calendar** -- Each member gets a personal booking page for prospects to schedule calls
+3. **Smart Funnel Builder** (replaces Website Builder) -- Scan a prospect's site for brand data, then generate an interactive quiz funnel prompt. The generated prompt includes instructions for a **form API endpoint** so the funnel captures leads for the member's client
+4. **Email Drip Agent** -- Activate and build the handler with Resend for sending 3-part email sequences
+5. **6-Step Pipeline** with Site Audit inserted and full handoff chain with CRM auto-updates
 
 ---
 
-## The New Funnel Flow
+## The Clarification: Form API
 
-```text
-Public visitor → /magazine/inside (reads product tour)
-                      ↓ CTA: "Apply Now"
-                 /apply (4-step application + $5 fee)
-                      ↓ Admin approves → member_status = accepted_pending_payment
-                 /upgrade (VIDEO PAGE — upgrade sales pitch)
-                      ↓ CTA: "Activate My Membership"
-                 /accepted (Stripe checkout — existing page, unchanged)
+The Form API is NOT a backend feature we build on this platform. Instead, the **generated Lovable prompt** will include instructions telling the AI to add a form submission endpoint in the funnel it builds. When a member builds a smart funnel for their client (e.g., a dental quiz), that funnel will have a lead capture form that stores submissions in the client project's own backend. This is purely a prompt instruction -- we add it to the system prompt so every generated funnel includes form handling out of the box.
+
+---
+
+## Database Changes (4 new tables + 1 data update)
+
+### New Table: `leads`
+Persistent CRM storage for scraped and manually-added leads.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid, PK | auto-generated |
+| user_id | uuid, NOT NULL | Owner |
+| business_name | text | |
+| contact_name | text, nullable | |
+| phone | text, nullable | |
+| email | text, nullable | |
+| website | text, nullable | |
+| address | text, nullable | |
+| city | text, nullable | |
+| category | text, nullable | |
+| rating | numeric, nullable | Google rating |
+| website_quality_score | integer, nullable | 0-10 |
+| audit_summary | text, nullable | Pain points from site audit |
+| pipeline_status | text, default 'scraped' | scraped / audited / emailed / contacted / called / proposal_sent / booked / converted / lost |
+| source | text, default 'manual' | manual / lead-prospector / import |
+| notes | text, nullable | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+RLS: Users can only SELECT, INSERT, UPDATE, DELETE their own leads.
+
+### New Table: `booking_settings`
+Per-member calendar configuration.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid, PK | |
+| user_id | uuid, unique | |
+| display_name | text | Shown on booking page |
+| timezone | text, default 'America/New_York' | |
+| available_days | integer[], default {1,2,3,4,5} | 0=Sun..6=Sat |
+| start_hour | integer, default 9 | |
+| end_hour | integer, default 17 | |
+| slot_duration_minutes | integer, default 30 | |
+| booking_slug | text, unique | For public URL /book/:slug |
+| created_at | timestamptz | |
+
+RLS: Owner manages own row. Public can SELECT by booking_slug.
+
+### New Table: `bookings`
+Scheduled appointments.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid, PK | |
+| host_user_id | uuid | |
+| guest_name | text | |
+| guest_email | text | |
+| guest_phone | text, nullable | |
+| scheduled_at | timestamptz | The booked slot |
+| duration_minutes | integer, default 30 | |
+| status | text, default 'confirmed' | confirmed / cancelled / completed |
+| notes | text, nullable | |
+| lead_id | uuid, nullable | Links to leads table |
+| created_at | timestamptz | |
+
+RLS: Host can view/update own bookings. Public can INSERT (to book). Public can SELECT by host to check availability.
+
+### Data Update
+```sql
+UPDATE agents SET status = 'active' WHERE slug = 'email-drip';
+```
+Video Content stays as `coming_soon`.
+
+---
+
+## Secrets Needed
+
+- **RESEND_API_KEY** -- for the Email Drip agent to send emails via Resend (free tier: 100 emails/day)
+
+---
+
+## Edge Function Changes
+
+### 1. `supabase/functions/run-agent/index.ts` -- Add email-drip handler
+
+New handler block for `agent.slug === "email-drip"`:
+- Inputs: `lead_name`, `lead_email`, `business_name`, `website_url`, `niche`, `sender_name`, `sender_email`, `pitch_context`
+- AI generates 3 structured emails (Day 1 intro, Day 3 value, Day 5 close)
+- Sends Email 1 immediately via Resend API (`POST https://api.resend.com/emails`)
+- Returns all 3 emails formatted in the result for manual follow-up
+- Includes send status (sent / failed / resend_not_configured)
+
+### 2. `supabase/functions/run-agent/index.ts` -- Add CRM auto-save
+
+After Lead Prospector completes, parse the result and INSERT leads into the `leads` table with `pipeline_status = 'scraped'`.
+
+After Site Audit completes on a lead, UPDATE the lead's `audit_summary` and set `pipeline_status = 'audited'`.
+
+### 3. `supabase/functions/run-agent/index.ts` -- Inject booking URL
+
+For SMS Outreach, Cold Call, Email Drip, and Website Proposal: fetch the member's `booking_settings.booking_slug` and include their booking URL in the AI prompt so all outreach copy ends with a booking CTA.
+
+---
+
+## New Frontend Pages (3)
+
+### `/crm` -- CRM Dashboard (member-only)
+- Lead table: Business Name, Contact, Phone, Email, Website, Pipeline Status, Source, Date
+- Pipeline status filter tabs: All / Scraped / Audited / Contacted / Booked / Converted
+- Quick actions per lead: Edit, change status, hand off to Audit/SMS/Call/Proposal
+- Add lead manually (modal form)
+- Stats bar: Total Leads, Contacted, Booked, Converted (with conversion rate)
+- Same dark editorial design as the rest of the platform
+
+### `/calendar` -- Booking Dashboard (member-only)
+- Upcoming bookings list with date/time, guest name, status
+- Settings panel: configure available days, hours, timezone, booking slug
+- Copy shareable booking link button
+- Cancel / mark completed actions
+
+### `/book/:slug` -- Public Booking Page (no auth required)
+- Fetches host's booking_settings by slug
+- Calendar date picker for date selection
+- Available time slots (filters out already-booked slots)
+- Simple form: Name, Email, Phone (optional), Notes
+- Confirmation screen after booking
+- Clean, professional design
+
+---
+
+## Modified Frontend Pages
+
+### `src/pages/Engine.tsx` -- Smart Funnel Builder (replaces Website Builder)
+
+**Remove**: "Website Builder" header, Pages Needed field, Animations Level field
+
+**Add**:
+- Header changes to "Smart Funnel Builder"
+- New fields: Quiz Title, Number of Questions (5-8), Result Label (e.g. "Risk Score"), CTA Text
+- Keep: Niche selector, URL scanner, brand context, style direction, color/font notes
+
+**New system prompt** (`SYSTEM_FUNNEL`) replaces `SYSTEM_WEBSITE`:
+- Instructs AI to generate a React quiz funnel prompt
+- Includes: multi-step quiz flow, education slides, lead capture form, animated score reveal, result page, booking CTA
+- **Form API instruction**: The prompt tells the AI to include a backend function or form handler that stores quiz submissions (name, email, phone, answers, score) so the member's client captures leads. This is baked into the generated Lovable prompt, not our platform
+- Uses brand context from site scan if available
+
+**Updated niche presets** for funnel mode:
+- Dental: "Is Your Smile Costing You Confidence?" -- smile health score
+- Restaurant: "Is Your Restaurant Leaving Money on the Table?" -- revenue leak score
+- Real Estate: "What's Your Home Really Worth?" -- market readiness score
+- Law Firm: "Are You Legally Protected?" -- risk assessment score
+- Fitness: "What's Your Fitness Age?" -- wellness score
+- Auto Shop: "Is Your Car a Ticking Time Bomb?" -- vehicle health score
+- Plumbing: "Is Your Home's Plumbing Secretly Failing?" -- plumbing risk score
+- Roofing: "Is Your Roof Protecting Your Family?" -- roof safety score
+- Salon: "What's Your Hair Health Score?" -- hair wellness score
+
+### `src/pages/Agents.tsx` -- Pipeline + Email Drip + Handoffs
+
+**Pipeline expansion** to 6 steps:
+```
+Lead Prospector -> Site Audit -> Email Drip -> SMS Outreach -> Cold Call -> Website Proposal
 ```
 
-**What changes in the auth redirect logic (`use-auth.tsx`):**
-- Currently: `accepted_pending_payment` → `/accepted`
-- New: `accepted_pending_payment` → `/upgrade`
+**AGENT_INPUTS for email-drip** expanded:
+- Lead Name, Lead Email (required), Business Name, Website URL, Niche (dropdown), Your Name (sender), Your Email (sender), Pitch Context (textarea)
+
+**New handoff buttons**:
+- Lead Prospector results: Add "Audit" button per lead (opens Site Audit with lead's URL)
+- Site Audit results: Add "Email Drip", "SMS", "Call", "Proposal" buttons (carry audit findings as pitch_context)
+
+**New state management**:
+- `auditPrefill` / `emailDripPrefill` for carrying data between agent handoffs
+- `onHandoffToAudit` / `onHandoffToEmailDrip` callbacks on RunAgentModal
+
+### `src/components/Navbar.tsx` -- Add CRM + Calendar links
+- Add "CRM" and "Calendar" links for active members (between Library and Agents)
+
+### `src/App.tsx` -- Add routes
+- `/crm` -> CRM page
+- `/calendar` -> Calendar page
+- `/book/:slug` -> Public booking page
 
 ---
 
-## Files to Change
+## Summary of All Changes
 
-### 1. `src/data/magazinePages.ts` — Full Content Rewrite
+### Database
+| Change | Detail |
+|--------|--------|
+| New table: `leads` | CRM lead storage with RLS |
+| New table: `booking_settings` | Calendar config per member with RLS |
+| New table: `bookings` | Scheduled appointments with RLS |
+| Data update | Set email-drip agent status to 'active' |
 
-The 20-page magazine gets new content structured around the product. New chapter map:
+### Secrets
+| Secret | Purpose |
+|--------|---------|
+| RESEND_API_KEY | Email sending for Email Drip agent |
 
-| Page | Chapter | New Title | Content |
-|---|---|---|---|
-| Cover | — | People Fail. Systems Work. | Keep — it's still the brand |
-| 1 | Intro | The Web Designer's Bottleneck | The problem: finding clients is hard, building is slow, you're doing both manually |
-| 2 | Ch I | Why Most Web Designers Struggle | No lead system, no outreach system, no build speed — triple bottleneck |
-| 3 | Ch II | The Toolkit | What PFSW gives you — overview of all 5 tools in one place |
-| 4 | Ch III | Lead Prospector | How the scraper works — city + niche → business names, phones, emails, websites |
-| 5 | Ch IV | Website Auditor | How the Website Proposal agent scans a site and generates the rebuild pitch |
-| 6 | Ch V | Cold Email Outreach | How the email agent writes personalized cold emails with audit pain points baked in |
-| 7 | Ch VI | AI Voice Caller | How the VAPI agent calls business owners, pitches the website problem, books the call |
-| 8 | Ch VII | The Lovable Build Stack | How members use Lovable to actually build and deliver the site after closing |
-| 9 | Ch VIII | Niche Prompt Library | Pre-built Lovable website prompts by niche: dental, restaurant, real estate, etc. |
-| 10 | Ch IX | The Weekly Hot Seat | What happens in the weekly cohort session — peer reviews, pitch critiques, close rate breakdowns |
-| 11 | Ch X | The Application Filter | Why we screen applicants — serious web designers only, not hobbyists |
-| 12 | Ch XI | The $5 Signal | Why the $5 fee exists — same philosophy, reframed for web design context |
-| 13 | Ch XII | The $197 ROI | What one closed web design client pays vs. $197/month — math on the ROI |
-| 14 | Ch XIII | The Agent Marketplace | Full catalog of available agents, how leasing works, on-demand vs. scheduled runs |
-| 15 | Ch XIV | The Pipeline Tracker | How every lead, email, call, and booking is tracked in the member dashboard |
-| 16 | Ch XV | The Board | Structured peer forum — operators sharing what's working, not audience-building |
-| 17 | Ch XVI | Moderation Standards | Why the board stays high signal — no spam, no bragging, actionable only |
-| 18 | Ch XVII | Who Belongs Here | Profile of the ideal member — web designer, uses Lovable, wants to scale client acquisition |
-| 19 | Ch XVIII | The Hot Seat Process | Deep dive on how peer reviews work and what to expect in your first session |
-| 20 | Ch XIX | The Decision | Final page — you've seen the system. Apply. The last CTA is "Apply Now" → `/apply` |
+### New Files
+| File | Purpose |
+|------|---------|
+| `src/pages/CRM.tsx` | Lead management dashboard |
+| `src/pages/Calendar.tsx` | Booking dashboard + availability settings |
+| `src/pages/BookingPage.tsx` | Public booking page for prospects |
 
-**Cover page stays identical** — same manifesto language, same design.
+### Modified Files
+| File | Changes |
+|------|---------|
+| `supabase/functions/run-agent/index.ts` | Add email-drip handler (Resend), CRM auto-save, booking URL injection |
+| `src/pages/Engine.tsx` | Complete rewrite to Smart Funnel Builder with new system prompt including form API instructions |
+| `src/pages/Agents.tsx` | 6-step pipeline, email-drip inputs, audit + email drip handoff buttons, CRM auto-updates |
+| `src/components/Navbar.tsx` | Add CRM + Calendar nav links |
+| `src/App.tsx` | Add /crm, /calendar, /book/:slug routes |
 
-**Final page CTA change** — the existing code in `MagazineInside.tsx` checks `page === total - 1` and renders the CTA button. That button currently links to `/accepted`. It will be changed to link to `/apply` with updated copy:
-- Button: "Apply Now"
-- Subtext: "Application required · $5 processing fee · $197/month upon acceptance"
+### Build Order
+1. Database migration (leads, booking_settings, bookings + RLS)
+2. Activate email-drip agent
+3. Add RESEND_API_KEY secret
+4. Update run-agent edge function (email-drip handler, CRM auto-save, booking URL injection)
+5. Build BookingPage.tsx (public /book/:slug)
+6. Build Calendar.tsx (member dashboard)
+7. Build CRM.tsx (lead management)
+8. Rewrite Engine.tsx (Smart Funnel Builder with form API in prompt)
+9. Update Agents.tsx (6-step pipeline, handoffs, email-drip inputs)
+10. Update Navbar.tsx + App.tsx (new routes)
 
-**Magazine access gating change** — currently the magazine is only accessible to `active` or `accepted_pending_payment` members. Since it's now a top-of-funnel tool, it should be **accessible to anyone who is logged in** (even `pending` applicants and unauthenticated visitors should at least be able to start reading). Two options:
-- Make it fully public (no login required)
-- Keep login required but allow any member status
-
-Best choice: **Keep login required** (protects the content value, but allows pending applicants to read it as part of their journey). The `useEffect` gating in `MagazineInside.tsx` will be updated to allow any logged-in user regardless of `member_status`, removing the `active`/`accepted_pending_payment` restriction.
-
----
-
-### 2. `src/pages/MagazineInside.tsx` — Two Small Changes
-
-**Change 1 — Remove the member_status gate:**
-```typescript
-// CURRENT — only allows active or accepted_pending_payment
-const allowed = s === "active" || s === "accepted_pending_payment" || isChiefArchitect;
-if (profile && !allowed) { navigate("/status", { replace: true }); return; }
-
-// NEW — allow any logged-in user
-// Remove the status check entirely — just require login
-```
-
-**Change 2 — Update the final page CTA:**
-```typescript
-// CURRENT
-<Button asChild size="lg" ...>
-  <Link to="/accepted">Activate My Membership</Link>
-</Button>
-<p>$197/month · Cohort assigned within 48 hours</p>
-
-// NEW
-<Button asChild size="lg" ...>
-  <Link to="/apply">Apply Now</Link>
-</Button>
-<p>Application required · $5 processing fee · $197/month upon acceptance</p>
-```
-
----
-
-### 3. New Page: `src/pages/Upgrade.tsx`
-
-A new page at `/upgrade` — the video sales page shown to `accepted_pending_payment` members immediately after login. This replaces the direct jump to `/accepted`.
-
-**Design:** Follows the same editorial black + serif + gold aesthetic as `/accepted`. No Navbar, no Footer — full focus page.
-
-**Structure:**
-- Small gold label: "You've Been Accepted"
-- Serif H1: "Before You Activate — Watch This."
-- Subtext: "This 5-minute video explains exactly what you're getting and why it works."
-- **Video embed** — a `<iframe>` or `<video>` component. We'll use a placeholder embed URL (Loom format) that you can swap out for your real video link via the admin settings. For now, we hardcode a placeholder iframe with an aspect ratio wrapper.
-- Gold divider
-- Short pitch copy (3–4 lines) summarizing what $197/month gets them
-- Big gold CTA button: "I'm Ready — Activate My Membership" → `/accepted`
-- Below button: small "Not ready? Go back to status" link
-
-**Auth gating:** The page uses `AuthGate requireAcceptedPending` — same as `/accepted`. Only `accepted_pending_payment` members can view it.
-
----
-
-### 4. `src/App.tsx` — Add the `/upgrade` Route
-
-```typescript
-import Upgrade from "./pages/Upgrade";
-// ...
-<Route path="/upgrade" element={<Upgrade />} />
-```
-
----
-
-### 5. `src/hooks/use-auth.tsx` — Update the Post-Login Redirect
-
-```typescript
-// CURRENT
-if (status === "accepted_pending_payment") {
-  navigate("/accepted", { replace: true });
-}
-
-// NEW
-if (status === "accepted_pending_payment") {
-  navigate("/upgrade", { replace: true });
-}
-```
-
----
-
-### 6. Admin Video URL (Optional Enhancement — Phase 2)
-
-To make the video URL configurable without touching code, we could add a `video_url` column to the `system_meta` table in the backend and read it in the `Upgrade` page. However, since you'll likely be iterating on the video link frequently during early launch, for Phase 1 we'll use a hardcoded constant at the top of `Upgrade.tsx` that is easy to swap:
-
-```typescript
-// Easy to update without touching logic
-const UPGRADE_VIDEO_URL = "https://www.loom.com/embed/YOUR_VIDEO_ID_HERE";
-```
-
-No database migration needed for Phase 1.
-
----
-
-## Summary of Files Modified
-
-| File | Change |
-|---|---|
-| `src/data/magazinePages.ts` | Full content rewrite — 20 pages, product-focused |
-| `src/pages/MagazineInside.tsx` | Remove member_status gate; update final CTA to `/apply` |
-| `src/pages/Upgrade.tsx` | **New file** — video sales page for accepted members |
-| `src/App.tsx` | Add `/upgrade` route |
-| `src/hooks/use-auth.tsx` | Change `accepted_pending_payment` redirect from `/accepted` to `/upgrade` |
-
-## No Database Changes Required
-
-The `member_status` values, RLS policies, and all backend logic remain unchanged. This is entirely a frontend/content update.
