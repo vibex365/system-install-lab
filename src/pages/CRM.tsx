@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+// Table imports removed - using card layout
 import {
-  Plus, Search, Edit2, Loader2, Users, Phone, Mail, Globe, TrendingUp, X,
+  Plus, Search, Loader2, Users, Phone, Mail, Globe, TrendingUp, X,
+  ScanSearch, PhoneCall, MessageSquare, Send,
 } from "lucide-react";
 
 const PIPELINE_STATUSES = ["funnel_lead", "scraped", "audited", "emailed", "contacted", "called", "proposal_sent", "booked", "converted", "lost"];
@@ -191,6 +192,78 @@ function CRMContent() {
     toast({ title: "Lead removed" });
   };
 
+  const [runningAgent, setRunningAgent] = useState<string | null>(null);
+
+  const runAgentOnLead = async (lead: Lead, agentSlug: string) => {
+    if (!user) return;
+    const key = `${lead.id}-${agentSlug}`;
+    setRunningAgent(key);
+    try {
+      // Find agent
+      const { data: agent } = await supabase
+        .from("agents")
+        .select("id")
+        .eq("slug", agentSlug)
+        .single();
+      if (!agent) throw new Error("Agent not found");
+
+      // Find or create lease
+      let { data: lease } = await supabase
+        .from("agent_leases")
+        .select("id")
+        .eq("agent_id", agent.id)
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (!lease) {
+        const { data: newLease, error: leaseErr } = await supabase
+          .from("agent_leases")
+          .insert({ agent_id: agent.id, user_id: user.id, status: "active" })
+          .select("id")
+          .single();
+        if (leaseErr) throw leaseErr;
+        lease = newLease;
+      }
+
+      // Create agent run
+      const inputPayload: Record<string, string | null> = {
+        lead_id: lead.id,
+        business_name: lead.business_name,
+        website: lead.website,
+        phone: lead.phone,
+        email: lead.email,
+        city: lead.city,
+        category: lead.category,
+      };
+
+      const { data: run, error: runErr } = await supabase
+        .from("agent_runs")
+        .insert({
+          agent_id: agent.id,
+          lease_id: lease!.id,
+          user_id: user.id,
+          input_payload: inputPayload,
+          status: "queued",
+        })
+        .select("id")
+        .single();
+      if (runErr) throw runErr;
+
+      // Invoke run-agent
+      await supabase.functions.invoke("run-agent", {
+        body: { runId: run!.id },
+      });
+
+      toast({ title: `${agentSlug.replace(/-/g, " ")} started`, description: lead.business_name });
+      fetchLeads();
+    } catch (e: any) {
+      toast({ title: "Agent failed", description: e.message, variant: "destructive" });
+    } finally {
+      setRunningAgent(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -266,53 +339,98 @@ function CRMContent() {
                   <p className="text-xs text-muted-foreground">No leads found. Add leads manually or run Lead Prospector.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-[10px]">Business</TableHead>
-                        <TableHead className="text-[10px] hidden md:table-cell">Contact</TableHead>
-                        <TableHead className="text-[10px] hidden lg:table-cell">Phone</TableHead>
-                        <TableHead className="text-[10px] hidden lg:table-cell">Email</TableHead>
-                        <TableHead className="text-[10px]">Status</TableHead>
-                        <TableHead className="text-[10px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredLeads.map((lead) => (
-                        <TableRow key={lead.id}>
-                          <TableCell className="text-xs font-medium">
-                            {lead.business_name}
-                            {lead.city && <span className="text-muted-foreground"> · {lead.city}</span>}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{lead.contact_name || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{lead.phone || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{lead.email || "—"}</TableCell>
-                          <TableCell>
-                            <Select value={lead.pipeline_status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                              <SelectTrigger className="h-6 text-[10px] w-[110px] border-0 p-0">
-                                <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[lead.pipeline_status] || ""}`}>
-                                  {lead.pipeline_status}
-                                </Badge>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PIPELINE_STATUSES.map((s) => (
-                                  <SelectItem key={s} value={s} className="text-xs capitalize">{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => deleteLead(lead.id)}>
-                                <X className="h-3 w-3 text-muted-foreground" />
-                              </Button>
+                <div className="divide-y divide-border">
+                  {filteredLeads.map((lead) => {
+                    const isRunning = (slug: string) => runningAgent === `${lead.id}-${slug}`;
+                    return (
+                      <div key={lead.id} className="p-4 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-semibold text-foreground truncate">{lead.business_name}</span>
+                              {lead.city && <span className="text-[10px] text-muted-foreground">· {lead.city}</span>}
+                              <Select value={lead.pipeline_status} onValueChange={(v) => updateStatus(lead.id, v)}>
+                                <SelectTrigger className="h-5 text-[10px] w-auto border-0 p-0 gap-0">
+                                  <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[lead.pipeline_status] || ""}`}>
+                                    {lead.pipeline_status.replace(/_/g, " ")}
+                                  </Badge>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PIPELINE_STATUSES.map((s) => (
+                                    <SelectItem key={s} value={s} className="text-xs capitalize">{s.replace(/_/g, " ")}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            <div className="flex items-center gap-4 flex-wrap text-[11px] text-muted-foreground">
+                              {lead.phone && (
+                                <a href={`tel:${lead.phone}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                                  <Phone className="h-3 w-3" /> {lead.phone}
+                                </a>
+                              )}
+                              {lead.email && (
+                                <a href={`mailto:${lead.email}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                                  <Mail className="h-3 w-3" /> {lead.email}
+                                </a>
+                              )}
+                              {lead.website && (
+                                <a href={lead.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors truncate max-w-[200px]">
+                                  <Globe className="h-3 w-3 shrink-0" /> {lead.website.replace(/https?:\/\/(www\.)?/, "")}
+                                </a>
+                              )}
+                              {lead.contact_name && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" /> {lead.contact_name}
+                                </span>
+                              )}
+                            </div>
+                            {lead.notes && <p className="text-[10px] text-muted-foreground/70 truncate max-w-md">{lead.notes}</p>}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 px-2 text-[10px] gap-1"
+                              disabled={!!runningAgent}
+                              onClick={() => runAgentOnLead(lead, "site-audit")}
+                            >
+                              {isRunning("site-audit") ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
+                              Scan
+                            </Button>
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 px-2 text-[10px] gap-1"
+                              disabled={!!runningAgent || !lead.email}
+                              onClick={() => runAgentOnLead(lead, "cold-email-outreach")}
+                            >
+                              {isRunning("cold-email-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                              Email
+                            </Button>
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 px-2 text-[10px] gap-1"
+                              disabled={!!runningAgent || !lead.phone}
+                              onClick={() => runAgentOnLead(lead, "cold-call")}
+                            >
+                              {isRunning("cold-call") ? <Loader2 className="h-3 w-3 animate-spin" /> : <PhoneCall className="h-3 w-3" />}
+                              Call
+                            </Button>
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 px-2 text-[10px] gap-1"
+                              disabled={!!runningAgent || !lead.phone}
+                              onClick={() => runAgentOnLead(lead, "sms-outreach")}
+                            >
+                              {isRunning("sms-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3" />}
+                              SMS
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteLead(lead.id)}>
+                              <X className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
