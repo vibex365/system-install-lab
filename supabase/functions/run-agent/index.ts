@@ -141,7 +141,7 @@ serve(async (req) => {
       const category = input.category || "";
       const city = input.city || "";
       const scraped = url ? await scrapeUrl(url) : "";
-      result = await callAI(`You are a local business website analyst specializing in lead generation and smart funnels.
+      result = await callAI(`You are a local business website analyst and digital marketing consultant. You work independently — do NOT mention any tools, platforms, or software you use. Never mention Lovable, Supabase, or any specific tech stack. You are presenting yourself as a consultant who builds custom solutions.
 
 Business: ${businessName}
 Category: ${category}
@@ -150,27 +150,29 @@ Website: ${url}
 Website content:
 ${scraped || "No website content available — this business may not have a website or it could not be scraped."}
 
-Analyze this business's online presence and produce a clear, actionable report. Write in plain text — no markdown, no asterisks, no hashtags, no bullet symbols. Use simple numbered lists and line breaks.
+Analyze this business's online presence and produce a clear, actionable report. Write in plain text only — no markdown, no asterisks, no hashtags, no bullet symbols. Use simple numbered lists and line breaks.
+
+IMPORTANT: Base your analysis ONLY on what you see in the actual website content provided above. Do NOT make up features or describe pages that don't exist. If the website content is empty or minimal, say so honestly.
 
 1. WEBSITE OVERVIEW
-Brief assessment of their current site — what it does well, what it's missing.
+Brief assessment of their current site based on what you actually see — what it does well, what it's missing.
 
 2. LEAD CAPTURE GAPS
-Identify specific ways this business is losing leads: no contact form, no booking system, no follow-up automation, no intake questionnaire, slow load times, poor mobile experience, etc.
+Identify specific ways this business is losing potential customers: missing contact forms, no online booking, no follow-up system, no intake questionnaire, slow or outdated design, poor mobile experience, etc.
 
 3. SMART FUNNEL OPPORTUNITY
-Describe exactly what kind of Smart Funnel would work for this ${category} business:
+Describe exactly what kind of automated lead capture system would work for this ${category} business:
 - What type of intake quiz or calculator would attract their ideal customers
-- How automated follow-up (SMS + email) would recover lost leads
-- What a booking integration would do for their conversion rate
+- How automated follow-up (text and email) would recover lost leads
+- What an online booking system would do for their conversion rate
 
 4. REVENUE IMPACT
 Estimate how many leads they may be losing monthly without proper capture and follow-up. Be specific to their niche.
 
 5. RECOMMENDATION
-One clear next step — whether it's building a funnel, fixing their site, or starting outreach.
+One clear next step — whether it's building a lead capture system, redesigning their site, or starting outreach.
 
-Keep it professional and specific to their business. No generic advice.`);
+Keep it professional, specific to their business, and written as if you are presenting this directly to the business owner. No generic advice. No mentions of any software platforms or tools.`);
     }
 
     else if (agent.slug === "lead-prospector") {
