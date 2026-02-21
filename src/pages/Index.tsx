@@ -38,6 +38,12 @@ const featuredAgents = [
 
 const pillars = [
   {
+    icon: Layers,
+    title: "Smart Funnel Builder",
+    description:
+      "Generate high-conversion interactive quiz funnels for any niche. Your client's prospects answer questions, get a personalized score, and book a call — all from one page.",
+  },
+  {
     icon: Search,
     title: "Lead Prospector",
     description:
@@ -60,12 +66,6 @@ const pillars = [
     title: "AI Voice Caller",
     description:
       "The VAPI agent calls business owners, pitches their website problems, and books discovery calls — automatically, while you sleep.",
-  },
-  {
-    icon: Brain,
-    title: "Lovable Website Builder",
-    description:
-      "Generate production-ready Lovable prompts for 10+ niches. Close the client, paste the prompt, ship the site in days — not weeks.",
   },
   {
     icon: CalendarCheck,
@@ -203,7 +203,7 @@ export default function Index() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            The Client Acquisition System for Web Designers.
+            Smart Funnels. Automated Outreach. Built With Lovable.
           </motion.p>
 
           <motion.p
@@ -212,7 +212,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.7 }}
           >
-            Scrape leads · Audit sites · Send the pitch · Close the client · Application required · $197/month
+            Build quiz funnels · Scrape leads · Audit sites · Auto-email · AI-call · Close the client · $197/month
           </motion.p>
 
           <motion.div
@@ -236,10 +236,67 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ── Smart Funnel Demo ── */}
+      <section className="py-20 md:py-28 border-t border-border bg-card/20">
+        <div className="container max-w-4xl">
+          <SectionHeader
+            title="Smart Funnel Builder"
+            subtitle="Generate interactive quiz funnels that convert cold traffic into booked calls. Pick a niche, customize the flow, paste into Lovable."
+          />
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                {[
+                  { step: "01", text: "Pick a niche preset or scan your client's existing site" },
+                  { step: "02", text: "AI generates a complete 4-phase quiz funnel prompt" },
+                  { step: "03", text: "Paste into Lovable — landing page, quiz, lead capture, results page" },
+                  { step: "04", text: "Client's prospects take the quiz, get scored, and book a call" },
+                ].map((s) => (
+                  <div key={s.step} className="flex items-start gap-3">
+                    <span className="text-sm font-bold text-primary shrink-0">{s.step}</span>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{s.text}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <Button asChild size="sm" className="gold-glow-strong">
+                  <Link to="/engine">Try the Funnel Builder</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="border-primary/30 text-foreground hover:bg-primary/10">
+                  <Link to="/intake-funnel">See Live Demo</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="h-4 w-4 text-primary" />
+                <span className="text-xs font-semibold text-foreground">Funnel Phases</span>
+              </div>
+              {[
+                { phase: "Landing", desc: "Hero hook + CTA — converts cold traffic" },
+                { phase: "Quiz", desc: "5-8 scored questions with progress bar" },
+                { phase: "Lead Capture", desc: "Name, email, phone — before results" },
+                { phase: "Results", desc: "Animated score gauge + personalized insights" },
+              ].map((p, i) => (
+                <div key={p.phase} className="flex items-start gap-3 pl-2 border-l-2 border-primary/30">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{p.phase}</p>
+                    <p className="text-[11px] text-muted-foreground">{p.desc}</p>
+                  </div>
+                </div>
+              ))}
+              <p className="text-[10px] text-muted-foreground pt-2 border-t border-border">
+                9 niche presets · Firecrawl brand scan · Supabase backend included
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Six Pillars ── */}
       <section className="py-20 md:py-28">
         <div className="container">
-          <SectionHeader id="pillars" title="What You Get" subtitle="Five automated agents and a weekly peer cohort. Everything you need to land and deliver web design clients." />
+          <SectionHeader id="pillars" title="What You Get" subtitle="Smart funnels, automated agents, and a weekly peer cohort. Everything you need to land and deliver web design clients." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pillars.map((p) => (
               <FeatureCard key={p.title} icon={p.icon} title={p.title} description={p.description} />
