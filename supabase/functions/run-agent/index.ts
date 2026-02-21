@@ -283,6 +283,9 @@ TWITTER/X (3 posts):
 LINKEDIN (1 post):
 - Professional insight post (200-300 words) about what was built and what it means for clients
 
+FACEBOOK (1 post):
+- Conversational post (150-250 words) optimized for Facebook engagement — ask a question, share a win, or tell a short story about the build. Include a CTA to comment or DM. No hashtag spam.
+
 INSTAGRAM (1 caption):
 - Visual-focused caption with story, outcome, and hashtags
 
@@ -649,6 +652,88 @@ Rules:
       }
 
       result = `EMAIL DRIP STATUS: ${sendStatus}\nTO: ${leadEmail}\n\n${emailContent}`;
+    }
+
+    else if (agent.slug === "cold-email-outreach") {
+      const leadName = input.lead_name || "there";
+      const leadEmail = input.lead_email || "";
+      const businessName = input.business_name || "";
+      const websiteUrl = input.url || "";
+      const niche = input.niche || "";
+      const senderName = input.sender_name || "Your Smart Funnel Consultant";
+      const senderEmail = input.sender_email || "";
+      const pitchContext = input.pitch_context || "";
+
+      if (!leadEmail) {
+        return new Response(JSON.stringify({ error: "Lead email is required." }), { status: 400, headers: corsHeaders });
+      }
+
+      // Fetch booking URL
+      let bookingUrl = "";
+      const { data: bookingSettingsCold } = await serviceSupabase
+        .from("booking_settings")
+        .select("booking_slug")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (bookingSettingsCold?.booking_slug) {
+        bookingUrl = `Book a call: https://system-install-lab.lovable.app/book/${bookingSettingsCold.booking_slug}`;
+      }
+
+      const emailContent = await callAI(`You are an expert cold outreach email copywriter for a smart funnel consultant who builds AI-powered lead generation systems for local businesses.
+
+Lead: ${leadName} at ${businessName}
+Website: ${websiteUrl}
+Niche: ${niche}
+Pitch context: ${pitchContext}
+Sender: ${senderName}
+${bookingUrl ? `Booking link: ${bookingUrl}` : ""}
+
+Write ONE cold email (not a drip sequence). This should be:
+
+Subject: [Compelling, personalized subject line — under 50 chars]
+
+Body:
+- Open with something specific about their business (reference their website, niche, or local area)
+- Identify a specific lead capture gap (no booking system, no follow-up, no intake form, etc.)
+- Pitch a Smart Funnel: an AI-powered lead capture system with automated follow-up, booking calendar, and lead scoring — built in under a week
+- Keep it under 120 words
+- End with a soft CTA — a question, not a hard sell
+${bookingUrl ? "- Include the booking link naturally in the CTA" : ""}
+- No spam language, no hype, no ALL CAPS
+- Sound like a real person, not a template
+
+Output the subject line and body clearly labeled.`);
+
+      // Try to send via Resend
+      let sendStatus = "draft";
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (RESEND_API_KEY && senderEmail) {
+        try {
+          const subjectMatch = emailContent.match(/Subject:\s*(.+?)[\n\r]/i);
+          const bodyMatch = emailContent.match(/Body:\s*([\s\S]*?)$/i);
+          const subject = subjectMatch?.[1]?.trim() || `Quick idea for ${businessName}`;
+          const body = bodyMatch?.[1]?.trim() || emailContent.slice(0, 500);
+
+          const resendRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: `${senderName} <onboarding@resend.dev>`,
+              to: [leadEmail],
+              subject,
+              text: body,
+            }),
+          });
+          sendStatus = resendRes.ok ? "sent" : "failed";
+        } catch (e) {
+          sendStatus = "failed";
+          console.error("[cold-email-outreach] Resend error:", e);
+        }
+      } else {
+        sendStatus = "resend_not_configured";
+      }
+
+      result = `COLD EMAIL STATUS: ${sendStatus}\nTO: ${leadEmail}\n\n${emailContent}`;
     }
 
     else if (agent.slug === "video-content") {
