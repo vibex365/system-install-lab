@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusPill } from "@/components/StatusPill";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,24 @@ export default function AdminApplications() {
   const [loading, setLoading] = useState(true);
   const [smsStatus, setSmsStatus] = useState<Record<string, string>>({});
   const [callStatus, setCallStatus] = useState<Record<string, string>>({});
+  const [countryCode, setCountryCode] = useState("+1");
+
+  const COUNTRY_CODES = [
+    { value: "+1", label: "🇺🇸 +1 (US/CA)" },
+    { value: "+44", label: "🇬🇧 +44 (UK)" },
+    { value: "+61", label: "🇦🇺 +61 (AU)" },
+    { value: "+91", label: "🇮🇳 +91 (IN)" },
+    { value: "+49", label: "🇩🇪 +49 (DE)" },
+    { value: "+33", label: "🇫🇷 +33 (FR)" },
+    { value: "+52", label: "🇲🇽 +52 (MX)" },
+    { value: "+55", label: "🇧🇷 +55 (BR)" },
+    { value: "+81", label: "🇯🇵 +81 (JP)" },
+    { value: "+86", label: "🇨🇳 +86 (CN)" },
+    { value: "+971", label: "🇦🇪 +971 (UAE)" },
+    { value: "+234", label: "🇳🇬 +234 (NG)" },
+    { value: "+27", label: "🇿🇦 +27 (ZA)" },
+    { value: "+63", label: "🇵🇭 +63 (PH)" },
+  ];
 
   const fetch = async () => {
     setLoading(true);
@@ -40,6 +59,7 @@ export default function AdminApplications() {
           phone_number: app.phone_number,
           call_type: "applicant",
           context: { name: app.name, product: app.product },
+          country_code: countryCode,
         },
       });
       if (error || data?.error) throw new Error(error?.message || data?.error);
@@ -139,20 +159,34 @@ export default function AdminApplications() {
                 <Button size="sm" variant="destructive" onClick={() => updateStatus(selected, "rejected")} disabled={selected.status === "rejected"} className="text-xs">
                   <XCircle className="h-3 w-3 mr-1" /> Reject
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => callApplicant(selected)}
-                  disabled={!selected.phone_number || callStatus[selected.id] === "calling"}
-                  className="text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
-                >
-                  {callStatus[selected.id] === "calling" ? (
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  ) : (
-                    <Phone className="h-3 w-3 mr-1" />
-                  )}
-                  {callStatus[selected.id] === "calling" ? "Dialing..." : "Call Applicant"}
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRY_CODES.map((cc) => (
+                        <SelectItem key={cc.value} value={cc.value} className="text-xs">
+                          {cc.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => callApplicant(selected)}
+                    disabled={!selected.phone_number || callStatus[selected.id] === "calling"}
+                    className="text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    {callStatus[selected.id] === "calling" ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <Phone className="h-3 w-3 mr-1" />
+                    )}
+                    {callStatus[selected.id] === "calling" ? "Dialing..." : "Call"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

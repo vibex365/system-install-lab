@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const VAPI_API_KEY = Deno.env.get("VAPI_API_KEY");
+const VAPI_PHONE_NUMBER_ID = Deno.env.get("VAPI_PHONE_NUMBER_ID");
 const VAPI_BASE = "https://api.vapi.ai";
 
 serve(async (req) => {
@@ -52,11 +53,16 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
-    const { phone_number, call_type, context } = await req.json();
+    const { phone_number, call_type, context, country_code } = await req.json();
 
     if (!phone_number) {
       return new Response(JSON.stringify({ error: "phone_number is required" }), { status: 400, headers: corsHeaders });
     }
+
+    // Format phone number to E.164
+    const digits = phone_number.replace(/\D/g, "");
+    const prefix = country_code || "+1";
+    const e164Phone = digits.startsWith(prefix.replace("+", "")) ? `+${digits}` : `${prefix}${digits}`;
 
     // Build the assistant prompt based on call type
     let systemPrompt = "";
@@ -102,9 +108,9 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
 
     // Create VAPI outbound call
     const vapiPayload = {
-      phoneNumberId: undefined, // VAPI will use the default number on the account
+      phoneNumberId: VAPI_PHONE_NUMBER_ID,
       customer: {
-        number: phone_number,
+        number: e164Phone,
       },
       assistant: {
         firstMessage,
