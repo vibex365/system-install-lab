@@ -384,6 +384,48 @@ export type Database = {
           },
         ]
       }
+      call_logs: {
+        Row: {
+          call_type: string
+          context: Json | null
+          country_code: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          phone_number: string
+          status: string
+          updated_at: string
+          user_id: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          call_type: string
+          context?: Json | null
+          country_code?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          phone_number: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          call_type?: string
+          context?: Json | null
+          country_code?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          phone_number?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vapi_call_id?: string | null
+        }
+        Relationships: []
+      }
       cohort_members: {
         Row: {
           cohort_id: string

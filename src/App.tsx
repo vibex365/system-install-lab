@@ -40,7 +40,8 @@ import CalendarPage from "./pages/CalendarPage";
 import BookingPage from "./pages/BookingPage";
 import IntakeFunnel from "./pages/IntakeFunnel";
 import AdminMarketing from "./pages/admin/AdminMarketing";
-
+import AdminCallLog from "./pages/admin/AdminCallLog";
+import DemoFunnel from "./pages/DemoFunnel";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -98,6 +99,10 @@ const App = () => (
             <Route path="/admin/modlog" element={<AdminModLog />} />
             <Route path="/admin/agents" element={<AdminAgents />} />
             <Route path="/admin/marketing" element={<AdminMarketing />} />
+            <Route path="/admin/calls" element={<AdminCallLog />} />
+
+            {/* Demo funnels */}
+            <Route path="/demo/:niche" element={<DemoFunnel />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

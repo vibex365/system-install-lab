@@ -281,7 +281,7 @@ export default function Index() {
                 </div>
               ))}
               <p className="text-[10px] text-muted-foreground pt-2 border-t border-border">
-                9 niche presets · Firecrawl brand scan · Supabase backend included
+                13 niche presets · Firecrawl brand scan · Supabase backend included
               </p>
             </div>
           </div>
@@ -293,25 +293,30 @@ export default function Index() {
         <div className="container">
           <SectionHeader
             title="Smart Funnels for Every Niche"
-            subtitle="Generate quiz funnels tailored to any industry. Here's what members are deploying for their clients."
+            subtitle="Generate quiz funnels tailored to any industry. Click to see live demos of what members are deploying."
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Stethoscope, niche: "Dental", funnel: "Smile Health Score Quiz", desc: "Patients answer 6 oral-health questions, get a personalized score, and book a cleaning.", gradient: "from-sky-500/20 to-cyan-500/10" },
-              { icon: Utensils, niche: "Restaurant", funnel: "Online Presence Audit", desc: "Restaurant owners discover their digital weak spots and book a website consultation.", gradient: "from-orange-500/20 to-amber-500/10" },
-              { icon: Home, niche: "Real Estate", funnel: "Home Readiness Scorecard", desc: "Sellers rate their home's condition across 8 categories and connect with an agent.", gradient: "from-emerald-500/20 to-green-500/10" },
-              { icon: Dumbbell, niche: "Fitness", funnel: "Fitness Goal Matcher", desc: "Prospects identify their training style and get matched with a program and trainer.", gradient: "from-violet-500/20 to-purple-500/10" },
+              { icon: Stethoscope, niche: "Dental", funnel: "Smile Health Score Quiz", desc: "Patients answer 6 oral-health questions, get a personalized score, and book a cleaning.", demoPath: "/demo/dental", gradient: "from-sky-500/20 to-cyan-500/10" },
+              { icon: Utensils, niche: "Restaurant", funnel: "Online Presence Audit", desc: "Restaurant owners discover their digital weak spots and book a website consultation.", demoPath: "/demo/restaurant", gradient: "from-orange-500/20 to-amber-500/10" },
+              { icon: Home, niche: "Real Estate", funnel: "Home Readiness Scorecard", desc: "Sellers rate their home's condition across 8 categories and connect with an agent.", demoPath: "/demo/realestate", gradient: "from-emerald-500/20 to-green-500/10" },
+              { icon: Dumbbell, niche: "Fitness", funnel: "Fitness Goal Matcher", desc: "Prospects identify their training style and get matched with a program and trainer.", demoPath: "/demo/fitness", gradient: "from-violet-500/20 to-purple-500/10" },
             ].map((ex) => (
-              <div key={ex.niche} className="rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-all">
-                <div className={`h-32 bg-gradient-to-br ${ex.gradient} flex items-center justify-center`}>
-                  <ex.icon className="h-10 w-10 text-primary/60" />
+              <Link
+                key={ex.niche}
+                to={ex.demoPath}
+                className="group rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-all"
+              >
+                <div className={`h-32 bg-gradient-to-br ${ex.gradient} flex items-center justify-center relative overflow-hidden`}>
+                  <ex.icon className="h-10 w-10 text-primary/60 group-hover:scale-110 transition-transform" />
+                  <span className="absolute bottom-2 right-2 text-[9px] uppercase tracking-widest text-primary/40 font-semibold">Live Demo →</span>
                 </div>
                 <div className="p-5">
                   <span className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">{ex.niche}</span>
                   <h3 className="text-sm font-semibold text-foreground mt-1 mb-2 tracking-tight">{ex.funnel}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
