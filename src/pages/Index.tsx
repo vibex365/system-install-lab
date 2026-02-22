@@ -8,7 +8,7 @@ import { FAQAccordion } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Search, Globe, Mail, Phone, Layers, Users, CalendarCheck, BookOpen, Shield, Brain } from "lucide-react";
+import { Search, Globe, Mail, Phone, Layers, Users, CalendarCheck, BookOpen, Shield, Brain, Utensils, Home, Dumbbell, Stethoscope } from "lucide-react";
 import heroBg from "@/assets/hero-bg.png";
 import { useSEO } from "@/hooks/use-seo";
 
@@ -101,7 +101,7 @@ const process = [
 const institutionalFaqs = [
   {
     q: "Who is PFSW for?",
-    a: "Web designers and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast. If you're doing outreach manually or not at all, this is the system that replaces that.",
+    a: "Agency owners, web designers, and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast. If you're doing outreach manually or not at all, this is the system that replaces that.",
   },
   {
     q: "Why does the application cost $5?",
@@ -141,13 +141,13 @@ export default function Index() {
 
   useSEO({
     title: "Land Website Clients With Lovable — PFSW",
-    description: "The client acquisition toolkit for web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and deliver Lovable-built websites. $197/month, application required.",
+    description: "The client acquisition toolkit for agency owners and web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and deliver Lovable-built websites. $197/month, application required.",
     canonical: "https://system-install-lab.lovable.app/",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "PFSW — Client Acquisition Toolkit for Web Designers",
-      "description": "The client acquisition toolkit for web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and ship websites fast.",
+      "name": "PFSW — Client Acquisition Toolkit for Agency Owners & Web Designers",
+      "description": "The client acquisition toolkit for agency owners and web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and ship websites fast.",
       "url": "https://system-install-lab.lovable.app/",
       "offers": {
         "@type": "Offer",
@@ -160,7 +160,7 @@ export default function Index() {
       "mainEntity": {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "Web designers and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast." } },
+          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "Agency owners, web designers, and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast." } },
           { "@type": "Question", "name": "How does the Lead Prospector work?", "acceptedAnswer": { "@type": "Answer", "text": "Enter a city and niche. The agent scrapes local business directories and returns business names, phones, emails, and website URLs in under 10 minutes." } },
           { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "All five agents, the niche Lovable prompt library, weekly hot seat cohort, and the member board." } }
         ]
@@ -185,7 +185,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Built for Web Designers Who Build With Lovable
+            Built for Agency Owners & Web Designers Who Build With Lovable
           </motion.p>
 
           <motion.h1
@@ -288,6 +288,35 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ── Niche Smart Funnel Examples ── */}
+      <section className="py-20 md:py-28 border-t border-border">
+        <div className="container">
+          <SectionHeader
+            title="Smart Funnels for Every Niche"
+            subtitle="Generate quiz funnels tailored to any industry. Here's what members are deploying for their clients."
+          />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Stethoscope, niche: "Dental", funnel: "Smile Health Score Quiz", desc: "Patients answer 6 oral-health questions, get a personalized score, and book a cleaning.", gradient: "from-sky-500/20 to-cyan-500/10" },
+              { icon: Utensils, niche: "Restaurant", funnel: "Online Presence Audit", desc: "Restaurant owners discover their digital weak spots and book a website consultation.", gradient: "from-orange-500/20 to-amber-500/10" },
+              { icon: Home, niche: "Real Estate", funnel: "Home Readiness Scorecard", desc: "Sellers rate their home's condition across 8 categories and connect with an agent.", gradient: "from-emerald-500/20 to-green-500/10" },
+              { icon: Dumbbell, niche: "Fitness", funnel: "Fitness Goal Matcher", desc: "Prospects identify their training style and get matched with a program and trainer.", gradient: "from-violet-500/20 to-purple-500/10" },
+            ].map((ex) => (
+              <div key={ex.niche} className="rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-all">
+                <div className={`h-32 bg-gradient-to-br ${ex.gradient} flex items-center justify-center`}>
+                  <ex.icon className="h-10 w-10 text-primary/60" />
+                </div>
+                <div className="p-5">
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-primary font-semibold">{ex.niche}</span>
+                  <h3 className="text-sm font-semibold text-foreground mt-1 mb-2 tracking-tight">{ex.funnel}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Six Pillars ── */}
       <section className="py-20 md:py-28">
         <div className="container">
@@ -346,7 +375,7 @@ export default function Index() {
       {/* ── Pricing ── */}
       <section className="py-20 md:py-28 border-t border-border">
         <div className="container max-w-2xl text-center">
-          <SectionHeader title="Pricing" subtitle="One membership. Full access. No tiers." />
+          <SectionHeader title="Pricing" subtitle="One membership for agency owners and web designers. Full access. No tiers." />
           <div className="rounded-2xl border border-primary/30 bg-card p-10 md:p-14 gold-glow">
             <p className="text-xs uppercase tracking-[0.2em] text-primary mb-6 font-medium">Membership</p>
             <div className="flex items-baseline justify-center gap-2 mb-4">
@@ -359,7 +388,7 @@ export default function Index() {
             <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
               <Link to="/apply">Apply for Access</Link>
             </Button>
-            <p className="text-xs text-muted-foreground mt-6">$5 application fee · Serious web designers only</p>
+            <p className="text-xs text-muted-foreground mt-6">$5 application fee · Serious agency owners & web designers only</p>
           </div>
         </div>
       </section>
@@ -381,7 +410,7 @@ export default function Index() {
             primaryTo="/apply"
             secondaryLabel="Read the Playbook"
             secondaryTo="/magazine/inside"
-            disclaimer="PFSW is for serious web designers. Application required. $197/month upon acceptance."
+            disclaimer="PFSW is for serious agency owners and web designers. Application required. $197/month upon acceptance."
           />
         </div>
       </section>
