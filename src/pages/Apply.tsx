@@ -23,7 +23,7 @@ export default function Apply() {
   useSEO({
     title: "Apply for Access — PFSW",
     description: "Apply to join PFSW, a private prompt architecture institution. $5 application fee. Accepted applicants gain access to the Prompt Engine, Library, and weekly build cohorts at $197/month.",
-    canonical: "https://system-install-lab.lovable.app/apply",
+    canonical: "https://pfsw.io/apply",
     noIndex: false,
   });
   const navigate = useNavigate();

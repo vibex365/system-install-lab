@@ -11,7 +11,7 @@ interface SEOOptions {
 }
 
 const SITE_NAME = "PFSW — People Fail, Systems Work";
-const SITE_URL = "https://system-install-lab.lovable.app";
+const SITE_URL = "https://pfsw.io";
 const DEFAULT_OG_IMAGE =
   "https://storage.googleapis.com/gpt-engineer-file-uploads/nUTmFuH9giZitS0bvQQb0LPAA0j1/social-images/social-1771457292534-Untitled_design.webp";
 

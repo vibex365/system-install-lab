@@ -60,20 +60,20 @@ export const magazinePages: MagazinePage[] = [
     pageNumber: 3,
     chapter: "Chapter II",
     title: "The Toolkit",
-    subtitle: "Five tools. One system. Built for web designers who build with Lovable.",
+    subtitle: "Five tools. One system. Built for web designers who build with AI.",
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80&auto=format&fit=crop",
     sections: [
       {
         heading: "What PFSW Gives You",
-        body: "People Fail Systems Work is a client acquisition operating system for web designers. It's not a course. It's not a community. It's a toolkit — five automated agents that handle the parts of your business you hate doing manually. You still do the creative work. The system handles the grunt work: finding leads, auditing websites, sending cold emails, calling prospects, and giving you battle-tested Lovable prompts to build the sites fast.",
+        body: "People Fail Systems Work is a client acquisition operating system for web designers. It's not a course. It's not a community. It's a toolkit — five automated agents that handle the parts of your business you hate doing manually. You still do the creative work. The system handles the grunt work: finding leads, auditing websites, sending cold emails, calling prospects, and giving you battle-tested build prompts to ship sites fast.",
       },
       {
         heading: "The Six Tools",
         body: "Smart Funnel Builder — generates interactive quiz funnels that convert cold traffic into booked calls for any niche. Lead Prospector — scrapes local business data by city and niche. Website Auditor — scans competitor sites and generates rebuild proposals. Cold Email Agent — writes personalized outreach emails with specific pain points. AI Voice Caller — calls business owners via AI and books discovery calls. Niche Prompt Library — pre-built smart funnel and website prompts for dental, restaurant, real estate, and 10+ niches. Each tool runs on-demand or on a schedule from your member dashboard.",
       },
       {
-        heading: "Built on Lovable",
-        body: "Every site your clients get is built with Lovable — the AI-powered web builder that lets you ship full-stack websites from a prompt. No custom code. No backend configuration. No DevOps. You take the niche prompt from the library, paste it into Lovable, and have a production-ready website in hours instead of weeks. This build speed is what makes the unit economics of this business model work.",
+        heading: "Built with Claude",
+        body: "Every site your clients get is built with Claude — Anthropic's AI that lets you ship full-stack websites from a prompt. No custom code. No backend configuration. No DevOps. You take the niche prompt from the library, feed it to Claude, and have a production-ready website in hours instead of weeks. This build speed is what makes the unit economics of this business model work.",
       },
     ],
   },
@@ -162,20 +162,20 @@ export const magazinePages: MagazinePage[] = [
   {
     pageNumber: 8,
     chapter: "Chapter VII",
-    title: "The Lovable Build Stack",
+    title: "The AI Build Stack",
     subtitle: "Close the client. Paste the prompt. Ship the site.",
     sections: [
       {
         heading: "The Old Way vs. The New Way",
-        body: "The old way: Client signs. You spend two weeks in WordPress or Webflow. Custom theme, plugin conflicts, responsive breakpoints, contact form integrations, hosting setup, DNS configuration. By the time you ship, you've put in 60+ hours. Your effective hourly rate is $25. The new way: Client signs. You paste a niche-specific Lovable prompt. The AI builds a production-ready site with working backend in hours. You review, customize, and ship. Effective hourly rate: $150+.",
+        body: "The old way: Client signs. You spend two weeks in WordPress or Webflow. Custom theme, plugin conflicts, responsive breakpoints, contact form integrations, hosting setup, DNS configuration. By the time you ship, you've put in 60+ hours. Your effective hourly rate is $25. The new way: Client signs. You paste a niche-specific prompt into Claude. The AI builds a production-ready site with working backend in hours. You review, customize, and ship. Effective hourly rate: $150+.",
       },
       {
-        heading: "What Lovable Builds",
-        body: "Lovable is an AI-powered full-stack web builder. From a single structured prompt, it generates a complete React application: responsive design, contact forms, booking integrations, image galleries, service pages, testimonials, Google Maps embeds, and more. No backend configuration required. No hosting headaches. The site is deployed automatically. Members use pre-built PFSW niche prompts as their starting point, then customize for each client.",
+        heading: "What Claude Builds",
+        body: "Claude is Anthropic's AI that helps you ship full-stack web applications. From a single structured prompt, it generates a complete React application: responsive design, contact forms, booking integrations, image galleries, service pages, testimonials, Google Maps embeds, and more. No backend configuration required. No hosting headaches. Members use pre-built PFSW niche prompts as their starting point, then customize for each client.",
       },
       {
         heading: "The Speed Advantage",
-        body: "When your build time drops from two weeks to two days, your business fundamentally changes. You can take more clients. You can charge more per site because your value-to-time ratio improves. You can offer faster turnaround as a competitive advantage. And you can reinvest the saved time back into running more outreach campaigns through the agent toolkit. Speed compounds. The Lovable build stack is what makes the entire PFSW model economically sustainable.",
+        body: "When your build time drops from two weeks to two days, your business fundamentally changes. You can take more clients. You can charge more per site because your value-to-time ratio improves. You can offer faster turnaround as a competitive advantage. And you can reinvest the saved time back into running more outreach campaigns through the agent toolkit. Speed compounds. The AI build stack is what makes the entire PFSW model economically sustainable.",
       },
     ],
   },
@@ -196,7 +196,7 @@ export const magazinePages: MagazinePage[] = [
       },
       {
         heading: "Living Library",
-        body: "The library grows with the community. When a member closes a client using a custom smart funnel prompt, they can submit it for review. If it passes institutional review — tested, structured, Lovable-compatible — it enters the library and becomes available to all members. This is how institutional knowledge compounds. Every member's funnel win becomes infrastructure for the next.",
+        body: "The library grows with the community. When a member closes a client using a custom smart funnel prompt, they can submit it for review. If it passes institutional review — tested, structured, and compatible — it enters the library and becomes available to all members. This is how institutional knowledge compounds. Every member's funnel win becomes infrastructure for the next.",
       },
     ],
   },
@@ -208,11 +208,11 @@ export const magazinePages: MagazinePage[] = [
     sections: [
       {
         heading: "What Happens in the Session",
-        body: "Every week, your cohort meets in a live session. The format is fixed: Roll Call — every member reports what they shipped (leads run, emails sent, calls made, clients closed). Hot Seats — two to three members share active work: a pitch deck, a Lovable build in progress, an audit report, a discovery call recording. Cohort gives structured feedback. Commitments — everyone declares their targets before the next session.",
+        body: "Every week, your cohort meets in a live session. The format is fixed: Roll Call — every member reports what they shipped (leads run, emails sent, calls made, clients closed). Hot Seats — two to three members share active work: a pitch deck, a build in progress, an audit report, a discovery call recording. Cohort gives structured feedback. Commitments — everyone declares their targets before the next session.",
       },
       {
         heading: "The Peer Review Advantage",
-        body: "A hot seat review from a peer who has closed five web design clients with Lovable is worth more than an hour of YouTube tutorials. They know the exact objections your prospect is raising. They can tell you whether your audit report is compelling or generic. They can spot the error in your Lovable prompt that's producing the wrong layout. This is the compounding value of being in a cohort of operators — not an audience of learners.",
+        body: "A hot seat review from a peer who has closed five web design clients is worth more than an hour of YouTube tutorials. They know the exact objections your prospect is raising. They can tell you whether your audit report is compelling or generic. They can spot the error in your prompt that's producing the wrong layout. This is the compounding value of being in a cohort of operators — not an audience of learners.",
       },
       {
         heading: "Accountability That Has Teeth",
@@ -270,7 +270,7 @@ export const magazinePages: MagazinePage[] = [
     sections: [
       {
         heading: "The Math",
-        body: "One local business website: $1,500–$3,500 average project value. PFSW membership: $197/month. The membership pays for itself with a fraction of a single closed project. A designer who closes two clients per month with Lovable-built sites is generating $3,000–$7,000 in revenue against a $197 overhead. The question is not whether $197 is worth it. The question is whether you're using the tools to generate the ROI.",
+        body: "One local business website: $1,500–$3,500 average project value. PFSW membership: $197/month. The membership pays for itself with a fraction of a single closed project. A designer who closes two clients per month with AI-built sites is generating $3,000–$7,000 in revenue against a $197 overhead. The question is not whether $197 is worth it. The question is whether you're using the tools to generate the ROI.",
       },
       {
         heading: "The Compounding Math",
@@ -331,7 +331,7 @@ export const magazinePages: MagazinePage[] = [
     sections: [
       {
         heading: "What the Board Is",
-        body: "The PFSW Board is the member discussion forum. It is structured as a topic-based board system where members post about active outreach campaigns, share agent run results, ask technical questions about Lovable builds, review each other's cold email drafts, and discuss what's working in different niches. Every post has a purpose. There are no off-topic threads. There is no casual chat.",
+        body: "The PFSW Board is the member discussion forum. It is structured as a topic-based board system where members post about active outreach campaigns, share agent run results, ask technical questions about builds, review each other's cold email drafts, and discuss what's working in different niches. Every post has a purpose. There are no off-topic threads. There is no casual chat.",
       },
       {
         heading: "Why It Stays High Signal",
@@ -339,7 +339,7 @@ export const magazinePages: MagazinePage[] = [
       },
       {
         heading: "Peer Intelligence",
-        body: "The Board is where members share the intelligence that makes the system more effective for everyone. 'Restaurant niche in Dallas is producing 12% reply rates.' 'This Lovable prompt works better for real estate than the library version.' 'The dental outreach email performs 2x better when you lead with load speed, not design.' This is operational intelligence you cannot get from YouTube or Reddit. It comes from people doing the same work you're doing.",
+        body: "The Board is where members share the intelligence that makes the system more effective for everyone. 'Restaurant niche in Dallas is producing 12% reply rates.' 'This prompt works better for real estate than the library version.' 'The dental outreach email performs 2x better when you lead with load speed, not design.' This is operational intelligence you cannot get from YouTube or Reddit. It comes from people doing the same work you're doing.",
       },
     ],
   },
@@ -360,7 +360,7 @@ export const magazinePages: MagazinePage[] = [
       },
       {
         heading: "The Standard We Hold",
-        body: "Every post should meet one criterion: would an experienced web designer building with Lovable find this useful right now? If yes, it belongs. If no, it doesn't — regardless of how much effort went into writing it. This standard is applied consistently, without exceptions for tenure or status. The Board is as useful as its least useful post. We keep that floor high.",
+        body: "Every post should meet one criterion: would an experienced web designer building with AI find this useful right now? If yes, it belongs. If no, it doesn't — regardless of how much effort went into writing it. This standard is applied consistently, without exceptions for tenure or status. The Board is as useful as its least useful post. We keep that floor high.",
       },
     ],
   },
@@ -375,8 +375,8 @@ export const magazinePages: MagazinePage[] = [
         body: "You build websites. That's your business or you want it to be. You might be a freelancer with two clients trying to scale to ten. You might be an agency owner who wants to automate the top-of-funnel. You might be a developer who wants to pivot to client work and needs a system to fill the pipeline. Whatever your exact position, your product is web design and your goal is to land more clients without spending all your time on manual outreach.",
       },
       {
-        heading: "You Build With Lovable",
-        body: "You use Lovable, or you're willing to. You understand that AI-powered web building is not a shortcut — it's a competitive advantage. Designers who can ship a production-quality website in two days will always outcompete designers who take three weeks. You want the build speed. You want the niche prompts. You want the process that lets you take more clients without adding more hours.",
+        heading: "You Build With AI",
+        body: "You use Claude and AI tools, or you're willing to. You understand that AI-powered web building is not a shortcut — it's a competitive advantage. Designers who can ship a production-quality website in two days will always outcompete designers who take three weeks. You want the build speed. You want the niche prompts. You want the process that lets you take more clients without adding more hours.",
       },
       {
         heading: "You Want a System",
@@ -401,7 +401,7 @@ export const magazinePages: MagazinePage[] = [
       },
       {
         heading: "The Compounding Effect",
-        body: "Members who go through three to five hot seat sessions consistently report the same outcome: their outreach quality improves, their close rate improves, and their Lovable build speed improves. Not because the hot seat is magic — but because structured external feedback applied to real work is the fastest way to improve at anything. Every session is a rep. The more reps you take, the faster you get. The system only works if you work it.",
+        body: "Members who go through three to five hot seat sessions consistently report the same outcome: their outreach quality improves, their close rate improves, and their build speed improves. Not because the hot seat is magic — but because structured external feedback applied to real work is the fastest way to improve at anything. Every session is a rep. The more reps you take, the faster you get. The system only works if you work it.",
       },
     ],
   },
@@ -413,7 +413,7 @@ export const magazinePages: MagazinePage[] = [
     sections: [
       {
         heading: "What You Now Know",
-        body: "You've read the entire playbook. You know how the Lead Prospector fills your pipeline. You know how the Website Auditor turns cold outreach into personalized pitches. You know how the Cold Email Agent and VAPI Caller run the outreach automatically. You know how Lovable builds the sites in hours. You know how the weekly hot seats and peer cohort keep you executing consistently. You have the complete picture.",
+        body: "You've read the entire playbook. You know how the Lead Prospector fills your pipeline. You know how the Website Auditor turns cold outreach into personalized pitches. You know how the Cold Email Agent and VAPI Caller run the outreach automatically. You know how Claude builds the sites in hours. You know how the weekly hot seats and peer cohort keep you executing consistently. You have the complete picture.",
       },
       {
         heading: "The Alternative",

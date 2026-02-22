@@ -14,7 +14,7 @@ export default function Waitlist() {
   useSEO({
     title: "Join the Waitlist — PFSW",
     description: "Applications are currently closed. Join the PFSW waitlist to be notified when the next cohort opens.",
-    canonical: "https://system-install-lab.lovable.app/waitlist",
+    canonical: "https://pfsw.io/waitlist",
     noIndex: true,
   });
   const { toast } = useToast();

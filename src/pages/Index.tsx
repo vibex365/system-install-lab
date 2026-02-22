@@ -71,7 +71,7 @@ const pillars = [
     icon: CalendarCheck,
     title: "Weekly Hot Seats",
     description:
-      "Live peer review sessions where members share pitches, Lovable builds, and outreach results. Real feedback from operators doing the same work.",
+      "Live peer review sessions where members share pitches, builds, and outreach results. Real feedback from operators doing the same work.",
   },
 ];
 
@@ -94,14 +94,14 @@ const process = [
   {
     step: "04",
     title: "Build & Ship",
-    desc: "Paste a niche Lovable prompt, customize for the client, and ship a polished site in days. Not weeks.",
+    desc: "Paste an AI-generated prompt, customize for the client, and ship a polished site in days. Not weeks.",
   },
 ];
 
 const institutionalFaqs = [
   {
     q: "Who is PFSW for?",
-    a: "Agency owners, web designers, and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast. If you're doing outreach manually or not at all, this is the system that replaces that.",
+    a: "Agency owners, web designers, and freelancers who want a system to find clients, pitch automatically, and deliver fast. If you're doing outreach manually or not at all, this is the system that replaces that.",
   },
   {
     q: "Why does the application cost $5?",
@@ -109,7 +109,7 @@ const institutionalFaqs = [
   },
   {
     q: "Do I need to know how to code?",
-    a: "No. Lovable builds the sites from structured prompts. You need to understand client conversations and be able to customize a prompt for a specific niche. The build stack handles the rest.",
+    a: "No. Claude builds the sites from structured prompts. You need to understand client conversations and be able to customize a prompt for a specific niche. The AI build stack handles the rest.",
   },
   {
     q: "How does the Lead Prospector work?",
@@ -121,11 +121,11 @@ const institutionalFaqs = [
   },
   {
     q: "What are the weekly hot seats?",
-    a: "Weekly peer review sessions where members share active work — pitches, Lovable builds, audit reports, discovery call recordings. Your cohort gives structured feedback. Real critique from operators doing the same work. Attendance is mandatory.",
+    a: "Weekly peer review sessions where members share active work — pitches, builds, audit reports, discovery call recordings. Your cohort gives structured feedback. Real critique from operators doing the same work. Attendance is mandatory.",
   },
   {
     q: "Can I cancel?",
-    a: "Yes. No contracts. Cancel anytime. The agent runs, the prospect data, and the Lovable prompts you generate stay with you.",
+    a: "Yes. No contracts. Cancel anytime. The agent runs, the prospect data, and the prompts you generate stay with you.",
   },
   {
     q: "What does $197/month include?",
@@ -140,29 +140,29 @@ export default function Index() {
   }, []);
 
   useSEO({
-    title: "Land Website Clients With Lovable — PFSW",
-    description: "The client acquisition toolkit for agency owners and web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and deliver Lovable-built websites. $197/month, application required.",
-    canonical: "https://system-install-lab.lovable.app/",
+    title: "Land Website Clients With AI — PFSW",
+    description: "The client acquisition toolkit for agency owners and web designers. Scrape leads, audit sites, send cold emails, call business owners, and deliver AI-built websites. Powered by Claude. $197/month, application required.",
+    canonical: "https://pfsw.io/",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": "PFSW — Client Acquisition Toolkit for Agency Owners & Web Designers",
-      "description": "The client acquisition toolkit for agency owners and web designers who build with Lovable. Scrape leads, audit sites, send cold emails, call business owners, and ship websites fast.",
-      "url": "https://system-install-lab.lovable.app/",
+      "description": "The client acquisition toolkit for agency owners and web designers. Scrape leads, audit sites, send cold emails, call business owners, and ship websites fast. Powered by Claude.",
+      "url": "https://pfsw.io/",
       "offers": {
         "@type": "Offer",
         "price": "197",
         "priceCurrency": "USD",
         "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1M" },
         "name": "PFSW Membership",
-        "description": "Lead Prospector, Website Auditor, Cold Email Agent, AI Voice Caller, Niche Lovable Prompt Library, Weekly Hot Seat Cohort."
+        "description": "Lead Prospector, Website Auditor, Cold Email Agent, AI Voice Caller, Niche Prompt Library, Weekly Hot Seat Cohort."
       },
       "mainEntity": {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "Agency owners, web designers, and freelancers who build with Lovable and want a system to find clients, pitch automatically, and deliver fast." } },
+          { "@type": "Question", "name": "Who is PFSW for?", "acceptedAnswer": { "@type": "Answer", "text": "Agency owners, web designers, and freelancers who want a system to find clients, pitch automatically, and deliver fast." } },
           { "@type": "Question", "name": "How does the Lead Prospector work?", "acceptedAnswer": { "@type": "Answer", "text": "Enter a city and niche. The agent scrapes local business directories and returns business names, phones, emails, and website URLs in under 10 minutes." } },
-          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "All five agents, the niche Lovable prompt library, weekly hot seat cohort, and the member board." } }
+          { "@type": "Question", "name": "What does $197/month include?", "acceptedAnswer": { "@type": "Answer", "text": "All five agents, the niche prompt library, weekly hot seat cohort, and the member board." } }
         ]
       }
     },
@@ -185,7 +185,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Built for Agency Owners & Web Designers Who Build With Lovable
+            Built for Agency Owners & Web Designers Who Build With AI
           </motion.p>
 
           <motion.h1
@@ -203,7 +203,7 @@ export default function Index() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
-            Smart Funnels. Automated Outreach. Built With Lovable.
+            Smart Funnels. Automated Outreach. Powered by Claude.
           </motion.p>
 
           <motion.p
@@ -241,7 +241,7 @@ export default function Index() {
         <div className="container max-w-4xl">
           <SectionHeader
             title="Smart Funnel Builder"
-            subtitle="Generate interactive quiz funnels that convert cold traffic into booked calls. Pick a niche, customize the flow, paste into Lovable."
+            subtitle="Generate interactive quiz funnels that convert cold traffic into booked calls. Pick a niche, customize the flow, deploy with AI."
           />
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">
@@ -249,7 +249,7 @@ export default function Index() {
                 {[
                   { step: "01", text: "Pick a niche preset or scan your client's existing site" },
                   { step: "02", text: "AI generates a complete 4-phase quiz funnel prompt" },
-                  { step: "03", text: "Paste into Lovable — landing page, quiz, lead capture, results page" },
+                  { step: "03", text: "Deploy with AI — landing page, quiz, lead capture, results page" },
                   { step: "04", text: "Client's prospects take the quiz, get scored, and book a call" },
                 ].map((s) => (
                   <div key={s.step} className="flex items-start gap-3">

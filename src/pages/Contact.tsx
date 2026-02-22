@@ -14,7 +14,7 @@ export default function Contact() {
   useSEO({
     title: "Contact PFSW",
     description: "Get in touch with the PFSW team. Questions about membership, the agent marketplace, or the platform.",
-    canonical: "https://system-install-lab.lovable.app/contact",
+    canonical: "https://pfsw.io/contact",
     noIndex: true,
   });
 

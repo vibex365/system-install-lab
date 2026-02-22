@@ -58,8 +58,8 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         gold: {
-          DEFAULT: "hsl(var(--gold))",
-          dark: "hsl(var(--gold-dark))",
+          DEFAULT: "hsl(var(--primary))",
+          dark: "hsl(var(--primary))",
         },
         surface: {
           DEFAULT: "hsl(var(--surface))",

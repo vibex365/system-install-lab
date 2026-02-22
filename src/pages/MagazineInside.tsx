@@ -19,8 +19,8 @@ const GoldDivider = () => (
 export default function MagazineInside() {
   useSEO({
     title: "The Web Designer's Toolkit — PFSW Field Manual",
-    description: "Read the PFSW product guide: how web designers use AI agents to scrape leads, audit sites, send cold emails, and close clients with Lovable-built websites.",
-    canonical: "https://system-install-lab.lovable.app/magazine/inside",
+    description: "Read the PFSW product guide: how web designers use AI agents to scrape leads, audit sites, send cold emails, and close clients with AI-built websites.",
+    canonical: "https://pfsw.io/magazine/inside",
   });
 
   const { user } = useAuth();

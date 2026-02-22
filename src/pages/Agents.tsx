@@ -35,7 +35,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 // Input form config per agent slug
 const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | "textarea" | "select"; placeholder?: string; options?: string[] }[]> = {
-  "site-audit": [{ label: "Your Live App URL", key: "url", type: "text", placeholder: "https://your-app.lovable.app" }],
+  "site-audit": [{ label: "Your Live App URL", key: "url", type: "text", placeholder: "https://your-app.vercel.app" }],
   "lead-prospector": [
     { label: "City / Market", key: "city", type: "text", placeholder: "Atlanta, GA" },
     { label: "Business Category", key: "category", type: "text", placeholder: "Dental practices" },

@@ -14,7 +14,7 @@ export default function Login() {
   useSEO({
     title: "Member Login — PFSW",
     description: "Sign in to your PFSW account to access the Prompt Engine, Library, and your weekly build cohort.",
-    canonical: "https://system-install-lab.lovable.app/login",
+    canonical: "https://pfsw.io/login",
     noIndex: true,
   });
   const { toast } = useToast();

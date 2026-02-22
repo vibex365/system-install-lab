@@ -6,7 +6,7 @@ export default function Privacy() {
   useSEO({
     title: "Privacy Policy — PFSW",
     description: "PFSW privacy policy. We collect only what's necessary to deliver the service and never sell your data.",
-    canonical: "https://system-install-lab.lovable.app/privacy",
+    canonical: "https://pfsw.io/privacy",
     noIndex: true,
   });
   return (
@@ -55,7 +55,7 @@ export default function Privacy() {
                 <li><strong className="text-foreground">Stripe</strong> — payment processing</li>
                 <li><strong className="text-foreground">Firecrawl</strong> — website scanning (sends URLs you input; receives scraped text only)</li>
                 <li><strong className="text-foreground">Twilio / VAPI</strong> — SMS and voice agent functionality</li>
-                <li><strong className="text-foreground">Google / OpenAI (via Lovable AI Gateway)</strong> — AI prompt generation</li>
+                <li><strong className="text-foreground">Anthropic (Claude)</strong> — AI prompt generation</li>
               </ul>
               <p className="mt-3">We never sell your data to third parties. Ever.</p>
             </section>

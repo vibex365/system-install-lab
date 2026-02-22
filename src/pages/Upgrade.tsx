@@ -69,10 +69,10 @@ export default function Upgrade() {
                 <span className="text-foreground font-medium">Five automated agents</span> — Lead Prospector, Website Auditor, Cold Email Outreach, AI Voice Caller, and the Niche Prompt Library. All running from one dashboard, on demand or on a schedule you define.
               </p>
               <p>
-                <span className="text-foreground font-medium">A weekly peer cohort</span> — real web designers, building with Lovable, holding each other accountable. Hot seat reviews of your pitches, your builds, and your results.
+                <span className="text-foreground font-medium">A weekly peer cohort</span> — real web designers, building with AI, holding each other accountable. Hot seat reviews of your pitches, your builds, and your results.
               </p>
               <p>
-                <span className="text-foreground font-medium">Niche Lovable prompts</span> — battle-tested build prompts for dental, restaurant, real estate, law, fitness, and more. Copy, paste, ship. Cut your build time from weeks to days.
+                <span className="text-foreground font-medium">Niche build prompts</span> — battle-tested Claude prompts for dental, restaurant, real estate, law, fitness, and more. Copy, paste, ship. Cut your build time from weeks to days.
               </p>
               <p>
                 <span className="text-foreground font-medium">A compounding acquisition system</span> — the longer you run the agents, the smarter your targeting gets. Month three looks nothing like month one.

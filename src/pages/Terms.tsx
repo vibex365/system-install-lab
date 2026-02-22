@@ -6,7 +6,7 @@ export default function Terms() {
   useSEO({
     title: "Terms of Service — PFSW",
     description: "Terms of service for the PFSW web design operator community and AI toolkit.",
-    canonical: "https://system-install-lab.lovable.app/terms",
+    canonical: "https://pfsw.io/terms",
     noIndex: true,
   });
   return (

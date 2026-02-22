@@ -19,7 +19,7 @@ import {
   Download, Scan, CheckCircle2, X, Send, ExternalLink,
 } from "lucide-react";
 
-const LOVABLE_AFFILIATE_URL = "https://lovable.dev/invite/8HW4GFV";
+const CLAUDE_URL = "https://claude.ai";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,12 +34,12 @@ interface ScanResult {
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
 
-const SYSTEM_FUNNEL = `You are PFSW — an elite Lovable prompt architect building HIGH-CONVERSION interactive quiz funnels for local businesses.
+const SYSTEM_FUNNEL = `You are PFSW — an elite prompt architect powered by Claude, building HIGH-CONVERSION interactive quiz funnels for local businesses.
 
 CONTEXT:
 - This is a SMART LANDING PAGE (interactive quiz funnel) — NOT a traditional multi-page website
-- The goal is to generate a complete Lovable-ready prompt that builds an interactive quiz funnel
-- Stack: React + Vite + Tailwind + Framer Motion + shadcn/ui + Supabase (Lovable Cloud)
+- The goal is to generate a complete build-ready prompt that creates an interactive quiz funnel
+- Stack: React + Vite + Tailwind + Framer Motion + shadcn/ui + Supabase
 - If brand context is provided from a site scan, USE IT for colors, fonts, tone
 
 ARCHITECTURE — The funnel is a SINGLE React component with 4 phases:
@@ -116,7 +116,7 @@ PHASE 4: RESULTS (phase === "result")
 
 ═══════════════════════════════════════════════════════
 BACKEND — FORM API & DATA HANDLING (CRITICAL)
-═══════════════════════════════════════════════════════
+══════════════════════════════════════════════���════════
 Include in the prompt:
 - A Supabase table schema for storing quiz submissions:
   • id (uuid, PK, default gen_random_uuid())
@@ -167,7 +167,7 @@ Rules:
 - Every quiz question must be relevant and educational, not filler
 - Scoring must feel legitimate and personalized
 - Result MUST feel valuable enough to justify giving contact info
-- The generated prompt should be PASTE-READY for Lovable — complete and self-contained
+- The generated prompt should be PASTE-READY — complete and self-contained
 - Return ONLY the final build prompt — nothing else.`;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -522,7 +522,7 @@ Color & Font Notes: ${colorFontNotes}
 ${refinement ? `\nRefinement: ${refinement}` : ""}
 ${output ? `\nPrevious Output:\n${output}` : ""}
 
-Generate a complete Lovable-ready smart funnel build prompt following the exact 8-section structure. The funnel MUST include a form API + backend to capture leads for the business owner.`;
+Generate a complete build-ready smart funnel prompt following the exact 8-section structure. The funnel MUST include a form API + backend to capture leads for the business owner.`;
 
       const response = await supabase.functions.invoke("generate-prompt", {
         body: { system: SYSTEM_FUNNEL, message: userMessage },
@@ -748,15 +748,15 @@ Generate a complete Lovable-ready smart funnel build prompt following the exact 
                   </CardContent>
                 </Card>
 
-                {/* Lovable CTA */}
+                {/* Claude CTA */}
                 <Card className="bg-card border border-primary/30">
                   <CardContent className="p-4 space-y-3">
-                    <p className="text-xs font-semibold text-primary tracking-wide uppercase">New to Lovable?</p>
+                    <p className="text-xs font-semibold text-primary tracking-wide uppercase">Powered by Claude</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Every prompt generated here is Lovable-ready. No account yet? Create one free — it takes 60 seconds.
+                      Every prompt generated here is built with Anthropic Claude. Need a Claude account? Create one free.
                     </p>
-                    <a href={LOVABLE_AFFILIATE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
-                      Create Your Lovable Account <ExternalLink className="h-3 w-3" />
+                    <a href={CLAUDE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                      Try Claude <ExternalLink className="h-3 w-3" />
                     </a>
                   </CardContent>
                 </Card>
@@ -813,7 +813,7 @@ Generate a complete Lovable-ready smart funnel build prompt following the exact 
                   <CardContent>
                     <Textarea
                       value={output} onChange={(e) => setOutput(e.target.value)}
-                      placeholder="Your Lovable-ready smart funnel prompt will appear here..."
+                      placeholder="Your build-ready smart funnel prompt will appear here..."
                       className="bg-background border-border min-h-[400px] font-mono text-xs leading-relaxed"
                     />
                   </CardContent>
