@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronUp, ScanSearch, Send, Eye, CheckCircle2 } from "lucide-react";
+import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronUp, ScanSearch, Send, Eye, CheckCircle2, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,6 +79,13 @@ function parseEmailDraft(text: string): { subject: string; body: string; to: str
   };
 }
 
+function parseSmsDraft(text: string, phone: string | null): { to: string; message: string } | null {
+  if (!text || !phone) return null;
+  const message = stripMarkdown(text).trim();
+  if (!message) return null;
+  return { to: phone, message };
+}
+
 export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerProps) {
   const { toast } = useToast();
   const [runs, setRuns] = useState<AgentRun[]>([]);
@@ -86,11 +93,14 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [sendingSms, setSendingSms] = useState(false);
+  const [smsSent, setSmsSent] = useState(false);
 
   useEffect(() => {
     if (!lead || !open) return;
     setExpandedRun(null);
     setEmailSent(false);
+    setSmsSent(false);
     fetchRuns();
   }, [lead?.id, open]);
 
@@ -134,6 +144,29 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
     (r) => (r.agent_slug === "cold-email-outreach" || r.agent_slug === "email-drip") && r.status === "completed"
   );
   const parsedEmail = latestEmailDraft?.result_summary ? parseEmailDraft(latestEmailDraft.result_summary) : null;
+
+  const latestSmsDraft = runs.find(
+    (r) => r.agent_slug === "sms-outreach" && r.status === "completed"
+  );
+  const parsedSms = latestSmsDraft?.result_summary ? parseSmsDraft(latestSmsDraft.result_summary, lead?.phone ?? null) : null;
+
+  const handleSendSms = async () => {
+    if (!parsedSms || !parsedSms.to) return;
+    setSendingSms(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-sms", {
+        body: { phone: parsedSms.to, message: parsedSms.message },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setSmsSent(true);
+      toast({ title: "SMS sent", description: `Sent to ${parsedSms.to}` });
+    } catch (e: any) {
+      toast({ title: "Failed to send SMS", description: e.message, variant: "destructive" });
+    } finally {
+      setSendingSms(false);
+    }
+  };
 
   const handleSendEmail = async () => {
     if (!parsedEmail || !parsedEmail.to || !parsedEmail.subject) return;
@@ -294,7 +327,50 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
             </section>
           )}
 
-          {/* Notes */}
+          {/* SMS Draft Preview + Send Button */}
+          {parsedSms && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">SMS Draft</h3>
+                {smsSent ? (
+                  <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-400 ml-auto">Sent</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-400 ml-auto">Ready to review</Badge>
+                )}
+              </div>
+              <div className="rounded-md border border-border bg-muted/40 p-3 space-y-2">
+                <div className="text-[11px] text-muted-foreground">
+                  To: <span className="text-foreground">{parsedSms.to}</span>
+                </div>
+                <div className="border-t border-border pt-2 text-sm text-foreground whitespace-pre-wrap">
+                  {parsedSms.message}
+                </div>
+              </div>
+              {!smsSent && (
+                <Button
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={handleSendSms}
+                  disabled={sendingSms || !parsedSms.to}
+                >
+                  {sendingSms ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  )}
+                  {sendingSms ? "Sending..." : "Approve & Send SMS"}
+                </Button>
+              )}
+              {smsSent && (
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  SMS sent successfully
+                </div>
+              )}
+            </section>
+          )}
+
           {lead.notes && (
             <section className="space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notes</h3>
