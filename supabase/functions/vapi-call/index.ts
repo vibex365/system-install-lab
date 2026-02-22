@@ -148,13 +148,24 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
       });
     }
 
-    console.log(`[vapi-call] Call initiated: ${vapiData.id} to ${phone_number} (${call_type})`);
+    console.log(`[vapi-call] Call initiated: ${vapiData.id} to ${e164Phone} (${call_type})`);
+
+    // Log the call
+    await serviceSupabase.from("call_logs").insert({
+      user_id: userId,
+      phone_number: e164Phone,
+      call_type,
+      country_code: prefix,
+      vapi_call_id: vapiData.id,
+      status: vapiData.status || "initiated",
+      context: context || {},
+    });
 
     return new Response(JSON.stringify({
       success: true,
       call_id: vapiData.id,
       status: vapiData.status,
-      phone_number,
+      phone_number: e164Phone,
       call_type,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

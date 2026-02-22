@@ -2,10 +2,26 @@ import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronUp, ScanSearch, Send, Eye, CheckCircle2, MessageSquare } from "lucide-react";
+import { Loader2, Phone, Mail, Globe, MapPin, Users, Clock, ChevronUp, ScanSearch, Send, Eye, CheckCircle2, MessageSquare, PhoneCall } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+
+const COUNTRY_CODES = [
+  { value: "+1", label: "🇺🇸 +1 (US)" },
+  { value: "+44", label: "🇬🇧 +44 (UK)" },
+  { value: "+61", label: "🇦🇺 +61 (AU)" },
+  { value: "+91", label: "🇮🇳 +91 (IN)" },
+  { value: "+49", label: "🇩🇪 +49 (DE)" },
+  { value: "+33", label: "🇫🇷 +33 (FR)" },
+  { value: "+52", label: "🇲🇽 +52 (MX)" },
+  { value: "+55", label: "🇧🇷 +55 (BR)" },
+  { value: "+81", label: "🇯🇵 +81 (JP)" },
+  { value: "+971", label: "🇦🇪 +971 (UAE)" },
+  { value: "+234", label: "🇳🇬 +234 (NG)" },
+  { value: "+63", label: "🇵🇭 +63 (PH)" },
+];
 
 function stripMarkdown(text: string): string {
   return text
@@ -95,12 +111,16 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
   const [emailSent, setEmailSent] = useState(false);
   const [sendingSms, setSendingSms] = useState(false);
   const [smsSent, setSmsSent] = useState(false);
+  const [countryCode, setCountryCode] = useState("+1");
+  const [callingLead, setCallingLead] = useState(false);
+  const [callSent, setCallSent] = useState(false);
 
   useEffect(() => {
     if (!lead || !open) return;
     setExpandedRun(null);
     setEmailSent(false);
     setSmsSent(false);
+    setCallSent(false);
     fetchRuns();
   }, [lead?.id, open]);
 
@@ -165,6 +185,28 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
       toast({ title: "Failed to send SMS", description: e.message, variant: "destructive" });
     } finally {
       setSendingSms(false);
+    }
+  };
+
+  const handleCallLead = async () => {
+    if (!lead?.phone) return;
+    setCallingLead(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("vapi-call", {
+        body: {
+          phone_number: lead.phone,
+          call_type: "website_lead",
+          context: { business_name: lead.business_name, website: lead.website },
+          country_code: countryCode,
+        },
+      });
+      if (error || data?.error) throw new Error(error?.message || data?.error);
+      setCallSent(true);
+      toast({ title: "Call initiated", description: `Calling ${lead.business_name}` });
+    } catch (e: any) {
+      toast({ title: "Call failed", description: e.message, variant: "destructive" });
+    } finally {
+      setCallingLead(false);
     }
   };
 
@@ -366,6 +408,40 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
                 <div className="flex items-center gap-2 text-xs text-green-400">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   SMS sent successfully
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Call Lead with Country Code */}
+          {lead.phone && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <PhoneCall className="h-3.5 w-3.5 text-primary" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Call Lead</h3>
+                {callSent && <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-400 ml-auto">Called</Badge>}
+              </div>
+              {!callSent && (
+                <div className="flex items-center gap-2">
+                  <Select value={countryCode} onValueChange={setCountryCode}>
+                    <SelectTrigger className="h-8 w-[120px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRY_CODES.map((cc) => (
+                        <SelectItem key={cc.value} value={cc.value} className="text-xs">{cc.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="flex-1 gap-2" onClick={handleCallLead} disabled={callingLead}>
+                    {callingLead ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PhoneCall className="h-3.5 w-3.5" />}
+                    {callingLead ? "Dialing..." : "Call via AI Voice"}
+                  </Button>
+                </div>
+              )}
+              {callSent && (
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Call initiated successfully
                 </div>
               )}
             </section>

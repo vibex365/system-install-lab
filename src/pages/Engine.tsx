@@ -247,6 +247,38 @@ const NICHE_PRESETS: Record<string, { industry: string; quizTitle: string; resul
     ctaText: "Book Your Free Hair Consultation",
     colorFontNotes: "Primary: #1A1A1A (near black) · Accent: #C9A0A0 (blush) · Accent2: #C9A84C (gold) · Background: #FAF7F5 · Fonts: Cormorant, Raleway",
   },
+  HVAC: {
+    industry: "HVAC / heating & cooling contractor",
+    quizTitle: "Is Your HVAC System Costing You Money?",
+    resultLabel: "Home Comfort Score",
+    styleDirection: "Clean, professional, trustworthy. Cool blue, white, subtle orange accent.",
+    ctaText: "Get Your Free HVAC Inspection",
+    colorFontNotes: "Primary: #1B4D7A (steel blue) · Accent: #E8732A (orange) · Background: #F7F9FC · Fonts: Montserrat, Open Sans",
+  },
+  Legal: {
+    industry: "Law firm / attorney / legal services",
+    quizTitle: "Are You Legally Protected?",
+    resultLabel: "Legal Risk Score",
+    styleDirection: "Authoritative and understated. Dark navy, white, subtle gold. Conveys trust and expertise.",
+    ctaText: "Book Your Free Legal Consultation",
+    colorFontNotes: "Primary: #0D1B2A (dark navy) · Accent: #C5A028 (gold) · Background: #FFFFFF · Fonts: EB Garamond, Inter",
+  },
+  "Med Spa": {
+    industry: "Med spa / aesthetic clinic / cosmetic dermatology",
+    quizTitle: "What's Your Skin Age?",
+    resultLabel: "Skin Vitality Score",
+    styleDirection: "Luxurious, clinical, modern. Soft rose gold, cream, charcoal. Premium spa aesthetic.",
+    ctaText: "Book Your Free Skin Consultation",
+    colorFontNotes: "Primary: #2C2C2C (charcoal) · Accent: #D4A574 (rose gold) · Background: #FDF8F4 (cream) · Fonts: Playfair Display, Nunito Sans",
+  },
+  "Auto Detailing": {
+    industry: "Auto detailing / car care / mobile detailing",
+    quizTitle: "What's Your Car's True Condition?",
+    resultLabel: "Vehicle Care Score",
+    styleDirection: "Sleek, bold, premium. Black, metallic silver, red accent. Automotive luxury feel.",
+    ctaText: "Book Your Free Detail Assessment",
+    colorFontNotes: "Primary: #111111 (near black) · Accent: #C41E3A (racing red) · Secondary: #8C8C8C (silver) · Background: #0A0A0A · Fonts: Rajdhani, DM Sans",
+  },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
