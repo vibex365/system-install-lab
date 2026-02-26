@@ -201,9 +201,55 @@ Return ONLY valid JSON array, no explanation.`,
         }
 
         // Update workflow memory
+        const updatedMemory = { scout_results: scoutResult };
         await serviceSupabase.from("workflows").update({
-          memory: { scout_results: scoutResult },
+          memory: updatedMemory,
         }).eq("id", workflow.id);
+
+        // Chain: invoke next step (qualifier) if it exists
+        const { data: nextStep } = await serviceSupabase
+          .from("workflow_steps")
+          .select("id, agent_id, input")
+          .eq("workflow_id", workflow.id)
+          .eq("status", "pending")
+          .order("position", { ascending: true })
+          .limit(1)
+          .single();
+
+        if (nextStep) {
+          await serviceSupabase.from("workflow_steps").update({
+            status: "running",
+            started_at: new Date().toISOString(),
+          }).eq("id", nextStep.id);
+
+          // Fire-and-forget call to the agent function
+          const agentFnName = `agent-${nextStep.agent_id.replace(/_/g, "-")}`;
+          try {
+            const agentUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/${agentFnName}`;
+            await fetch(agentUrl, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                workflow_id: workflow.id,
+                step_id: nextStep.id,
+                user_id: user.id,
+                params: nextStep.input,
+                memory: updatedMemory,
+              }),
+            });
+          } catch (chainErr) {
+            console.error(`Failed to chain ${agentFnName}:`, chainErr);
+          }
+        } else {
+          // No more steps — complete workflow
+          await serviceSupabase.from("workflows").update({
+            status: "completed",
+            updated_at: new Date().toISOString(),
+          }).eq("id", workflow.id);
+        }
 
       } catch (scoutErr) {
         console.error("Scout step failed:", scoutErr);
