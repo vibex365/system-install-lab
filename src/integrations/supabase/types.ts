@@ -569,6 +569,45 @@ export type Database = {
         }
         Relationships: []
       }
+      funnel_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          downloads: number
+          id: string
+          niche: string
+          preview_url: string | null
+          price_cents: number
+          quiz_config: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downloads?: number
+          id?: string
+          niche?: string
+          preview_url?: string | null
+          price_cents?: number
+          quiz_config?: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          downloads?: number
+          id?: string
+          niche?: string
+          preview_url?: string | null
+          price_cents?: number
+          quiz_config?: Json
+          title?: string
+        }
+        Relationships: []
+      }
       job_runs: {
         Row: {
           created_at: string
@@ -734,6 +773,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      niche_config: {
+        Row: {
+          created_at: string
+          cta_label: string
+          display_name: string
+          id: string
+          outreach_templates: Json
+          pipeline_stages: string[]
+          quiz_prompt_context: string | null
+          stat_labels: Json
+        }
+        Insert: {
+          created_at?: string
+          cta_label?: string
+          display_name: string
+          id: string
+          outreach_templates?: Json
+          pipeline_stages?: string[]
+          quiz_prompt_context?: string | null
+          stat_labels?: Json
+        }
+        Update: {
+          created_at?: string
+          cta_label?: string
+          display_name?: string
+          id?: string
+          outreach_templates?: Json
+          pipeline_stages?: string[]
+          quiz_prompt_context?: string | null
+          stat_labels?: Json
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -1144,6 +1216,98 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_tracking: {
+        Row: {
+          campaigns_used: number
+          created_at: string
+          funnels_used: number
+          id: string
+          leads_used: number
+          period_start: string
+          sms_used: number
+          updated_at: string
+          user_id: string
+          voice_calls_used: number
+          workflows_used: number
+        }
+        Insert: {
+          campaigns_used?: number
+          created_at?: string
+          funnels_used?: number
+          id?: string
+          leads_used?: number
+          period_start?: string
+          sms_used?: number
+          updated_at?: string
+          user_id: string
+          voice_calls_used?: number
+          workflows_used?: number
+        }
+        Update: {
+          campaigns_used?: number
+          created_at?: string
+          funnels_used?: number
+          id?: string
+          leads_used?: number
+          period_start?: string
+          sms_used?: number
+          updated_at?: string
+          user_id?: string
+          voice_calls_used?: number
+          workflows_used?: number
+        }
+        Relationships: []
+      }
+      user_funnels: {
+        Row: {
+          brand_config: Json
+          created_at: string
+          id: string
+          quiz_config: Json
+          slug: string
+          status: string
+          submissions_count: number
+          template_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_config?: Json
+          created_at?: string
+          id?: string
+          quiz_config?: Json
+          slug: string
+          status?: string
+          submissions_count?: number
+          template_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_config?: Json
+          created_at?: string
+          id?: string
+          quiz_config?: Json
+          slug?: string
+          status?: string
+          submissions_count?: number
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_funnels_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_notifications: {
         Row: {
           agent_run_id: string | null
@@ -1255,11 +1419,122 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_steps: {
+        Row: {
+          agent_id: string
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          input: Json
+          output: Json | null
+          position: number
+          retry_count: number
+          started_at: string | null
+          status: string
+          workflow_id: string
+        }
+        Insert: {
+          agent_id: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          position: number
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          workflow_id: string
+        }
+        Update: {
+          agent_id?: string
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          position?: number
+          retry_count?: number
+          started_at?: string | null
+          status?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_steps_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflows: {
+        Row: {
+          created_at: string
+          goal: string
+          id: string
+          memory: Json
+          niche: string | null
+          plan: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal: string
+          id?: string
+          memory?: Json
+          niche?: string | null
+          plan?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal?: string
+          id?: string
+          memory?: Json
+          niche?: string | null
+          plan?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_usage: {
+        Args: { p_user_id: string }
+        Returns: {
+          campaigns_used: number
+          created_at: string
+          funnels_used: number
+          id: string
+          leads_used: number
+          period_start: string
+          sms_used: number
+          updated_at: string
+          user_id: string
+          voice_calls_used: number
+          workflows_used: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "usage_tracking"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

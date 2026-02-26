@@ -1,135 +1,210 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { AuthGate } from "@/components/AuthGate";
-import { StatusPill } from "@/components/StatusPill";
-import { StepList } from "@/components/StepList";
-import { EmptyState } from "@/components/EmptyState";
-import { track } from "@/lib/analytics";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Map, Zap, FileText } from "lucide-react";
+import { Zap, Rocket, Target, ArrowRight, Mail, Phone, MessageSquare, Search, BarChart3 } from "lucide-react";
+import { motion } from "framer-motion";
 
-const cadenceSteps = [
-  { label: "Plan", active: true },
-  { label: "Build", active: false },
-  { label: "Ship", active: false },
-  { label: "Review", active: false },
+const quickGoals = [
+  { label: "Find Leads", icon: Search, goal: "Find 50 leads in my niche in my local area" },
+  { label: "Build Funnel", icon: Target, goal: "Build a quiz funnel for my niche that captures leads and books calls" },
+  { label: "Book Calls", icon: Phone, goal: "Call my top 20 qualified leads and book discovery calls" },
+  { label: "Email Campaign", icon: Mail, goal: "Send a 3-part email sequence to my uncontacted leads" },
+  { label: "SMS Follow-up", icon: MessageSquare, goal: "Send SMS follow-ups to leads who haven't responded to email" },
+  { label: "Competitor Intel", icon: BarChart3, goal: "Research my top 5 competitors and find positioning gaps" },
 ];
 
-const promptPacks = ["MVP Blueprint Prompt", "Architecture Prompt", "Landing Page Prompt"];
-
 export default function Dashboard() {
-  const [searchParams] = useSearchParams();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
-  const [activating, setActivating] = useState(false);
+  const navigate = useNavigate();
+  const [goal, setGoal] = useState("");
+  const [launching, setLaunching] = useState(false);
+  const [workflows, setWorkflows] = useState<any[]>([]);
 
-  useEffect(() => { track("dashboard_viewed"); }, []);
-
-  // Verify membership payment if redirected from Stripe
   useEffect(() => {
-    const membershipSessionId = searchParams.get("membership_session_id");
-    if (!membershipSessionId) return;
+    if (!loading && !user) navigate("/login", { replace: true });
+  }, [user, loading, navigate]);
 
-    const verify = async () => {
-      setActivating(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("verify-membership-payment", {
-          body: { session_id: membershipSessionId },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        toast({ title: "Membership activated!", description: `Welcome, ${data.tier} member.` });
-        // Clean URL
-        window.history.replaceState({}, "", "/dashboard");
-      } catch (err: any) {
-        console.error("Membership verification error:", err);
-        toast({ title: "Verification issue", description: err.message, variant: "destructive" });
-      } finally {
-        setActivating(false);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("workflows")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        if (data) setWorkflows(data);
+      });
+  }, [user]);
+
+  const launchWorkflow = async (goalText: string) => {
+    if (!goalText.trim() || !user) return;
+    setLaunching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("orchestrator", {
+        body: { goal: goalText.trim() },
+      });
+      if (error) throw error;
+      toast({ title: "Workflow launched!", description: "Your agents are working on it." });
+      if (data?.workflow_id) {
+        navigate(`/dashboard/workflows/${data.workflow_id}`);
       }
-    };
+    } catch (err: any) {
+      toast({ title: "Failed to launch", description: err.message, variant: "destructive" });
+    } finally {
+      setLaunching(false);
+    }
+  };
 
-    verify();
-  }, [searchParams, toast]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const statusColors: Record<string, string> = {
+    planning: "text-primary",
+    running: "text-emerald-400",
+    completed: "text-emerald-400",
+    paused: "text-yellow-400",
+    failed: "text-destructive",
+  };
 
   return (
-    <AuthGate requireActive>
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="pt-24 pb-20">
-          <div className="container max-w-5xl">
-            {activating && (
-              <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin inline-block mr-2" />
-                <span className="text-sm text-primary font-medium">Activating your membership...</span>
-              </div>
-            )}
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="pt-24 pb-20">
+        <div className="container max-w-4xl">
+          {/* Goal Input */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-10"
+          >
+            <Card className="bg-card border-border overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  What do you want to accomplish?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  placeholder="Get me 50 MLM leads in Dallas who are interested in health supplements..."
+                  className="min-h-[80px] bg-background border-border resize-none text-sm"
+                />
 
-            <div className="flex flex-wrap items-center gap-3 mb-10">
-              <StatusPill label="Active" variant="active" />
-              <StatusPill label="Week 01" />
-              <Button size="sm" disabled className="ml-auto tracking-wide opacity-50">
-                Start Weekly Sprint
+                <div className="flex flex-wrap gap-2">
+                  {quickGoals.map((qg) => (
+                    <button
+                      key={qg.label}
+                      onClick={() => setGoal(qg.goal)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
+                    >
+                      <qg.icon className="h-3 w-3" />
+                      {qg.label}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => launchWorkflow(goal)}
+                  disabled={!goal.trim() || launching}
+                  className="w-full gold-glow-strong"
+                  size="lg"
+                >
+                  {launching ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+                      Launching...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Launch Workflow
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Recent Workflows */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Recent Workflows</h2>
+              <Button asChild variant="ghost" size="sm" className="text-primary">
+                <Link to="/dashboard/workflows">View All <ArrowRight className="h-3 w-3 ml-1" /></Link>
               </Button>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {workflows.length === 0 ? (
               <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Map className="h-4 w-4 text-primary" /> This Week's System
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">Your System Map appears here.</p>
-                  <Button size="sm" variant="outline" disabled className="opacity-50 border-border">Generate System Map</Button>
+                <CardContent className="py-12 text-center">
+                  <Zap className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">No workflows yet. Describe a goal above to get started.</p>
                 </CardContent>
               </Card>
-
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" /> Execution Cadence
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <StepList steps={cadenceSteps} />
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" /> Prompt Packs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {promptPacks.map((p) => (
-                    <div key={p} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2">
-                      <span className="text-sm text-foreground">{p}</span>
-                      <Button size="sm" variant="ghost" className="text-xs text-primary h-auto py-1 px-2" disabled>Open</Button>
+            ) : (
+              <div className="space-y-3">
+                {workflows.map((w) => (
+                  <Link
+                    key={w.id}
+                    to={`/dashboard/workflows/${w.id}`}
+                    className="block rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{w.goal}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(w.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${statusColors[w.status] || "text-muted-foreground"}`}>
+                        {w.status}
+                      </span>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
-              <Card className="bg-card border-border">
-                <CardContent className="p-0">
-                  <EmptyState message="No activity yet." sub="Start Week 01." />
-                </CardContent>
-              </Card>
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        </main>
-        <Footer />
-      </div>
-    </AuthGate>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Active Workflows", value: workflows.filter(w => w.status === "running").length, icon: Zap },
+              { label: "Completed", value: workflows.filter(w => w.status === "completed").length, icon: Target },
+              { label: "Leads Found", value: "—", icon: Search },
+              { label: "Calls Booked", value: "—", icon: Phone },
+            ].map((s) => (
+              <Card key={s.label} className="bg-card border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <s.icon className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{s.label}</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 }
