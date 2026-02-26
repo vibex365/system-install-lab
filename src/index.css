@@ -23,8 +23,8 @@
     --popover: 240 12% 7%;
     --popover-foreground: 240 5% 96%;
 
-    --primary: 48 96% 53%;
-    --primary-foreground: 240 10% 4%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 240 12% 10%;
     --secondary-foreground: 240 5% 96%;
@@ -32,29 +32,29 @@
     --muted: 240 8% 12%;
     --muted-foreground: 240 5% 74%;
 
-    --accent: 48 80% 45%;
-    --accent-foreground: 240 5% 96%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 240 8% 16%;
     --input: 240 8% 16%;
-    --ring: 48 96% 53%;
+    --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 240 12% 7%;
     --sidebar-foreground: 240 5% 96%;
-    --sidebar-primary: 48 96% 53%;
-    --sidebar-primary-foreground: 240 10% 4%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 8% 12%;
     --sidebar-accent-foreground: 240 5% 96%;
     --sidebar-border: 240 8% 16%;
-    --sidebar-ring: 48 96% 53%;
+    --sidebar-ring: 217 91% 60%;
 
-    --gold: 48 96% 53%;
-    --gold-dark: 45 80% 42%;
+    --gold: 217 91% 60%;
+    --gold-dark: 263 70% 50%;
     --surface: 240 14% 9%;
     --surface-elevated: 240 12% 11%;
   }
@@ -66,19 +66,19 @@
     --card-foreground: 240 5% 96%;
     --popover: 240 12% 7%;
     --popover-foreground: 240 5% 96%;
-    --primary: 48 96% 53%;
-    --primary-foreground: 240 10% 4%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 12% 10%;
     --secondary-foreground: 240 5% 96%;
     --muted: 240 8% 12%;
     --muted-foreground: 240 5% 74%;
-    --accent: 48 80% 45%;
-    --accent-foreground: 240 5% 96%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 240 8% 16%;
     --input: 240 8% 16%;
-    --ring: 48 96% 53%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -98,19 +98,19 @@
 
 @layer utilities {
   .gold-glow {
-    box-shadow: 0 0 30px hsl(48 96% 53% / 0.2), 0 0 80px hsl(48 96% 53% / 0.08);
+    box-shadow: 0 0 30px hsl(217 91% 60% / 0.2), 0 0 80px hsl(263 70% 50% / 0.08);
   }
 
   .gold-glow-strong {
-    box-shadow: 0 0 40px hsl(48 96% 53% / 0.35), 0 0 120px hsl(48 96% 53% / 0.12), 0 0 200px hsl(48 96% 53% / 0.05);
+    box-shadow: 0 0 40px hsl(217 91% 60% / 0.35), 0 0 120px hsl(263 70% 50% / 0.12), 0 0 200px hsl(217 91% 60% / 0.05);
   }
 
   .gold-text-glow {
-    text-shadow: 0 0 40px hsl(48 96% 53% / 0.5), 0 0 80px hsl(48 96% 53% / 0.2);
+    text-shadow: 0 0 40px hsl(217 91% 60% / 0.5), 0 0 80px hsl(263 70% 50% / 0.2);
   }
 
   .gold-underline {
-    background-image: linear-gradient(to right, hsl(48 96% 53%), hsl(45 80% 42%));
+    background-image: linear-gradient(to right, hsl(217 91% 60%), hsl(263 70% 50%));
     background-size: 0% 2px;
     background-position: left bottom;
     background-repeat: no-repeat;

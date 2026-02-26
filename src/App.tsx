@@ -42,6 +42,9 @@ import IntakeFunnel from "./pages/IntakeFunnel";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminCallLog from "./pages/admin/AdminCallLog";
 import DemoFunnel from "./pages/DemoFunnel";
+import Dashboard from "./pages/Dashboard";
+import Workflows from "./pages/Workflows";
+import WorkflowDetail from "./pages/WorkflowDetail";
 const queryClient = new QueryClient();
 
 const App = () => (
