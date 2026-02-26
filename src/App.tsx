@@ -69,6 +69,9 @@ const App = () => (
             <Route path="/upgrade" element={<Upgrade />} />
 
             {/* Member routes */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/workflows" element={<Workflows />} />
+            <Route path="/dashboard/workflows/:id" element={<WorkflowDetail />} />
             <Route path="/engine" element={<Engine />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/calendar" element={<CalendarPage />} />
