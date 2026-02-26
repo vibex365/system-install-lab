@@ -16,9 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Table imports removed - using card layout
 import {
   Plus, Search, Loader2, Users, Phone, Mail, Globe, TrendingUp, X,
-  ScanSearch, PhoneCall, MessageSquare, Send, MapPin,
+  ScanSearch, PhoneCall, MessageSquare, Send, MapPin, LayoutGrid, List,
 } from "lucide-react";
 import { LeadDetailDrawer } from "@/components/crm/LeadDetailDrawer";
+import { KanbanBoard } from "@/components/crm/KanbanBoard";
 
 const PIPELINE_STATUSES = ["funnel_lead", "scraped", "audited", "emailed", "contacted", "called", "proposal_sent", "booked", "converted", "lost"];
 const STATUS_COLORS: Record<string, string> = {
@@ -71,6 +72,7 @@ function CRMContent() {
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [drawerLead, setDrawerLead] = useState<Lead | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
 
   // Add form
   const [formName, setFormName] = useState("");
@@ -286,9 +288,25 @@ function CRMContent() {
               <h1 className="text-xl font-bold text-foreground">CRM</h1>
               <p className="text-xs text-muted-foreground">{leads.length} leads total</p>
             </div>
-            <Button size="sm" onClick={() => setAddOpen(true)}>
-              <Plus className="h-3 w-3 mr-1" /> Add Lead
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="h-3 w-3 mr-1" /> Add Lead
+              </Button>
+              <div className="flex items-center border border-border rounded-md overflow-hidden">
+                <button
+                  onClick={() => setViewMode("kanban")}
+                  className={`p-1.5 transition-colors ${viewMode === "kanban" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Stats */}
@@ -311,147 +329,157 @@ function CRMContent() {
             ))}
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-2 flex-wrap mb-4">
-            {["All", ...PIPELINE_STATUSES].map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors capitalize ${
-                  filter === s
-                    ? "bg-primary/20 text-primary border-primary/40"
-                    : "bg-transparent text-muted-foreground border-border hover:text-foreground"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search leads..."
-              className="pl-9 h-9 text-xs"
+          {viewMode === "kanban" ? (
+            <KanbanBoard
+              leads={leads}
+              onLeadClick={(lead) => setDrawerLead(lead)}
+              onStatusChange={updateStatus}
             />
-          </div>
+          ) : (
+            <>
+              {/* Filters */}
+              <div className="flex gap-2 flex-wrap mb-4">
+                {["All", ...PIPELINE_STATUSES].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setFilter(s)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors capitalize ${
+                      filter === s
+                        ? "bg-primary/20 text-primary border-primary/40"
+                        : "bg-transparent text-muted-foreground border-border hover:text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
 
-          {/* Table */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredLeads.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-xs text-muted-foreground">No leads found. Add leads manually or run Lead Prospector.</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {filteredLeads.map((lead) => {
-                    const isRunning = (slug: string) => runningAgent === `${lead.id}-${slug}`;
-                    return (
-                      <div key={lead.id} className="p-4 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-1.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <button onClick={() => setDrawerLead(lead)} className="text-sm font-semibold text-foreground truncate hover:text-primary transition-colors text-left">{lead.business_name}</button>
-                              {lead.city && <span className="text-[10px] text-muted-foreground">· {lead.city}</span>}
-                              <Select value={lead.pipeline_status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                                <SelectTrigger className="h-5 text-[10px] w-auto border-0 p-0 gap-0">
-                                  <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[lead.pipeline_status] || ""}`}>
-                                    {lead.pipeline_status.replace(/_/g, " ")}
-                                  </Badge>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {PIPELINE_STATUSES.map((s) => (
-                                    <SelectItem key={s} value={s} className="text-xs capitalize">{s.replace(/_/g, " ")}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search leads..."
+                  className="pl-9 h-9 text-xs"
+                />
+              </div>
+
+              {/* Table */}
+              <Card className="bg-card border-border">
+                <CardContent className="p-0">
+                  {loading ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : filteredLeads.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-xs text-muted-foreground">No leads found. Add leads manually or run Lead Prospector.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {filteredLeads.map((lead) => {
+                        const isRunning = (slug: string) => runningAgent === `${lead.id}-${slug}`;
+                        return (
+                          <div key={lead.id} className="p-4 hover:bg-muted/30 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0 space-y-1.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <button onClick={() => setDrawerLead(lead)} className="text-sm font-semibold text-foreground truncate hover:text-primary transition-colors text-left">{lead.business_name}</button>
+                                  {lead.city && <span className="text-[10px] text-muted-foreground">· {lead.city}</span>}
+                                  <Select value={lead.pipeline_status} onValueChange={(v) => updateStatus(lead.id, v)}>
+                                    <SelectTrigger className="h-5 text-[10px] w-auto border-0 p-0 gap-0">
+                                      <Badge variant="outline" className={`text-[10px] capitalize ${STATUS_COLORS[lead.pipeline_status] || ""}`}>
+                                        {lead.pipeline_status.replace(/_/g, " ")}
+                                      </Badge>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {PIPELINE_STATUSES.map((s) => (
+                                        <SelectItem key={s} value={s} className="text-xs capitalize">{s.replace(/_/g, " ")}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="flex items-center gap-4 flex-wrap text-[11px] text-muted-foreground">
+                                  {lead.phone && (
+                                    <a href={`tel:${lead.phone}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                                      <Phone className="h-3 w-3" /> {lead.phone}
+                                    </a>
+                                  )}
+                                  {lead.email && (
+                                    <a href={`mailto:${lead.email}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                                      <Mail className="h-3 w-3" /> {lead.email}
+                                    </a>
+                                  )}
+                                  {lead.website && (
+                                    <a href={lead.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors truncate max-w-[200px]">
+                                      <Globe className="h-3 w-3 shrink-0" /> {lead.website.replace(/https?:\/\/(www\.)?/, "")}
+                                    </a>
+                                  )}
+                                  {lead.contact_name && (
+                                    <span className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" /> {lead.contact_name}
+                                    </span>
+                                  )}
+                                  {lead.address && (
+                                    <span className="flex items-center gap-1 truncate max-w-[200px]">
+                                      <MapPin className="h-3 w-3 shrink-0" /> {lead.address}
+                                    </span>
+                                  )}
+                                </div>
+                                {lead.notes && <p className="text-[10px] text-muted-foreground/70 truncate max-w-md">{lead.notes}</p>}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="sm" variant="outline"
+                                  className="h-7 px-2 text-[10px] gap-1"
+                                  disabled={!!runningAgent}
+                                  onClick={() => runAgentOnLead(lead, "site-audit")}
+                                >
+                                  {isRunning("site-audit") ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
+                                  Scan
+                                </Button>
+                                <Button
+                                  size="sm" variant="outline"
+                                  className="h-7 px-2 text-[10px] gap-1"
+                                  disabled={!!runningAgent || !lead.email}
+                                  onClick={() => runAgentOnLead(lead, "cold-email-outreach")}
+                                >
+                                  {isRunning("cold-email-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                                  Email
+                                </Button>
+                                <Button
+                                  size="sm" variant="outline"
+                                  className="h-7 px-2 text-[10px] gap-1"
+                                  disabled={!!runningAgent || !lead.phone}
+                                  onClick={() => runAgentOnLead(lead, "cold-call")}
+                                >
+                                  {isRunning("cold-call") ? <Loader2 className="h-3 w-3 animate-spin" /> : <PhoneCall className="h-3 w-3" />}
+                                  Call
+                                </Button>
+                                <Button
+                                  size="sm" variant="outline"
+                                  className="h-7 px-2 text-[10px] gap-1"
+                                  disabled={!!runningAgent || !lead.phone}
+                                  onClick={() => runAgentOnLead(lead, "sms-outreach")}
+                                >
+                                  {isRunning("sms-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3" />}
+                                  SMS
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteLead(lead.id)}>
+                                  <X className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-4 flex-wrap text-[11px] text-muted-foreground">
-                              {lead.phone && (
-                                <a href={`tel:${lead.phone}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
-                                  <Phone className="h-3 w-3" /> {lead.phone}
-                                </a>
-                              )}
-                              {lead.email && (
-                                <a href={`mailto:${lead.email}`} className="flex items-center gap-1 hover:text-foreground transition-colors">
-                                  <Mail className="h-3 w-3" /> {lead.email}
-                                </a>
-                              )}
-                              {lead.website && (
-                                <a href={lead.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors truncate max-w-[200px]">
-                                  <Globe className="h-3 w-3 shrink-0" /> {lead.website.replace(/https?:\/\/(www\.)?/, "")}
-                                </a>
-                              )}
-                            {lead.contact_name && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-3 w-3" /> {lead.contact_name}
-                                </span>
-                              )}
-                              {lead.address && (
-                                <span className="flex items-center gap-1 truncate max-w-[200px]">
-                                  <MapPin className="h-3 w-3 shrink-0" /> {lead.address}
-                                </span>
-                              )}
-                            </div>
-                            {lead.notes && <p className="text-[10px] text-muted-foreground/70 truncate max-w-md">{lead.notes}</p>}
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              size="sm" variant="outline"
-                              className="h-7 px-2 text-[10px] gap-1"
-                              disabled={!!runningAgent}
-                              onClick={() => runAgentOnLead(lead, "site-audit")}
-                            >
-                              {isRunning("site-audit") ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
-                              Scan
-                            </Button>
-                            <Button
-                              size="sm" variant="outline"
-                              className="h-7 px-2 text-[10px] gap-1"
-                              disabled={!!runningAgent || !lead.email}
-                              onClick={() => runAgentOnLead(lead, "cold-email-outreach")}
-                            >
-                              {isRunning("cold-email-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                              Email
-                            </Button>
-                            <Button
-                              size="sm" variant="outline"
-                              className="h-7 px-2 text-[10px] gap-1"
-                              disabled={!!runningAgent || !lead.phone}
-                              onClick={() => runAgentOnLead(lead, "cold-call")}
-                            >
-                              {isRunning("cold-call") ? <Loader2 className="h-3 w-3 animate-spin" /> : <PhoneCall className="h-3 w-3" />}
-                              Call
-                            </Button>
-                            <Button
-                              size="sm" variant="outline"
-                              className="h-7 px-2 text-[10px] gap-1"
-                              disabled={!!runningAgent || !lead.phone}
-                              onClick={() => runAgentOnLead(lead, "sms-outreach")}
-                            >
-                              {isRunning("sms-outreach") ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3" />}
-                              SMS
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => deleteLead(lead.id)}>
-                              <X className="h-3 w-3 text-muted-foreground" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </main>
       <Footer />
