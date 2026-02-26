@@ -37,11 +37,11 @@ export function Navbar() {
 
   const memberLinks = (
     <>
-      <Link to="/engine" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
-      <Link to="/crm" className="text-sm text-muted-foreground hover:text-foreground transition-colors">CRM</Link>
-      <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
-      <Link to="/library" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+      <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+      <Link to="/dashboard/workflows" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
+      <Link to="/crm" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
       <Link to="/agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
+      <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
     </>
   );
 
@@ -104,11 +104,11 @@ export function Navbar() {
 
             {user && isActive && (
               <>
-                <Link to="/engine" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Engine</Link>
-                <Link to="/crm" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">CRM</Link>
-                <Link to="/calendar" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
-                <Link to="/library" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Library</Link>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+                <Link to="/dashboard/workflows" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
+                <Link to="/crm" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
                 <Link to="/agents" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
+                <Link to="/calendar" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
               </>
             )}
             {user && isChiefArchitect && (
