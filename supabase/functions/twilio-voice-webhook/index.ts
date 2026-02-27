@@ -327,6 +327,39 @@ async function handleStatusCallback(formData: FormData | null, ctx: Ctx) {
       summary = await generateCallSummary({ supabase, callLogId, respondentName, quizScore, quizResult, duration });
     }
     await supabase.from("call_logs").update({ status: finalStatus, call_duration_seconds: duration, call_summary: summary }).eq("id", callLogId);
+
+    // ── Partner Mode: Send affiliate link SMS after call completes ──
+    if (finalStatus === "completed") {
+      try {
+        const { data: callLog } = await supabase.from("call_logs").select("phone_number, quiz_answers").eq("id", callLogId).single();
+        const quizData = (callLog?.quiz_answers as any) || {};
+        if (quizData.partner_mode && quizData.affiliate_url && callLog?.phone_number) {
+          const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+          const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+          const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+          if (twilioSid && twilioToken && twilioPhone) {
+            const firstName = (quizData.respondent_name || "").split(" ")[0] || "there";
+            const smsBody = `Thanks for chatting with us, ${firstName}! 🎉 Here's your exclusive link to get started: ${quizData.affiliate_url}`;
+            const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+            await fetch(twilioUrl, {
+              method: "POST",
+              headers: {
+                "Authorization": "Basic " + btoa(`${twilioSid}:${twilioToken}`),
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                To: callLog.phone_number,
+                From: twilioPhone,
+                Body: smsBody,
+              }).toString(),
+            });
+            console.log("Partner affiliate SMS sent to:", callLog.phone_number);
+          }
+        }
+      } catch (affiliateErr) {
+        console.error("Affiliate SMS error:", affiliateErr);
+      }
+    }
   }
 
   return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { "Content-Type": "text/xml" } });

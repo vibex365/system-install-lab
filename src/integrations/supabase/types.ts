@@ -1199,6 +1199,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          affiliate_url: string | null
           attendance_count: number
           certified_at: string | null
           cohort_id: string | null
@@ -1216,6 +1217,7 @@ export type Database = {
           target_location: string | null
         }
         Insert: {
+          affiliate_url?: string | null
           attendance_count?: number
           certified_at?: string | null
           cohort_id?: string | null
@@ -1233,6 +1235,7 @@ export type Database = {
           target_location?: string | null
         }
         Update: {
+          affiliate_url?: string | null
           attendance_count?: number
           certified_at?: string | null
           cohort_id?: string | null
@@ -1569,9 +1572,12 @@ export type Database = {
       }
       user_funnels: {
         Row: {
+          affiliate_url: string | null
           brand_config: Json
+          completion_action: string
           created_at: string
           id: string
+          partner_mode: boolean
           quiz_config: Json
           slug: string
           status: string
@@ -1582,9 +1588,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          affiliate_url?: string | null
           brand_config?: Json
+          completion_action?: string
           created_at?: string
           id?: string
+          partner_mode?: boolean
           quiz_config?: Json
           slug: string
           status?: string
@@ -1595,9 +1604,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          affiliate_url?: string | null
           brand_config?: Json
+          completion_action?: string
           created_at?: string
           id?: string
+          partner_mode?: boolean
           quiz_config?: Json
           slug?: string
           status?: string

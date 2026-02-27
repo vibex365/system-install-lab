@@ -56,6 +56,7 @@ const NICHES = [
   { value: "affiliate", label: "Affiliate Marketing" },
   { value: "coaching", label: "Online Coaching" },
   { value: "home_business", label: "Home Business" },
+  { value: "travel_mlm", label: "Travel / Lifestyle MLM" },
 ];
 
 const AGENT_TOGGLES = [
@@ -77,6 +78,10 @@ export default function Funnels() {
   const [selectedNiche, setSelectedNiche] = useState(profile?.niche || "mlm");
   const [primaryColor, setPrimaryColor] = useState("#d4af37");
   const [accentColor, setAccentColor] = useState("#1a1a2e");
+
+  // Partner mode state
+  const [partnerMode, setPartnerMode] = useState(false);
+  const [affiliateUrl, setAffiliateUrl] = useState("");
 
   // Agent toggles
   const [agentToggles, setAgentToggles] = useState<AgentToggles>({
@@ -118,6 +123,9 @@ export default function Funnels() {
       if (f.brand_config.primary_color) setPrimaryColor(f.brand_config.primary_color);
       if (f.brand_config.accent_color) setAccentColor(f.brand_config.accent_color);
       if (f.brand_config.niche) setSelectedNiche(f.brand_config.niche);
+      // Load partner mode fields
+      setPartnerMode((data as any).partner_mode || false);
+      setAffiliateUrl((data as any).affiliate_url || "");
     }
     setLoadingFunnel(false);
   };
@@ -296,12 +304,63 @@ export default function Funnels() {
                     </Button>
                   </div>
 
-                  {generating && (
+                    {generating && (
                     <div className="py-8 text-center space-y-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
                       <p className="text-sm text-muted-foreground animate-pulse">AI is crafting your quiz questions...</p>
                     </div>
                   )}
+
+                  {/* Partner Mode Section */}
+                  <div className="border-t border-border pt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Partner Mode</p>
+                        <p className="text-[11px] text-muted-foreground">Send an affiliate signup link via SMS after the callback call ends.</p>
+                      </div>
+                      <Switch
+                        checked={partnerMode}
+                        onCheckedChange={async (v) => {
+                          setPartnerMode(v);
+                          if (funnel) {
+                            await supabase.from("user_funnels").update({
+                              partner_mode: v,
+                              completion_action: v ? "send_link" : "callback",
+                            } as any).eq("id", funnel.id);
+                          }
+                        }}
+                      />
+                    </div>
+                    {partnerMode && (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Affiliate URL</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={affiliateUrl}
+                            onChange={(e) => setAffiliateUrl(e.target.value)}
+                            placeholder="https://www.elytlifestyle.com/?ref=YOUR_CODE"
+                            className="flex-1 text-xs"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={async () => {
+                              if (funnel) {
+                                await supabase.from("user_funnels").update({
+                                  affiliate_url: affiliateUrl,
+                                } as any).eq("id", funnel.id);
+                                toast({ title: "Affiliate URL saved!" });
+                              }
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">This link will be texted to leads after their callback call completes.</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
 
