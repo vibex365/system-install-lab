@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,7 +14,6 @@ const navItems = [
   { label: "Marketing", path: "/admin/marketing", icon: Megaphone },
   { label: "Payments", path: "/admin/payments", icon: CreditCard },
   { label: "Settings", path: "/admin/settings", icon: Settings },
-  { label: "Mod Log", path: "/admin/modlog", icon: ScrollText },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -47,7 +46,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="p-4 border-t border-border">
-            <Link to="/engine" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Engine</Link>
+            <Link to="/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Dashboard</Link>
           </div>
         </aside>
 
@@ -81,7 +80,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     </Link>
                   );
                 })}
-                <Link to="/engine" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Engine</Link>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Dashboard</Link>
               </nav>
             )}
           </header>
