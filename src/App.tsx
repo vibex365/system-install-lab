@@ -105,7 +105,7 @@ const App = () => (
             <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
-            <Route path="/admin/submissions" element={<AdminSubmissions />} />
+            {/* AdminSubmissions removed — not part of PFSW pivot */}
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/modlog" element={<AdminModLog />} />
