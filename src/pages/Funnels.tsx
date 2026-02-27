@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Target, Trash2,
+  Plus, Target, Trash2, Copy,
   FileText, Users, Zap, Mail, MessageSquare, PhoneCall, CalendarCheck,
   Activity, CheckCircle2, XCircle, Clock,
   History, RefreshCw, Eye, ChevronUp, Send, ExternalLink,
@@ -437,6 +437,12 @@ export default function Funnels() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toggleStatus(funnel.id, funnel.status)}>{funnel.status === "active" ? "Unpublish" : "Publish"}</Button>
+                                {funnel.status === "active" && (
+                                  <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-primary" title="Copy funnel link" onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/f/${funnel.slug}`);
+                                    toast({ title: "Link copied!", description: `${window.location.origin}/f/${funnel.slug}` });
+                                  }}><Copy className="h-3.5 w-3.5" /></Button>
+                                )}
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => deleteFunnel(funnel.id, funnel.title)}><Trash2 className="h-3.5 w-3.5" /></Button>
                               </div>
                             </CardContent>

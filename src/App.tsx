@@ -42,6 +42,7 @@ import IntakeFunnel from "./pages/IntakeFunnel";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminCallLog from "./pages/admin/AdminCallLog";
 import DemoFunnel from "./pages/DemoFunnel";
+import PublicFunnel from "./pages/PublicFunnel";
 import Dashboard from "./pages/Dashboard";
 import Workflows from "./pages/Workflows";
 import WorkflowDetail from "./pages/WorkflowDetail";
@@ -83,6 +84,7 @@ const App = () => (
             {/* Public booking & funnel */}
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/intake-funnel" element={<IntakeFunnel />} />
+            <Route path="/f/:slug" element={<PublicFunnel />} />
             <Route path="/library" element={<Library />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/submit" element={<Submit />} />
