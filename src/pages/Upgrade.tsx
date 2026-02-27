@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { useAuth, PLAN_TIERS, type PlanTier } from "@/hooks/use-auth";
+import { useUsage } from "@/hooks/use-usage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Rocket, Crown, Loader2 } from "lucide-react";
+import { Check, Rocket, Crown, Loader2, Plus, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { CREDIT_PACKS, RESOURCE_LABELS, type CreditPack } from "@/lib/credit-packs";
 
 const plans = [
   {
@@ -40,23 +42,66 @@ const plans = [
   },
 ];
 
+// Group credit packs by resource type
+const groupedPacks = Object.entries(
+  CREDIT_PACKS.reduce((acc, pack) => {
+    if (!acc[pack.resource]) acc[pack.resource] = [];
+    acc[pack.resource].push(pack);
+    return acc;
+  }, {} as Record<string, CreditPack[]>)
+);
+
 export default function Upgrade() {
   const { user, subscribed, planTier, subLoading, refreshSubscription, loading } = useAuth();
+  const { bonus, refreshUsage } = useUsage();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [creditLoading, setCreditLoading] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Choose Your Plan | PFSW";
   }, []);
 
-  // Handle returning from checkout
+  // Handle returning from plan checkout
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
       refreshSubscription();
       toast({ title: "Payment successful!", description: "Your plan is now active." });
     }
   }, [searchParams, refreshSubscription, toast]);
+
+  // Handle returning from credit checkout
+  useEffect(() => {
+    const creditCheckout = searchParams.get("credit_checkout");
+    const sessionId = searchParams.get("session_id");
+    const packKey = searchParams.get("pack");
+
+    if (creditCheckout === "success" && sessionId && packKey) {
+      // Verify and redeem credits
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("verify-credit-purchase", {
+            body: { session_id: sessionId, pack_key: packKey },
+          });
+          if (error) throw error;
+          if (data?.already_redeemed) {
+            toast({ title: "Credits already added", description: "This purchase was already redeemed." });
+          } else {
+            toast({ title: "Credits added! 🎉", description: `${data.credits} ${data.resource.replace(/_/g, " ")} credits added to your account.` });
+          }
+          refreshUsage();
+        } catch (e: any) {
+          toast({ title: "Credit verification failed", description: e.message, variant: "destructive" });
+        }
+      })();
+      // Clean URL
+      searchParams.delete("credit_checkout");
+      searchParams.delete("session_id");
+      searchParams.delete("pack");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast, refreshUsage]);
 
   const handleCheckout = async (priceId: string, tierKey: string) => {
     if (!user) return;
@@ -73,6 +118,24 @@ export default function Upgrade() {
       toast({ title: "Checkout failed", description: e.message, variant: "destructive" });
     } finally {
       setCheckoutLoading(null);
+    }
+  };
+
+  const handleCreditPurchase = async (pack: CreditPack) => {
+    if (!user) return;
+    setCreditLoading(pack.key);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-credit-checkout", {
+        body: { price_id: pack.price_id, pack_key: pack.key },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (e: any) {
+      toast({ title: "Checkout failed", description: e.message, variant: "destructive" });
+    } finally {
+      setCreditLoading(null);
     }
   };
 
@@ -99,6 +162,7 @@ export default function Upgrade() {
       <Navbar />
       <main className="pt-24 pb-20">
         <div className="container max-w-5xl">
+          {/* Plan Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,7 +199,7 @@ export default function Upgrade() {
                       </div>
                     )}
                     {isCurrentPlan && (
-                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                      <div className="absolute top-0 right-0 bg-emerald-500 text-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
                         Your Plan
                       </div>
                     )}
@@ -193,6 +257,73 @@ export default function Upgrade() {
               </Button>
             </div>
           )}
+
+          {/* Credit Packs Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-20"
+          >
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 mb-4">
+                <Zap className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-primary tracking-wide">Top-Up Credits</span>
+              </div>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Need More?</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Buy credit packs when you hit your plan limits. Credits never expire.
+              </p>
+            </div>
+
+            {/* Current bonus credits summary */}
+            {subscribed && (bonus.leads > 0 || bonus.sms > 0 || bonus.voice_calls > 0 || bonus.workflows > 0) && (
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                {Object.entries(bonus).map(([key, val]) =>
+                  val > 0 ? (
+                    <div key={key} className="rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary">
+                      {val} bonus {RESOURCE_LABELS[key] || key}
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
+              {groupedPacks.map(([resource, packs]) => (
+                <Card key={resource} className="bg-card border-border overflow-hidden">
+                  <CardContent className="p-5">
+                    <h3 className="text-sm font-bold text-foreground mb-1 uppercase tracking-wider">
+                      {RESOURCE_LABELS[resource] || resource}
+                    </h3>
+                    <div className="space-y-3 mt-4">
+                      {packs.map((pack) => (
+                        <div key={pack.key} className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{pack.label}</p>
+                            <p className="text-xs text-muted-foreground">${pack.price}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0 h-8 px-3"
+                            onClick={() => handleCreditPurchase(pack)}
+                            disabled={!!creditLoading}
+                          >
+                            {creditLoading === pack.key ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <><Plus className="h-3 w-3 mr-1" /> Buy</>
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </main>
     </div>
