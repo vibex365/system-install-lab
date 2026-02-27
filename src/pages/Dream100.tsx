@@ -17,7 +17,8 @@ import {
   Plus, Search, Loader2, Star, Globe, Instagram, Youtube, Twitter,
   Sparkles, Trash2, ExternalLink, Users, MessageCircle, UserPlus,
   CheckCircle2, Circle, XCircle, Eye, Zap, Target, ScanSearch, BrainCircuit,
-  Filter, Database, ArrowRight, Mail, Phone, Send, Gift,
+  Filter, Database, ArrowRight, Mail, Phone, Send, Gift, Copy, Radar,
+  FileText, MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -64,6 +65,18 @@ const DISCOVERY_STEPS = [
   { id: "insert", label: "Adding to your Dream 100", icon: Database, description: "Saving new suggestions to your list" },
 ];
 
+// Forum scout workflow steps
+const FORUM_SCOUT_STEPS = [
+  { id: "profile", label: "Reading your niche & location", icon: Eye, description: "Getting your niche and target area" },
+  { id: "reddit", label: "Searching Reddit", icon: ScanSearch, description: "Finding high-intent posts on Reddit" },
+  { id: "facebook", label: "Searching Facebook groups", icon: MessageSquare, description: "Scanning Facebook community groups" },
+  { id: "nextdoor", label: "Searching Nextdoor", icon: Radar, description: "Finding local recommendations requests" },
+  { id: "ai_analyze", label: "AI analyzing posts", icon: BrainCircuit, description: "Extracting intent, urgency, and generating replies" },
+  { id: "dedup", label: "Deduplicating results", icon: Filter, description: "Removing duplicates from existing leads" },
+  { id: "replies", label: "Generating reply templates", icon: FileText, description: "Creating copy-paste reply templates" },
+  { id: "save", label: "Saving to your CRM", icon: Database, description: "Adding qualified leads to your pipeline" },
+];
+
 interface Dream100Entry {
   id: string;
   name: string;
@@ -84,6 +97,17 @@ interface DiscoveryStep {
   id: string;
   status: "pending" | "running" | "completed" | "failed";
   detail?: string;
+}
+
+interface ForumScoutLead {
+  id?: string;
+  title: string;
+  url: string;
+  platform: string;
+  snippet: string;
+  intent: string;
+  urgency: number;
+  suggested_reply: string;
 }
 
 export default function Dream100() {
@@ -108,6 +132,11 @@ function Dream100Content() {
   const [discovering, setDiscovering] = useState(false);
   const [discoverySteps, setDiscoverySteps] = useState<DiscoveryStep[]>([]);
   const [discoveryResult, setDiscoveryResult] = useState<{ count: number; error?: string } | null>(null);
+
+  // Forum scout state
+  const [scouting, setScouting] = useState(false);
+  const [scoutSteps, setScoutSteps] = useState<DiscoveryStep[]>([]);
+  const [scoutResult, setScoutResult] = useState<{ count: number; leads: ForumScoutLead[]; error?: string } | null>(null);
 
   // Outreach state
   const [outreachOpen, setOutreachOpen] = useState(false);
@@ -230,15 +259,18 @@ function Dream100Content() {
     toast({ title: "Removed from Dream 100" });
   };
 
-  // Simulate step-by-step discovery workflow
-  const advanceStep = useCallback((stepIndex: number, detail?: string) => {
-    setDiscoverySteps((prev) => {
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: "Reply template copied to clipboard" });
+  };
+
+  // Simulate step-by-step workflow
+  const advanceStep = useCallback((setter: React.Dispatch<React.SetStateAction<DiscoveryStep[]>>, stepIndex: number, detail?: string) => {
+    setter((prev) => {
       const next = [...prev];
-      // Complete previous step
       if (stepIndex > 0 && next[stepIndex - 1]) {
         next[stepIndex - 1] = { ...next[stepIndex - 1], status: "completed" };
       }
-      // Start current step
       if (next[stepIndex]) {
         next[stepIndex] = { ...next[stepIndex], status: "running", detail };
       }
@@ -251,20 +283,17 @@ function Dream100Content() {
     setDiscovering(true);
     setDiscoveryResult(null);
 
-    // Initialize steps
     const initialSteps: DiscoveryStep[] = DISCOVERY_STEPS.map((s) => ({
       id: s.id,
       status: "pending" as const,
     }));
     setDiscoverySteps(initialSteps);
 
-    // Simulate step progression while the real function runs
     const stepTimings = [300, 800, 1500, 3000, 5000, 7500, 10000, 13000];
-
     const timers: number[] = [];
     stepTimings.forEach((ms, i) => {
       const timer = window.setTimeout(() => {
-        advanceStep(i, DISCOVERY_STEPS[i].description);
+        advanceStep(setDiscoverySteps, i, DISCOVERY_STEPS[i].description);
       }, ms);
       timers.push(timer);
     });
@@ -273,31 +302,63 @@ function Dream100Content() {
       const { data, error } = await supabase.functions.invoke("agent-dream100-discover", {
         body: { user_id: user.id },
       });
-
-      // Clear remaining timers
       timers.forEach((t) => clearTimeout(t));
-
       if (error) throw error;
-
-      // Mark all steps completed
-      setDiscoverySteps((prev) =>
-        prev.map((s) => ({ ...s, status: "completed" as const }))
-      );
-
+      setDiscoverySteps((prev) => prev.map((s) => ({ ...s, status: "completed" as const })));
       setDiscoveryResult({ count: data?.count || 0 });
       toast({ title: "Discovery complete", description: `Found ${data?.count || 0} new suggestions` });
       fetchEntries();
     } catch (e: any) {
       timers.forEach((t) => clearTimeout(t));
       setDiscoverySteps((prev) =>
-        prev.map((s) =>
-          s.status === "running" ? { ...s, status: "failed" as const, detail: e.message } : s
-        )
+        prev.map((s) => s.status === "running" ? { ...s, status: "failed" as const, detail: e.message } : s)
       );
       setDiscoveryResult({ count: 0, error: e.message });
       toast({ title: "Discovery failed", description: e.message, variant: "destructive" });
     } finally {
       setDiscovering(false);
+    }
+  };
+
+  // Forum scout workflow
+  const runForumScout = async () => {
+    if (!user) return;
+    setScouting(true);
+    setScoutResult(null);
+
+    const initialSteps: DiscoveryStep[] = FORUM_SCOUT_STEPS.map((s) => ({
+      id: s.id,
+      status: "pending" as const,
+    }));
+    setScoutSteps(initialSteps);
+
+    const stepTimings = [300, 1500, 4000, 7000, 10000, 13000, 16000, 19000];
+    const timers: number[] = [];
+    stepTimings.forEach((ms, i) => {
+      const timer = window.setTimeout(() => {
+        advanceStep(setScoutSteps, i, FORUM_SCOUT_STEPS[i].description);
+      }, ms);
+      timers.push(timer);
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke("agent-forum-scout", {
+        body: { user_id: user.id },
+      });
+      timers.forEach((t) => clearTimeout(t));
+      if (error) throw error;
+      setScoutSteps((prev) => prev.map((s) => ({ ...s, status: "completed" as const })));
+      setScoutResult({ count: data?.count || 0, leads: data?.leads || [] });
+      toast({ title: "Forum scout complete", description: `Found ${data?.count || 0} qualified leads` });
+    } catch (e: any) {
+      timers.forEach((t) => clearTimeout(t));
+      setScoutSteps((prev) =>
+        prev.map((s) => s.status === "running" ? { ...s, status: "failed" as const, detail: e.message } : s)
+      );
+      setScoutResult({ count: 0, leads: [], error: e.message });
+      toast({ title: "Forum scout failed", description: e.message, variant: "destructive" });
+    } finally {
+      setScouting(false);
     }
   };
 
@@ -315,8 +376,121 @@ function Dream100Content() {
     failed: <XCircle className="h-4 w-4 text-destructive" />,
   };
 
-  const completedSteps = discoverySteps.filter((s) => s.status === "completed").length;
-  const showWorkflow = discoverySteps.length > 0;
+  const completedDiscovery = discoverySteps.filter((s) => s.status === "completed").length;
+  const showDiscoveryWorkflow = discoverySteps.length > 0;
+  const completedScout = scoutSteps.filter((s) => s.status === "completed").length;
+  const showScoutWorkflow = scoutSteps.length > 0;
+
+  const renderWorkflowPanel = (
+    title: string,
+    icon: React.ReactNode,
+    steps: typeof DISCOVERY_STEPS,
+    stepStates: DiscoveryStep[],
+    isRunning: boolean,
+    result: { count: number; error?: string } | null,
+    completed: number,
+  ) => (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.3 }}
+      className="mb-6"
+    >
+      <Card className="bg-card border-border overflow-hidden">
+        <CardHeader className="pb-3 pt-4 px-5">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              {icon}
+              {title}
+              {isRunning && (
+                <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30 animate-pulse">
+                  Running
+                </Badge>
+              )}
+              {!isRunning && result && !result.error && (
+                <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                  Complete — {result.count} found
+                </Badge>
+              )}
+              {!isRunning && result?.error && (
+                <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/30">
+                  Failed
+                </Badge>
+              )}
+            </CardTitle>
+            <span className="text-[10px] text-muted-foreground">
+              {completed}/{steps.length} steps
+            </span>
+          </div>
+          <div className="h-1 bg-muted rounded-full mt-2 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: `${(completed / steps.length) * 100}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-4">
+          <div className="space-y-1.5">
+            {steps.map((stepDef, i) => {
+              const step = stepStates[i];
+              if (!step) return null;
+              const StepIcon = stepDef.icon;
+              return (
+                <motion.div
+                  key={stepDef.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+                    step.status === "running" ? "bg-primary/5 border border-primary/20" :
+                    step.status === "completed" ? "bg-emerald-500/5" :
+                    step.status === "failed" ? "bg-destructive/5" : "opacity-50"
+                  }`}
+                >
+                  <div className="shrink-0">{stepIcons[step.status]}</div>
+                  <StepIcon className={`h-3.5 w-3.5 shrink-0 ${
+                    step.status === "running" ? "text-primary" :
+                    step.status === "completed" ? "text-emerald-400" :
+                    step.status === "failed" ? "text-destructive" : "text-muted-foreground"
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-xs font-medium ${
+                      step.status === "running" ? "text-foreground" :
+                      step.status === "completed" ? "text-emerald-400" :
+                      step.status === "failed" ? "text-destructive" : "text-muted-foreground"
+                    }`}>
+                      {stepDef.label}
+                    </span>
+                    {step.status === "running" && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{stepDef.description}</p>
+                    )}
+                    {step.status === "failed" && step.detail && (
+                      <p className="text-[10px] text-destructive mt-0.5">{step.detail}</p>
+                    )}
+                  </div>
+                  {step.status === "running" && (
+                    <div className="flex gap-0.5">
+                      {[0, 1, 2].map((d) => (
+                        <motion.div
+                          key={d}
+                          className="w-1 h-1 rounded-full bg-primary"
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{ duration: 1, repeat: Infinity, delay: d * 0.2 }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -330,7 +504,11 @@ function Dream100Content() {
               <p className="text-xs text-muted-foreground">Your strategic relationship-building list</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={runDiscovery} disabled={discovering}>
+              <Button size="sm" variant="outline" onClick={runForumScout} disabled={scouting || discovering}>
+                {scouting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Radar className="h-3 w-3 mr-1" />}
+                Scout Forums
+              </Button>
+              <Button size="sm" variant="outline" onClick={runDiscovery} disabled={discovering || scouting}>
                 {discovering ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                 AI Discover
               </Button>
@@ -342,113 +520,110 @@ function Dream100Content() {
 
           {/* Discovery Workflow Panel */}
           <AnimatePresence>
-            {showWorkflow && (
+            {showDiscoveryWorkflow && renderWorkflowPanel(
+              "Dream 100 Discovery Agent",
+              <Zap className="h-4 w-4 text-primary" />,
+              DISCOVERY_STEPS,
+              discoverySteps,
+              discovering,
+              discoveryResult,
+              completedDiscovery,
+            )}
+          </AnimatePresence>
+
+          {/* Forum Scout Workflow Panel */}
+          <AnimatePresence>
+            {showScoutWorkflow && renderWorkflowPanel(
+              "Forum Lead Scout",
+              <Radar className="h-4 w-4 text-primary" />,
+              FORUM_SCOUT_STEPS,
+              scoutSteps,
+              scouting,
+              scoutResult,
+              completedScout,
+            )}
+          </AnimatePresence>
+
+          {/* Forum Scout Results - Lead Cards with Reply Templates */}
+          <AnimatePresence>
+            {scoutResult && scoutResult.leads.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 className="mb-6"
               >
-                <Card className="bg-card border-border overflow-hidden">
-                  <CardHeader className="pb-3 pt-4 px-5">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        Dream 100 Discovery Agent
-                        {discovering && (
-                          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30 animate-pulse">
-                            Running
-                          </Badge>
-                        )}
-                        {!discovering && discoveryResult && !discoveryResult.error && (
-                          <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                            Complete — {discoveryResult.count} found
-                          </Badge>
-                        )}
-                        {!discovering && discoveryResult?.error && (
-                          <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/30">
-                            Failed
-                          </Badge>
-                        )}
-                      </CardTitle>
-                      <span className="text-[10px] text-muted-foreground">
-                        {completedSteps}/{DISCOVERY_STEPS.length} steps
-                      </span>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="h-1 bg-muted rounded-full mt-2 overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                        initial={{ width: "0%" }}
-                        animate={{ width: `${(completedSteps / DISCOVERY_STEPS.length) * 100}%` }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-5 pb-4">
-                    <div className="space-y-1.5">
-                      {DISCOVERY_STEPS.map((stepDef, i) => {
-                        const step = discoverySteps[i];
-                        if (!step) return null;
-                        const StepIcon = stepDef.icon;
-                        return (
-                          <motion.div
-                            key={stepDef.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
-                              step.status === "running"
-                                ? "bg-primary/5 border border-primary/20"
-                                : step.status === "completed"
-                                ? "bg-emerald-500/5"
-                                : step.status === "failed"
-                                ? "bg-destructive/5"
-                                : "opacity-50"
-                            }`}
-                          >
-                            <div className="shrink-0">{stepIcons[step.status]}</div>
-                            <StepIcon className={`h-3.5 w-3.5 shrink-0 ${
-                              step.status === "running" ? "text-primary" :
-                              step.status === "completed" ? "text-emerald-400" :
-                              step.status === "failed" ? "text-destructive" :
-                              "text-muted-foreground"
-                            }`} />
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    Forum Leads Found — Copy & Reply
+                  </h2>
+                  <Button size="sm" variant="ghost" onClick={() => setScoutResult(null)} className="text-xs text-muted-foreground">
+                    Dismiss
+                  </Button>
+                </div>
+                <div className="grid gap-3">
+                  {scoutResult.leads.map((lead, i) => (
+                    <motion.div
+                      key={lead.url + i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                    >
+                      <Card className="bg-card border-border">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-3 mb-2">
                             <div className="flex-1 min-w-0">
-                              <span className={`text-xs font-medium ${
-                                step.status === "running" ? "text-foreground" :
-                                step.status === "completed" ? "text-emerald-400" :
-                                step.status === "failed" ? "text-destructive" :
-                                "text-muted-foreground"
-                              }`}>
-                                {stepDef.label}
-                              </span>
-                              {step.status === "running" && (
-                                <p className="text-[10px] text-muted-foreground mt-0.5">{stepDef.description}</p>
-                              )}
-                              {step.status === "failed" && step.detail && (
-                                <p className="text-[10px] text-destructive mt-0.5">{step.detail}</p>
-                              )}
-                            </div>
-                            {step.status === "running" && (
-                              <div className="flex gap-0.5">
-                                {[0, 1, 2].map((d) => (
-                                  <motion.div
-                                    key={d}
-                                    className="w-1 h-1 rounded-full bg-primary"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{ duration: 1, repeat: Infinity, delay: d * 0.2 }}
-                                  />
-                                ))}
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] capitalize bg-primary/10 text-primary border-primary/30">
+                                  {lead.platform}
+                                </Badge>
+                                <Badge variant="outline" className={`text-[10px] ${
+                                  lead.urgency >= 7 ? "bg-red-500/10 text-red-400 border-red-500/30" :
+                                  lead.urgency >= 4 ? "bg-amber-500/10 text-amber-400 border-amber-500/30" :
+                                  "bg-muted text-muted-foreground"
+                                }`}>
+                                  Urgency: {lead.urgency}/10
+                                </Badge>
                               </div>
-                            )}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
+                              <h3 className="text-sm font-semibold text-foreground">{lead.title}</h3>
+                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{lead.snippet}</p>
+                            </div>
+                            <a
+                              href={lead.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 p-2 text-muted-foreground hover:text-primary transition-colors"
+                              title="View original post"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </div>
+                          {/* Reply Template */}
+                          <div className="mt-3 bg-muted/50 rounded-lg p-3 border border-border">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                                Reply Template
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-[10px] gap-1"
+                                onClick={() => copyToClipboard(lead.suggested_reply)}
+                              >
+                                <Copy className="h-3 w-3" />
+                                Copy Reply
+                              </Button>
+                            </div>
+                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                              {lead.suggested_reply}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -512,8 +687,11 @@ function Dream100Content() {
                 <div className="text-center py-12">
                   <Star className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm font-medium text-foreground mb-1">Your Dream 100 is empty</p>
-                  <p className="text-xs text-muted-foreground mb-4">Add manually or hit AI Discover to find niche influencers automatically.</p>
+                  <p className="text-xs text-muted-foreground mb-4">Add manually, AI Discover influencers, or Scout Forums for leads.</p>
                   <div className="flex items-center justify-center gap-2">
+                    <Button size="sm" variant="outline" onClick={runForumScout} disabled={scouting}>
+                      <Radar className="h-3 w-3 mr-1" /> Scout Forums
+                    </Button>
                     <Button size="sm" variant="outline" onClick={runDiscovery} disabled={discovering}>
                       <Sparkles className="h-3 w-3 mr-1" /> AI Discover
                     </Button>
