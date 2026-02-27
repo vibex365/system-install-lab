@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles, Cpu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles, Cpu, Scale, Dumbbell, Home, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,6 +11,14 @@ const FUNNEL_URL = "https://peoplefailsystemswork.com/intake-funnel";
 const MAGAZINE_URL = "https://peoplefailsystemswork.com/magazine/inside";
 const ELYT_DEMO_URL = "https://peoplefailsystemswork.com/elyt-demo";
 const SYSTEM_MAG_URL = "https://peoplefailsystemswork.com/magazine/system";
+const DOMAIN = "https://peoplefailsystemswork.com";
+
+const NICHE_MAGS = [
+  { slug: "lawyers", label: "Law Firms", icon: Scale, color: "text-blue-400", blurb: "Client intake automation — qualify, book, retain." },
+  { slug: "fitness", label: "Fitness / Gyms", icon: Dumbbell, color: "text-green-400", blurb: "Trial bookings + member conversion on autopilot." },
+  { slug: "real-estate", label: "Real Estate", icon: Home, color: "text-amber-400", blurb: "Showings, valuations, and closings — automated pipeline." },
+  { slug: "dentists", label: "Dental Practices", icon: Stethoscope, color: "text-cyan-400", blurb: "Fill every chair with AI-driven patient acquisition." },
+];
 
 export default function AdminMarketing() {
   const { toast } = useToast();
@@ -220,6 +229,49 @@ export default function AdminMarketing() {
                 <p>📲 <strong>ELYT group blast:</strong> "Want to see exactly how our AI system works? Read this 5-min breakdown:" + paste URL</p>
                 <p>💬 <strong>1-on-1 DM:</strong> "Before our call, check this out — it shows how everything connects:" + paste URL</p>
                 <p>🎯 <strong>After quiz:</strong> Send as a follow-up to ELYT demo quiz completions to build conviction</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* ─── NICHE MAGAZINES ─── */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Niche Marketing Magazines — Before/After Case Studies
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Niche-targeted editorial pages showing how PFSW transforms each vertical. Before/after format with agent stack breakdown. Share directly with prospects.
+            </p>
+
+            <div className="space-y-3">
+              {NICHE_MAGS.map((nm) => (
+                <div key={nm.slug} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/30">
+                  <nm.icon className={`h-5 w-5 shrink-0 ${nm.color}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{nm.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{nm.blurb}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" onClick={() => copyUrl(`${DOMAIN}/for/${nm.slug}`)} className="h-7 w-7 p-0">
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => window.open(`/for/${nm.slug}`, "_blank")} className="h-7 w-7 p-0">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <h4 className="text-xs font-semibold text-foreground mb-2">How to Use</h4>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>💬 <strong>DM/SMS:</strong> "I put together a breakdown of how AI automation works for [niche] — check it out:" + paste link</p>
+                <p>📧 <strong>Email outreach:</strong> Include in agent-generated emails as a case study link</p>
+                <p>📲 <strong>Post-call follow-up:</strong> Send after a discovery call to reinforce the value prop</p>
               </div>
             </div>
           </CardContent>
