@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.agent-booker]
 verify_jwt = false
+
+[functions.notify-lead-booked]
+verify_jwt = false

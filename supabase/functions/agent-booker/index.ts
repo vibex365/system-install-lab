@@ -146,6 +146,25 @@ serve(async (req) => {
           notes: `${lead.notes || ""}\n\nCall booked: ${slot.toISOString()}`.trim(),
           updated_at: new Date().toISOString(),
         }).eq("id", lead.id).eq("user_id", user_id);
+
+        // Send email notification for booked lead
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-lead-booked`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lead_id: lead.id,
+              lead_name: lead.business_name,
+              user_id,
+              scheduled_at: slot.toISOString(),
+            }),
+          });
+        } catch (notifyErr) {
+          console.error(`Failed to notify for ${lead.business_name}:`, notifyErr);
+        }
       } else {
         console.error(`Failed to book ${lead.business_name}:`, insertErr);
         results.push({
