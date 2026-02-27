@@ -1,4 +1,4 @@
-export type NicheKey = "mlm" | "affiliate" | "coaching" | "home_business";
+export type NicheKey = "mlm" | "affiliate" | "coaching" | "home_business" | "lawyer" | "fitness" | "real_estate" | "dentist";
 
 export interface NicheConfig {
   id: NicheKey;
@@ -36,6 +36,34 @@ export const NICHE_CONFIGS: Record<NicheKey, NicheConfig> = {
     pipeline_stages: ["interested", "qualified", "onboarding", "launched", "earning"],
     cta_label: "Find Your Perfect Opportunity",
     stat_labels: { leads: "Interested", booked: "Calls", converted: "Started" },
+  },
+  lawyer: {
+    id: "lawyer",
+    display_name: "Lawyers / Law Firms",
+    pipeline_stages: ["inquiry", "consultation_booked", "case_review", "retained", "active_client"],
+    cta_label: "Book Free Consultation",
+    stat_labels: { leads: "Inquiries", booked: "Consultations", converted: "Retained" },
+  },
+  fitness: {
+    id: "fitness",
+    display_name: "Fitness Trainers / Gyms",
+    pipeline_stages: ["lead", "trial_booked", "trial_completed", "member", "active_member"],
+    cta_label: "Book Free Session",
+    stat_labels: { leads: "Leads", booked: "Trial Sessions", converted: "Members" },
+  },
+  real_estate: {
+    id: "real_estate",
+    display_name: "Real Estate Agents",
+    pipeline_stages: ["lead", "showing_booked", "offer_made", "under_contract", "closed"],
+    cta_label: "Schedule Home Valuation",
+    stat_labels: { leads: "Leads", booked: "Showings", converted: "Closings" },
+  },
+  dentist: {
+    id: "dentist",
+    display_name: "Dentists / Clinics",
+    pipeline_stages: ["inquiry", "appointment_booked", "exam_completed", "treatment_plan", "active_patient"],
+    cta_label: "Book Your Checkup",
+    stat_labels: { leads: "Inquiries", booked: "Appointments", converted: "Patients" },
   },
 };
 
