@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.voice-memo-webhook]
 verify_jwt = false
+
+[functions.agent-dream100-discover]
+verify_jwt = false
