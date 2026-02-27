@@ -109,7 +109,8 @@ Deno.serve(async (req) => {
 
     if (twilioSid && twilioToken && twilioPhone) {
       const firstName = contactName.split(" ")[0];
-      const smsMessage = `Hi ${firstName}! 🎯 Your Automation Readiness results are ready (Score: ${quiz_score}/100). Our AI growth specialist is standing by to walk you through your personalized report and show you how quiz funnels + AI agents can transform your business. Call us now: ${twilioPhone}`;
+      const callbackNumber = "(866) 642-9937";
+      const smsMessage = `Hi ${firstName}! 🎯 Your Automation Readiness results are ready (Score: ${quiz_score}/100). Our AI growth specialist is standing by to walk you through your personalized report and show you how quiz funnels + AI agents can transform your business. Call us now: ${callbackNumber}`;
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
       await fetch(twilioUrl, {
@@ -131,8 +132,7 @@ Deno.serve(async (req) => {
         success: true,
         lead_id: leadData?.id,
         call_log_id: callLog?.id,
-        callback_number: twilioPhone || null,
-        flow: "inbound_callback",
+        callback_number: "(866) 642-9937",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
