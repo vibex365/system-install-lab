@@ -576,6 +576,40 @@ async function createAppointmentFromCall(ctx: { supabase: any; callLogId: string
 
   if (appointment) {
     await supabase.from("call_logs").update({ appointment_id: appointment.id, booking_made: true }).eq("id", callLogId);
+
+    // Also create a booking entry for the calendar system
+    const { data: callLogData } = await supabase.from("call_logs").select("phone_number").eq("id", callLogId).single();
+    const guestPhone = callLogData?.phone_number || null;
+    let guestEmail = "";
+    if (callLog.lead_id) {
+      const { data: lead } = await supabase.from("leads").select("email").eq("id", callLog.lead_id).single();
+      guestEmail = lead?.email || `${(respondentName || "lead").toLowerCase().replace(/\s+/g, "")}@placeholder.local`;
+    } else {
+      guestEmail = `${(respondentName || "lead").toLowerCase().replace(/\s+/g, "")}@placeholder.local`;
+    }
+
+    await supabase.from("bookings").insert({
+      host_user_id: callLog.user_id,
+      lead_id: callLog.lead_id || null,
+      guest_name: respondentName || "Lead",
+      guest_email: guestEmail,
+      guest_phone: guestPhone,
+      scheduled_at: appointmentDate.toISOString(),
+      duration_minutes: 30,
+      status: "confirmed",
+      notes: `Auto-booked via AI voice call. Preference: ${dayPreference}`,
+    });
+
+    // Log voice call to outreach_log
+    await supabase.from("outreach_log").insert({
+      user_id: callLog.user_id,
+      lead_id: callLog.lead_id || null,
+      channel: "voice",
+      recipient_phone: guestPhone,
+      company_name: respondentName || null,
+      delivery_status: "sent",
+      sms_body: `Voice call — booking confirmed for ${dateStr}`,
+    });
   }
 
   const hour = appointmentDate.getHours();
@@ -647,7 +681,7 @@ async function sendBookingEmail(ctx: { supabase: any; callLogId: string; appoint
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "PFSW <onboarding@resend.dev>", to: [leadEmail], subject, html: htmlBody }),
+        body: JSON.stringify({ from: "PFSW <noreply@peoplefailsystemswork.com>", to: [leadEmail], subject, html: htmlBody }),
       });
     } catch (e) { console.error("Booking email error:", e); }
   }

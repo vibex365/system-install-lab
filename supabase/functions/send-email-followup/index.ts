@@ -101,6 +101,18 @@ Deno.serve(async (req) => {
       to_status: lead.pipeline_status,
     });
 
+    // Log to outreach_log for history tracking
+    await sb.from("outreach_log").insert({
+      user_id: uid,
+      lead_id,
+      channel: "email",
+      recipient_email: lead.email,
+      company_name: lead.business_name || lead.contact_name || null,
+      email_subject: emailContent.subject,
+      email_body: emailContent.body,
+      delivery_status: "sent",
+    });
+
     // Track usage
     const { data: usage } = await sb.rpc("get_or_create_usage", { p_user_id: uid });
     if (usage) {

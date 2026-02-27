@@ -140,6 +140,18 @@ serve(async (req) => {
           status: "booked",
         });
 
+        // Log to outreach_log
+        await serviceSupabase.from("outreach_log").insert({
+          user_id,
+          lead_id: lead.id,
+          channel: "email",
+          recipient_email: guestEmail,
+          company_name: lead.business_name,
+          email_subject: `Strategy Call Booked — ${slot.toISOString()}`,
+          email_body: `Auto-booked by agent for ${lead.business_name}`,
+          delivery_status: "sent",
+        });
+
         // Update lead pipeline status
         await serviceSupabase.from("leads").update({
           pipeline_status: "booked",

@@ -142,6 +142,17 @@ No markdown, no explanation — just the JSON array.`,
           sent++;
           results.push({ lead_id: lead.id, business: lead.business_name, status: "sent" });
 
+          // Log to outreach_log
+          await serviceSupabase.from("outreach_log").insert({
+            user_id,
+            lead_id: lead.id,
+            channel: "sms",
+            recipient_phone: lead.phone,
+            company_name: lead.business_name,
+            sms_body: sms.message,
+            delivery_status: "sent",
+          });
+
           // Update lead pipeline status
           await serviceSupabase.from("leads").update({
             pipeline_status: "sms_sent",
