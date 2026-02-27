@@ -38,6 +38,23 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("AI not configured");
 
+    // Fetch user's niche and location from profile
+    const serviceSupabaseForProfile = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: profile } = await serviceSupabaseForProfile
+      .from("profiles")
+      .select("niche, target_location")
+      .eq("id", user.id)
+      .single();
+
+    const userNiche = (profile as any)?.niche || "";
+    const userLocation = (profile as any)?.target_location || "";
+    const nicheContext = userNiche
+      ? `\n\nIMPORTANT USER CONTEXT:\n- User's niche/industry: ${userNiche}\n- User's target location: ${userLocation || "not specified"}\nAlways use this niche and location in agent params when relevant. If the user says "my niche" or "my area", substitute these values.`
+      : "";
+
     // Step 1: Use AI to decompose the goal into agent steps
     const planRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -47,7 +64,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a workflow planner for an AI agent platform that helps MLM marketers, affiliate promoters, coaches, and home-business operators.
+            content: `You are a workflow planner for an AI agent platform that helps business owners automate lead generation and outreach.
 
 Available agents:
 - scout: Discover leads by niche and location (params: niche, location, count)
@@ -59,7 +76,7 @@ Available agents:
 - competitor_intel: Research competitors (params: niche, location)
 
 Given a user's goal, return a JSON array of steps. Each step has: agent (string), params (object).
-Return ONLY valid JSON array, no explanation.`,
+Return ONLY valid JSON array, no explanation.${nicheContext}`,
           },
           { role: "user", content: goal },
         ],
@@ -95,6 +112,7 @@ Return ONLY valid JSON array, no explanation.`,
         goal,
         status: "running",
         plan,
+        niche: userNiche || null,
       })
       .select()
       .single();

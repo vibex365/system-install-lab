@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,17 +14,23 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Zap, Rocket, Target, ArrowRight, Mail, Phone,
   MessageSquare, Search, BarChart3, Calendar, Users,
-  TrendingUp, Clock, CheckCircle2, AlertCircle,
+  TrendingUp, Clock, CheckCircle2, AlertCircle, Settings2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const quickGoals = [
-  { label: "Find Leads", icon: Search, goal: "Find 50 leads in my niche in my local area" },
-  { label: "Book Calls", icon: Phone, goal: "Call my top 20 qualified leads and book discovery calls" },
-  { label: "Email Campaign", icon: Mail, goal: "Send a 3-part email sequence to my uncontacted leads" },
-  { label: "SMS Follow-up", icon: MessageSquare, goal: "Send SMS follow-ups to leads who haven't responded to email" },
-  { label: "Build Funnel", icon: Target, goal: "Build a quiz funnel for my niche that captures leads and books calls" },
-  { label: "Competitor Intel", icon: BarChart3, goal: "Research my top 5 competitors and find positioning gaps" },
+const nicheOptions = [
+  { value: "mlm", label: "Network Marketing / MLM" },
+  { value: "affiliate", label: "Affiliate Marketing" },
+  { value: "coaching", label: "Online Coaching" },
+  { value: "ecommerce", label: "E-Commerce" },
+  { value: "home_business", label: "Home Business" },
+  { value: "dental", label: "Dental Practice" },
+  { value: "restaurant", label: "Restaurant / Food Service" },
+  { value: "realestate", label: "Real Estate" },
+  { value: "fitness", label: "Fitness / Wellness" },
+  { value: "agency", label: "Marketing Agency" },
+  { value: "saas", label: "SaaS / Software" },
+  { value: "other", label: "Other" },
 ];
 
 export default function Dashboard() {
@@ -36,6 +45,14 @@ export default function Dashboard() {
   const [agentRunCount, setAgentRunCount] = useState(0);
   const [greeting, setGreeting] = useState("Good morning");
 
+  // Niche onboarding state
+  const [userNiche, setUserNiche] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [editNiche, setEditNiche] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
   useEffect(() => {
     const h = new Date().getHours();
     setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
@@ -47,6 +64,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Fetch profile for niche/location
+    supabase
+      .from("profiles")
+      .select("niche, target_location")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setUserNiche((data as any).niche || null);
+          setUserLocation((data as any).target_location || null);
+          setEditNiche((data as any).niche || "");
+          setEditLocation((data as any).target_location || "");
+        }
+        setProfileLoaded(true);
+      });
 
     // Fetch workflows
     supabase
@@ -78,6 +111,34 @@ export default function Dashboard() {
       .then(({ count }) => { if (count != null) setAgentRunCount(count); });
   }, [user]);
 
+  const saveNicheProfile = async () => {
+    if (!user || !editNiche) return;
+    setSavingProfile(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ niche: editNiche, target_location: editLocation || null } as any)
+      .eq("id", user.id);
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      setUserNiche(editNiche);
+      setUserLocation(editLocation || null);
+      toast({ title: "Profile updated!", description: "Your niche and location are saved. Agents will use this context." });
+    }
+    setSavingProfile(false);
+  };
+
+  const nicheLabel = nicheOptions.find(n => n.value === userNiche)?.label || userNiche || "";
+
+  const quickGoals = [
+    { label: "Find Leads", icon: Search, goal: `Find 50 ${nicheLabel || "business"} leads${userLocation ? ` in ${userLocation}` : ""}` },
+    { label: "Book Calls", icon: Phone, goal: `Call my top 20 qualified ${nicheLabel || ""} leads and book discovery calls` },
+    { label: "Email Campaign", icon: Mail, goal: `Send a 3-part email sequence to my uncontacted ${nicheLabel || ""} leads` },
+    { label: "SMS Follow-up", icon: MessageSquare, goal: `Send SMS follow-ups to ${nicheLabel || ""} leads who haven't responded to email` },
+    { label: "Build Funnel", icon: Target, goal: `Build a quiz funnel for ${nicheLabel || "my business"} that captures leads and books calls` },
+    { label: "Competitor Intel", icon: BarChart3, goal: `Research my top 5 ${nicheLabel || ""} competitors${userLocation ? ` in ${userLocation}` : ""} and find positioning gaps` },
+  ];
+
   const launchWorkflow = async (goalText: string) => {
     if (!goalText.trim() || !user) return;
     setLaunching(true);
@@ -107,6 +168,8 @@ export default function Dashboard() {
 
   if (!user) return null;
 
+  const needsOnboarding = profileLoaded && !userNiche;
+
   const statusConfig: Record<string, { color: string; icon: typeof Zap; bg: string }> = {
     planning: { color: "text-primary", icon: Clock, bg: "bg-primary/10" },
     running: { color: "text-emerald-400", icon: Zap, bg: "bg-emerald-400/10" },
@@ -116,8 +179,8 @@ export default function Dashboard() {
   };
 
   const statCards = [
-    { label: "Total Leads", value: leadCount, icon: Users, trend: "+12%", color: "from-primary/15 to-primary/5" },
-    { label: "Calls Booked", value: bookingCount, icon: Calendar, trend: "+8%", color: "from-accent/15 to-accent/5" },
+    { label: "Total Leads", value: leadCount, icon: Users, trend: null, color: "from-primary/15 to-primary/5" },
+    { label: "Calls Booked", value: bookingCount, icon: Calendar, trend: null, color: "from-accent/15 to-accent/5" },
     { label: "Agent Runs", value: agentRunCount, icon: Zap, trend: null, color: "from-emerald-500/15 to-emerald-500/5" },
     { label: "Active Workflows", value: workflows.filter(w => w.status === "running").length, icon: TrendingUp, trend: null, color: "from-yellow-500/15 to-yellow-500/5" },
   ];
@@ -137,8 +200,77 @@ export default function Dashboard() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
               {greeting}, {user.email?.split("@")[0]}
             </h1>
-            <p className="text-sm text-muted-foreground">Here's what's happening with your pipeline.</p>
+            <p className="text-sm text-muted-foreground">
+              {userNiche ? (
+                <>
+                  <span className="text-primary font-medium">{nicheLabel}</span>
+                  {userLocation && <> · <span>{userLocation}</span></>}
+                  {" · "}
+                  <button onClick={() => { setEditNiche(userNiche || ""); setEditLocation(userLocation || ""); setUserNiche(null); }} className="text-primary/70 hover:text-primary underline text-xs">
+                    Change
+                  </button>
+                </>
+              ) : (
+                "Set up your niche to get started."
+              )}
+            </p>
           </motion.div>
+
+          {/* ─── Niche Onboarding Card ─── */}
+          {needsOnboarding && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-6 md:p-8">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Settings2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Set Up Your Business Profile</h2>
+                      <p className="text-xs text-muted-foreground">This helps our AI agents find the right leads, build relevant funnels, and personalize outreach for your niche.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4 mb-5">
+                    <div>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your Niche / Industry</Label>
+                      <Select value={editNiche} onValueChange={setEditNiche}>
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select your niche..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {nicheOptions.map((n) => (
+                            <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target Location (optional)</Label>
+                      <Input
+                        value={editLocation}
+                        onChange={(e) => setEditLocation(e.target.value)}
+                        placeholder="e.g. Fort Lauderdale, FL"
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={saveNicheProfile}
+                    disabled={!editNiche || savingProfile}
+                    className="gold-glow-strong"
+                  >
+                    {savingProfile ? "Saving..." : "Save & Continue"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {/* ─── Stats Grid ─── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -157,11 +289,6 @@ export default function Dashboard() {
                         <div className="h-9 w-9 rounded-xl bg-background/80 flex items-center justify-center">
                           <s.icon className="h-4 w-4 text-primary" />
                         </div>
-                        {s.trend && (
-                          <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                            {s.trend}
-                          </span>
-                        )}
                       </div>
                       <p className="text-3xl font-black text-foreground">{s.value}</p>
                       <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-medium">{s.label}</p>
@@ -195,7 +322,10 @@ export default function Dashboard() {
                   <Textarea
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
-                    placeholder="Get me 50 MLM leads in Dallas who are interested in health supplements..."
+                    placeholder={userNiche
+                      ? `Find ${nicheLabel} leads${userLocation ? ` in ${userLocation}` : ""}, qualify them, and start outreach...`
+                      : "Set your niche above first, then describe a goal..."
+                    }
                     className="min-h-[100px] bg-background border-border resize-none text-sm flex-shrink-0 mb-4"
                   />
 
