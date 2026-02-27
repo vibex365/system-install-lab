@@ -55,7 +55,7 @@ serve(async (req) => {
       ? `\n\nScheduled for: ${new Date(scheduled_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}`
       : "";
 
-    const emailBody = `${greeting},\n\nGreat news — "${lead_name}" has been moved to the **booked** stage in your pipeline!${scheduleLine}\n\nLog in to your dashboard to review the details and prepare for your call.\n\nBest,\nYour Automation Engine`;
+    const emailBody = `${greeting},\n\nGreat news — "${lead_name}" has been moved to the booked stage in your PFSW pipeline!${scheduleLine}\n\nLog in to your dashboard to review the details and prepare for your call.\n\nBest,\nThe PFSW Team\nPeople Fail. Systems Work.`;
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -64,7 +64,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Pipeline Alerts <onboarding@resend.dev>",
+        from: "PFSW Alerts <noreply@peoplefailsystemswork.com>",
         to: [profile.email],
         subject: `🎯 Lead Booked: ${lead_name}`,
         text: emailBody,
