@@ -189,6 +189,19 @@ function CRMContent() {
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("leads").update({ pipeline_status: status }).eq("id", id);
+
+    // Send email notification when lead reaches 'booked'
+    if (status === "booked" && user) {
+      const lead = leads.find((l) => l.id === id);
+      supabase.functions.invoke("notify-lead-booked", {
+        body: {
+          lead_id: id,
+          lead_name: lead?.business_name || "Unknown",
+          user_id: user.id,
+        },
+      }).catch((err) => console.error("Notify error:", err));
+    }
+
     fetchLeads();
   };
 
