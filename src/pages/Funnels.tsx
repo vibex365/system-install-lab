@@ -235,10 +235,17 @@ export default function Funnels() {
     fetchFunnel();
   };
 
+  const DOMAIN = "https://peoplefailsystemswork.com";
+
   const copyLink = () => {
     if (!funnel) return;
-    navigator.clipboard.writeText(`${window.location.origin}/f/${funnel.slug}`);
+    navigator.clipboard.writeText(`${DOMAIN}/f/${funnel.slug}`);
     toast({ title: "Link copied!" });
+  };
+
+  const resetColors = () => {
+    setPrimaryColor("#d4af37");
+    setAccentColor("#1a1a2e");
   };
 
   if (loading) return (
@@ -348,7 +355,7 @@ export default function Funnels() {
                         <Copy className="h-3 w-3" /> Copy Link
                       </Button>
                       <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
-                        <a href={`/f/${funnel.slug}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`${DOMAIN}/f/${funnel.slug}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3 w-3" /> Preview
                         </a>
                       </Button>
@@ -454,9 +461,14 @@ export default function Funnels() {
                     </div>
                   </div>
 
-                  <Button onClick={updateColors} disabled={!funnel} className="gap-2">
-                    <Palette className="h-4 w-4" /> Save Colors
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={updateColors} disabled={!funnel} className="gap-2">
+                      <Palette className="h-4 w-4" /> Save Colors
+                    </Button>
+                    <Button variant="outline" onClick={resetColors} className="gap-2 text-xs">
+                      <RefreshCw className="h-4 w-4" /> Reset to Defaults
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
