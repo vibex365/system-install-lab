@@ -50,8 +50,8 @@ Deno.serve(async (req) => {
     const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
     if (!twilioSid || !twilioToken || !twilioPhone) throw new Error("Twilio not configured");
 
-    // Use VibeX voice webhook (shared Twilio infrastructure)
-    const webhookUrl = "https://cuuvsarxfpmcnsxbhscg.supabase.co/functions/v1/twilio-voice-webhook";
+    // PFSW voice webhook (this project's own infrastructure)
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/twilio-voice-webhook`;
 
     // Create call log
     const { data: callLog, error: clError } = await supabase

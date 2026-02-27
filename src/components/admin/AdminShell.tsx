@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, BookOpen, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Calendar, Settings, ScrollText, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -9,12 +9,11 @@ const navItems = [
   { label: "Applications", path: "/admin/applications", icon: FileText },
   { label: "Members", path: "/admin/members", icon: Users },
   { label: "Cohorts", path: "/admin/cohorts", icon: Calendar },
-  { label: "Submissions", path: "/admin/submissions", icon: BookOpen },
-  { label: "Payments", path: "/admin/payments", icon: CreditCard },
-  { label: "Settings", path: "/admin/settings", icon: Settings },
   { label: "Agents", path: "/admin/agents", icon: Bot },
   { label: "Call Log", path: "/admin/calls", icon: PhoneCall },
   { label: "Marketing", path: "/admin/marketing", icon: Megaphone },
+  { label: "Payments", path: "/admin/payments", icon: CreditCard },
+  { label: "Settings", path: "/admin/settings", icon: Settings },
   { label: "Mod Log", path: "/admin/modlog", icon: ScrollText },
 ];
 

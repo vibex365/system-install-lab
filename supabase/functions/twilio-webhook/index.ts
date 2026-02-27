@@ -31,10 +31,10 @@ Deno.serve(async (req) => {
 
     if (STOP_KEYWORDS.includes(bodyUpper)) {
       await supabase.from("leads").update({ sms_opt_out: true }).eq("phone", from);
-      replyMsg = "You have been unsubscribed from SMS reminders. Reply START to re-subscribe.";
+      replyMsg = "You've been unsubscribed from PFSW messages. Reply START to re-subscribe.";
     } else if (START_KEYWORDS.includes(bodyUpper)) {
       await supabase.from("leads").update({ sms_opt_out: false }).eq("phone", from);
-      replyMsg = "You have been re-subscribed to SMS reminders. Reply STOP to opt out.";
+      replyMsg = "You've been re-subscribed to PFSW updates. Reply STOP to opt out.";
     } else if (bodyUpper === "YES") {
       // Look up lead by phone
       const { data: leads } = await supabase
@@ -65,13 +65,13 @@ Deno.serve(async (req) => {
             }),
           });
 
-          replyMsg = `Great! We'll be calling you shortly to discuss your results. Talk soon!`;
+          replyMsg = `Great! A PFSW growth specialist will call you shortly to walk through your Automation Readiness results. Talk soon!`;
         } catch (err) {
           console.error("Failed to trigger call from YES reply:", err);
-          replyMsg = "Thanks for your interest! We'll be in touch shortly.";
+          replyMsg = "Thanks for your interest in PFSW! We'll be in touch shortly.";
         }
       } else {
-        replyMsg = "Thanks for your interest! We'll be in touch shortly.";
+        replyMsg = "Thanks for reaching out! Visit peoplefailsystemswork.com to get started with PFSW.";
       }
     }
 

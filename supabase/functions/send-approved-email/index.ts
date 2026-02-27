@@ -36,7 +36,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Email service not configured" }), { status: 500, headers: corsHeaders });
     }
 
-    const fromName = sender_name || "Your Consultant";
+    const fromName = sender_name || "PFSW";
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -45,7 +45,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `${fromName} <onboarding@resend.dev>`,
+        from: `${fromName} <noreply@peoplefailsystemswork.com>`,
         to: [to],
         subject,
         text: body,
