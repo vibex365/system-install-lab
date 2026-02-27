@@ -18,6 +18,8 @@ export interface NicheMagazine {
   hero_stat: string;
   hero_stat_label: string;
   color: string;
+  hero_image: string;
+  agents_image: string;
   sections: NicheMagazineSection[];
 }
 
@@ -30,6 +32,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     hero_stat: "67%",
     hero_stat_label: "of potential clients never hear back from their first inquiry",
     color: "#3b82f6",
+    hero_image: "/niche/lawyers-hero.jpg",
+    agents_image: "/niche/lawyers-agents.jpg",
     sections: [
       {
         type: "hero",
@@ -96,6 +100,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     hero_stat: "73%",
     hero_stat_label: "of gym prospects never convert because follow-up dies after the first contact",
     color: "#22c55e",
+    hero_image: "/niche/fitness-hero.jpg",
+    agents_image: "/niche/fitness-agents.jpg",
     sections: [
       {
         type: "hero",
@@ -162,6 +168,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     hero_stat: "78%",
     hero_stat_label: "of real estate leads go to the first agent who responds",
     color: "#f59e0b",
+    hero_image: "/niche/realestate-hero.jpg",
+    agents_image: "/niche/realestate-agents.jpg",
     sections: [
       {
         type: "hero",
@@ -228,6 +236,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     hero_stat: "43%",
     hero_stat_label: "of dental appointment slots go unfilled due to poor follow-up and no-shows",
     color: "#06b6d4",
+    hero_image: "/niche/dentists-hero.jpg",
+    agents_image: "/niche/dentists-agents.jpg",
     sections: [
       {
         type: "hero",
