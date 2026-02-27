@@ -154,7 +154,7 @@ export default function SystemMagazine() {
                       size="lg"
                       className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-500/90 hover:to-orange-600/90 text-black tracking-wide px-10 py-6 text-lg font-bold border-0"
                     >
-                      <Link to="/elyt-demo">Take the Quiz →</Link>
+                      <Link to="/intake-funnel">Take the Quiz →</Link>
                     </Button>
                     <p className="text-xs text-neutral-600 mt-4">Free · 2 minutes · No signup required</p>
                   </div>
