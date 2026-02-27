@@ -7,6 +7,43 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/** Scrape a website via Firecrawl and return a short summary + branding info */
+async function enrichWithFirecrawl(website: string, firecrawlKey: string): Promise<string> {
+  try {
+    let url = website.trim();
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = `https://${url}`;
+    }
+
+    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${firecrawlKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: ["summary", "markdown"],
+        onlyMainContent: true,
+      }),
+    });
+
+    if (!res.ok) {
+      console.warn(`Firecrawl scrape failed for ${url}: ${res.status}`);
+      return "";
+    }
+
+    const raw = await res.json();
+    const d = raw.data || raw;
+    const summary = d.summary || "";
+    const markdown = (d.markdown || "").slice(0, 1500);
+    return summary ? `Website summary: ${summary}\nContent preview: ${markdown}` : markdown ? `Content preview: ${markdown}` : "";
+  } catch (e) {
+    console.warn("Firecrawl enrichment error:", e);
+    return "";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -22,15 +59,16 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("AI not configured");
 
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY") || "";
+
     const serviceSupabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch unqualified leads for this user
     const minScore = params?.min_score ?? 60;
     const maxLeads = params?.max_leads ?? 50;
-    const criteria = params?.criteria || "business readiness, contact info completeness, niche fit";
+    const criteria = params?.criteria || "business readiness, contact info completeness, niche fit, website quality";
 
     const { data: leads, error: leadsErr } = await serviceSupabase
       .from("leads")
@@ -43,7 +81,6 @@ serve(async (req) => {
     if (leadsErr) throw leadsErr;
 
     if (!leads || leads.length === 0) {
-      // No leads to qualify
       await serviceSupabase.from("workflow_steps").update({
         status: "completed",
         output: { qualified: 0, message: "No unqualified leads found" },
@@ -59,10 +96,37 @@ serve(async (req) => {
       });
     }
 
-    // Build lead summaries for AI scoring
-    const leadSummaries = leads.map((l, i) => 
-      `Lead ${i + 1} (ID: ${l.id}): ${l.business_name || "Unknown"} | Phone: ${l.phone || "none"} | Email: ${l.email || "none"} | Website: ${l.website || "none"} | Category: ${l.category || "unknown"} | City: ${l.city || "unknown"} | Source: ${l.source}`
-    ).join("\n");
+    // --- Firecrawl enrichment: scrape websites for leads that have one ---
+    console.log(`Enriching ${leads.length} leads via Firecrawl...`);
+    const enrichmentMap: Record<string, string> = {};
+
+    if (firecrawlKey) {
+      // Scrape up to 20 leads' websites in parallel (batched to avoid rate limits)
+      const leadsWithWebsite = leads.filter((l) => l.website).slice(0, 20);
+      const batchSize = 5;
+
+      for (let i = 0; i < leadsWithWebsite.length; i += batchSize) {
+        const batch = leadsWithWebsite.slice(i, i + batchSize);
+        const results = await Promise.allSettled(
+          batch.map((l) => enrichWithFirecrawl(l.website!, firecrawlKey))
+        );
+        results.forEach((r, idx) => {
+          if (r.status === "fulfilled" && r.value) {
+            enrichmentMap[batch[idx].id] = r.value;
+          }
+        });
+      }
+      console.log(`Enriched ${Object.keys(enrichmentMap).length} leads with website data`);
+    } else {
+      console.warn("FIRECRAWL_API_KEY not set — skipping website enrichment");
+    }
+
+    // Build lead summaries for AI scoring (now with website intel)
+    const leadSummaries = leads.map((l, i) => {
+      const base = `Lead ${i + 1} (ID: ${l.id}): ${l.business_name || "Unknown"} | Phone: ${l.phone || "none"} | Email: ${l.email || "none"} | Website: ${l.website || "none"} | Category: ${l.category || "unknown"} | City: ${l.city || "unknown"} | Source: ${l.source}`;
+      const enrichment = enrichmentMap[l.id];
+      return enrichment ? `${base}\n${enrichment}` : base;
+    }).join("\n\n");
 
     // Use AI to score leads
     const scoreRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -76,15 +140,17 @@ serve(async (req) => {
             content: `You are a lead qualification AI for MLM/affiliate/coaching businesses. Score each lead 0-100 based on: ${criteria}.
 
 Scoring rubric:
-- Has phone AND email: +30 points
-- Has phone OR email: +15 points  
-- Has website: +15 points
-- Business name is specific (not generic): +10 points
-- Has city/location data: +10 points
-- Category matches niche: +15 points
+- Has phone AND email: +25 points
+- Has phone OR email: +12 points  
+- Has website: +10 points
+- Website shows active business with services/products: +15 points
+- Website has clear call-to-action or booking: +5 points
+- Business name is specific (not generic): +8 points
+- Has city/location data: +5 points
+- Category matches niche: +10 points
 - Source is "agent_scout" or "manual": +5 points
 
-Return ONLY a JSON array: [{"id":"lead-uuid","score":85,"reason":"Has complete contact info and relevant business"}]
+Return ONLY a JSON array: [{"id":"lead-uuid","score":85,"reason":"Has complete contact info, active website with coaching services","website_quality":"good"}]
 Include ALL leads. No explanations outside JSON.`,
           },
           { role: "user", content: leadSummaries },
@@ -97,53 +163,58 @@ Include ALL leads. No explanations outside JSON.`,
     if (!scoreRes.ok) {
       const errText = await scoreRes.text();
       console.error("AI scoring error:", scoreRes.status, errText);
-      
-      if (scoreRes.status === 429) {
-        throw new Error("Rate limited - please try again shortly");
-      }
-      if (scoreRes.status === 402) {
-        throw new Error("AI credits depleted - please add credits");
-      }
+      if (scoreRes.status === 429) throw new Error("Rate limited - please try again shortly");
+      if (scoreRes.status === 402) throw new Error("AI credits depleted - please add credits");
       throw new Error(`AI scoring failed: ${scoreRes.status}`);
     }
 
     const scoreData = await scoreRes.json();
     const raw = scoreData.choices?.[0]?.message?.content || "[]";
     const match = raw.match(/\[[\s\S]*\]/);
-    
-    let scores: Array<{ id: string; score: number; reason: string }> = [];
+
+    let scores: Array<{ id: string; score: number; reason: string; website_quality?: string }> = [];
     try {
       scores = JSON.parse(match ? match[0] : "[]");
     } catch {
       console.error("Failed to parse AI scores, using fallback scoring");
-      // Fallback: simple heuristic scoring
       scores = leads.map((l) => {
         let score = 0;
-        if (l.phone && l.email) score += 30;
-        else if (l.phone || l.email) score += 15;
-        if (l.website) score += 15;
-        if (l.business_name && l.business_name.length > 3) score += 10;
-        if (l.city) score += 10;
-        if (l.category) score += 15;
-        score += 5; // base
-        return { id: l.id, score, reason: "Heuristic scoring" };
+        if (l.phone && l.email) score += 25;
+        else if (l.phone || l.email) score += 12;
+        if (l.website) score += 10;
+        if (enrichmentMap[l.id]) score += 15; // website had content
+        if (l.business_name && l.business_name.length > 3) score += 8;
+        if (l.city) score += 5;
+        if (l.category) score += 10;
+        score += 5;
+        return { id: l.id, score, reason: "Heuristic scoring (AI parse failed)" };
       });
     }
 
-    // Update leads with scores and pipeline status
+    // Update leads with scores, pipeline status, and website quality
     let qualified = 0;
     for (const s of scores) {
       const newStatus = s.score >= minScore ? "qualified" : "unqualified";
       if (s.score >= minScore) qualified++;
 
-      await serviceSupabase.from("leads").update({
+      const updateData: Record<string, any> = {
         rating: s.score,
         pipeline_status: newStatus,
         notes: s.reason ? `AI Score: ${s.score}/100 — ${s.reason}` : `AI Score: ${s.score}/100`,
-      }).eq("id", s.id).eq("user_id", user_id);
+      };
+
+      // Store website quality score if enriched
+      if (s.website_quality && enrichmentMap[s.id]) {
+        const wqMap: Record<string, number> = { excellent: 90, good: 70, average: 50, poor: 25, none: 0 };
+        updateData.website_quality_score = wqMap[s.website_quality] ?? 50;
+        if (enrichmentMap[s.id]) {
+          updateData.audit_summary = enrichmentMap[s.id].slice(0, 500);
+        }
+      }
+
+      await serviceSupabase.from("leads").update(updateData).eq("id", s.id).eq("user_id", user_id);
     }
 
-    // Cap qualified leads if needed
     const qualifiedLeads = scores
       .filter((s) => s.score >= minScore)
       .sort((a, b) => b.score - a.score)
@@ -152,11 +223,13 @@ Include ALL leads. No explanations outside JSON.`,
     const result = {
       total_scored: scores.length,
       qualified: qualifiedLeads.length,
+      enriched_with_firecrawl: Object.keys(enrichmentMap).length,
       min_score: minScore,
       top_leads: qualifiedLeads.slice(0, 10).map((s) => ({
         id: s.id,
         score: s.score,
         reason: s.reason,
+        website_quality: s.website_quality,
       })),
     };
 
@@ -183,14 +256,12 @@ Include ALL leads. No explanations outside JSON.`,
         started_at: new Date().toISOString(),
       }).eq("id", nextStep.id);
     } else {
-      // No more steps — complete workflow
       await serviceSupabase.from("workflows").update({
         status: "completed",
         updated_at: new Date().toISOString(),
       }).eq("id", workflow_id);
     }
 
-    // Update workflow memory
     await serviceSupabase.from("workflows").update({
       memory: { ...memory, qualifier_results: result },
       updated_at: new Date().toISOString(),
@@ -205,9 +276,9 @@ Include ALL leads. No explanations outside JSON.`,
     });
   } catch (err) {
     console.error("Qualifier agent error:", err);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: (err as Error).message 
+    return new Response(JSON.stringify({
+      success: false,
+      error: (err as Error).message,
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
