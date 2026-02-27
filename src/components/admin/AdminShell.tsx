@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, FileText, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Overview", path: "/admin", icon: LayoutDashboard },
-  { label: "Applications", path: "/admin/applications", icon: FileText },
   { label: "Members", path: "/admin/members", icon: Users },
   { label: "Cohorts", path: "/admin/cohorts", icon: Calendar },
   { label: "Agents", path: "/admin/agents", icon: Bot },

@@ -4,50 +4,52 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
+import { PlanGate } from "@/components/PlanGate";
 import Index from "./pages/Index";
-import Apply from "./pages/Apply";
-import ApplicationUnderReview from "./pages/ApplicationUnderReview";
-import Waitlist from "./pages/Waitlist";
 import Login from "./pages/Login";
-import Status from "./pages/Status";
-import Accepted from "./pages/Accepted";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import Engine from "./pages/Engine";
-import Library from "./pages/Library";
-import Submit from "./pages/Submit";
-import MagazineInside from "./pages/MagazineInside";
-import ChooseCohort from "./pages/ChooseCohort";
-import BoardFeed from "./pages/BoardFeed";
-import PostDetail from "./pages/PostDetail";
-import LeadDashboard from "./pages/lead/LeadDashboard";
-import LeadAttendance from "./pages/lead/LeadAttendance";
-import AdminOverview from "./pages/admin/AdminOverview";
-import AdminApplications from "./pages/admin/AdminApplications";
-import AdminMembers from "./pages/admin/AdminMembers";
-import AdminCohorts from "./pages/admin/AdminCohorts";
-import AdminSubmissions from "./pages/admin/AdminSubmissions";
-import AdminPayments from "./pages/admin/AdminPayments";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminModLog from "./pages/admin/AdminModLog";
-import AdminAgents from "./pages/admin/AdminAgents";
-import Agents from "./pages/Agents";
 import Upgrade from "./pages/Upgrade";
-import CRM from "./pages/CRM";
-import CalendarPage from "./pages/CalendarPage";
-import BookingPage from "./pages/BookingPage";
-import IntakeFunnel from "./pages/IntakeFunnel";
-import AdminMarketing from "./pages/admin/AdminMarketing";
-import AdminCallLog from "./pages/admin/AdminCallLog";
-import DemoFunnel from "./pages/DemoFunnel";
-import PublicFunnel from "./pages/PublicFunnel";
+
+// Gated member routes
 import Dashboard from "./pages/Dashboard";
 import Workflows from "./pages/Workflows";
 import WorkflowDetail from "./pages/WorkflowDetail";
+import Engine from "./pages/Engine";
+import CRM from "./pages/CRM";
 import Analytics from "./pages/Analytics";
 import Funnels from "./pages/Funnels";
+import CalendarPage from "./pages/CalendarPage";
+import Agents from "./pages/Agents";
+import Library from "./pages/Library";
+import Submit from "./pages/Submit";
+import BoardFeed from "./pages/BoardFeed";
+import PostDetail from "./pages/PostDetail";
+import MagazineInside from "./pages/MagazineInside";
+import ChooseCohort from "./pages/ChooseCohort";
+
+// Public routes
+import BookingPage from "./pages/BookingPage";
+import IntakeFunnel from "./pages/IntakeFunnel";
+import PublicFunnel from "./pages/PublicFunnel";
+import DemoFunnel from "./pages/DemoFunnel";
+
+// Lead routes
+import LeadDashboard from "./pages/lead/LeadDashboard";
+import LeadAttendance from "./pages/lead/LeadAttendance";
+
+// Admin routes
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminMembers from "./pages/admin/AdminMembers";
+import AdminCohorts from "./pages/admin/AdminCohorts";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAgents from "./pages/admin/AdminAgents";
+import AdminMarketing from "./pages/admin/AdminMarketing";
+import AdminCallLog from "./pages/admin/AdminCallLog";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,57 +60,51 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public */}
             <Route path="/" element={<Index />} />
-            <Route path="/apply" element={<Apply />} />
-            <Route path="/application-under-review" element={<ApplicationUnderReview />} />
-            <Route path="/waitlist" element={<Waitlist />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/status" element={<Status />} />
-            <Route path="/accepted" element={<Accepted />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/contact" element={<Contact />} />
 
+            {/* Plan selection (accessible to all logged-in users) */}
             <Route path="/upgrade" element={<Upgrade />} />
 
-            {/* Member routes */}
+            {/* Dashboard is visible to all logged-in users (shows limited view for non-subscribed) */}
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/workflows" element={<Workflows />} />
-            <Route path="/dashboard/workflows/:id" element={<WorkflowDetail />} />
-            <Route path="/engine" element={<Engine />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/funnels" element={<Funnels />} />
-            <Route path="/calendar" element={<CalendarPage />} />
+
+            {/* Gated member routes — require active subscription */}
+            <Route path="/dashboard/workflows" element={<PlanGate><Workflows /></PlanGate>} />
+            <Route path="/dashboard/workflows/:id" element={<PlanGate><WorkflowDetail /></PlanGate>} />
+            <Route path="/engine" element={<PlanGate><Engine /></PlanGate>} />
+            <Route path="/crm" element={<PlanGate><CRM /></PlanGate>} />
+            <Route path="/analytics" element={<PlanGate><Analytics /></PlanGate>} />
+            <Route path="/funnels" element={<PlanGate><Funnels /></PlanGate>} />
+            <Route path="/calendar" element={<PlanGate><CalendarPage /></PlanGate>} />
+            <Route path="/agents" element={<PlanGate><Agents /></PlanGate>} />
+            <Route path="/library" element={<PlanGate><Library /></PlanGate>} />
+            <Route path="/submit" element={<PlanGate><Submit /></PlanGate>} />
+            <Route path="/magazine/inside" element={<PlanGate><MagazineInside /></PlanGate>} />
+            <Route path="/choose-cohort" element={<PlanGate><ChooseCohort /></PlanGate>} />
+            <Route path="/board" element={<Navigate to="/board/main" replace />} />
+            <Route path="/board/:slug" element={<PlanGate><BoardFeed /></PlanGate>} />
+            <Route path="/post/:id" element={<PlanGate><PostDetail /></PlanGate>} />
 
             {/* Public booking & funnel */}
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/intake-funnel" element={<IntakeFunnel />} />
             <Route path="/f/:slug" element={<PublicFunnel />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/submit" element={<Submit />} />
-            <Route path="/magazine/inside" element={<MagazineInside />} />
-            <Route path="/choose-cohort" element={<ChooseCohort />} />
-
-            {/* Legacy board routes (still functional) */}
-            <Route path="/board" element={<Navigate to="/board/main" replace />} />
-            <Route path="/board/:slug" element={<BoardFeed />} />
-            <Route path="/post/:id" element={<PostDetail />} />
 
             {/* Lead routes */}
             <Route path="/lead/dashboard" element={<LeadDashboard />} />
             <Route path="/lead/attendance" element={<LeadAttendance />} />
 
-            {/* Admin routes */}
+            {/* Admin routes (gated by AuthGate requireChiefArchitect in AdminShell) */}
             <Route path="/admin" element={<AdminOverview />} />
-            <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/members" element={<AdminMembers />} />
             <Route path="/admin/cohorts" element={<AdminCohorts />} />
-            {/* AdminSubmissions removed — not part of PFSW pivot */}
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/admin/modlog" element={<AdminModLog />} />
             <Route path="/admin/agents" element={<AdminAgents />} />
             <Route path="/admin/marketing" element={<AdminMarketing />} />
             <Route path="/admin/calls" element={<AdminCallLog />} />
