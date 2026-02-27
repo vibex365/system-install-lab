@@ -45,6 +45,7 @@ import DemoFunnel from "./pages/DemoFunnel";
 import Dashboard from "./pages/Dashboard";
 import Workflows from "./pages/Workflows";
 import WorkflowDetail from "./pages/WorkflowDetail";
+import Analytics from "./pages/Analytics";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/dashboard/workflows/:id" element={<WorkflowDetail />} />
             <Route path="/engine" element={<Engine />} />
             <Route path="/crm" element={<CRM />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/calendar" element={<CalendarPage />} />
 
             {/* Public booking & funnel */}
