@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_program: {
+        Row: {
+          commission_percent: number
+          created_at: string
+          id: string
+          invited_by: string
+          invited_email: string
+          referral_code: string
+          status: string
+          total_earned: number
+          total_referrals: number
+          user_id: string | null
+        }
+        Insert: {
+          commission_percent?: number
+          created_at?: string
+          id?: string
+          invited_by: string
+          invited_email: string
+          referral_code: string
+          status?: string
+          total_earned?: number
+          total_referrals?: number
+          user_id?: string | null
+        }
+        Update: {
+          commission_percent?: number
+          created_at?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string
+          referral_code?: string
+          status?: string
+          total_earned?: number
+          total_referrals?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_referrals: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number
+          created_at: string
+          id: string
+          payment_id: string | null
+          referred_email: string
+          referred_user_id: string | null
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          payment_id?: string | null
+          referred_email: string
+          referred_user_id?: string | null
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          payment_id?: string | null
+          referred_email?: string
+          referred_user_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_program"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_leases: {
         Row: {
           agent_id: string
@@ -692,6 +779,7 @@ export type Database = {
         Row: {
           ai_suggested: boolean
           created_at: string
+          email: string | null
           followers_estimate: number | null
           id: string
           last_checked_at: string | null
@@ -699,6 +787,7 @@ export type Database = {
           niche: string | null
           notes: string | null
           outreach_status: string
+          phone: string | null
           platform: string
           status: string
           updated_at: string
@@ -708,6 +797,7 @@ export type Database = {
         Insert: {
           ai_suggested?: boolean
           created_at?: string
+          email?: string | null
           followers_estimate?: number | null
           id?: string
           last_checked_at?: string | null
@@ -715,6 +805,7 @@ export type Database = {
           niche?: string | null
           notes?: string | null
           outreach_status?: string
+          phone?: string | null
           platform?: string
           status?: string
           updated_at?: string
@@ -724,6 +815,7 @@ export type Database = {
         Update: {
           ai_suggested?: boolean
           created_at?: string
+          email?: string | null
           followers_estimate?: number | null
           id?: string
           last_checked_at?: string | null
@@ -731,6 +823,7 @@ export type Database = {
           niche?: string | null
           notes?: string | null
           outreach_status?: string
+          phone?: string | null
           platform?: string
           status?: string
           updated_at?: string

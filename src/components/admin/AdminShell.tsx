@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
-import { LayoutDashboard, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { label: "Agents", path: "/admin/agents", icon: Bot },
   { label: "Call Log", path: "/admin/calls", icon: PhoneCall },
   { label: "Marketing", path: "/admin/marketing", icon: Megaphone },
+  { label: "Affiliates", path: "/admin/affiliates", icon: Gift },
   { label: "Payments", path: "/admin/payments", icon: CreditCard },
   { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
