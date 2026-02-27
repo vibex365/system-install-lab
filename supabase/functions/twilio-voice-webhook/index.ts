@@ -460,9 +460,23 @@ async function generateCallSummary(ctx: { supabase: any; callLogId: string; resp
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [{ role: "user", content: `Summarize this ${ctx.duration}s call with ${ctx.respondentName || "caller"} (score: ${ctx.quizScore}, result: ${ctx.quizResult}). Include: interest level, key discussion points, objections, next steps, and whether a booking was made. 3-5 sentences.\n\nTranscript:\n${text}` }],
-        max_tokens: 250,
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: `You are a sales strategist reviewing a ${ctx.duration}s call transcript with ${ctx.respondentName || "a prospect"} (Automation Readiness Score: ${ctx.quizScore}/100, Tier: ${ctx.quizResult}).
+
+Produce a SALES INTELLIGENCE BRIEF with these sections:
+1. **Buyer Temperature** (Cold / Warm / Hot) — how ready are they to buy?
+2. **Pain Points Identified** — the 2-3 specific business problems they mentioned
+3. **Objections & Hesitations** — what held them back, pricing concerns, timing issues
+4. **Buying Signals** — positive indicators (asked about pricing, features, timeline)
+5. **Recommended Close Strategy** — the specific approach to convert this lead (e.g., urgency play, ROI demo, social proof, free trial offer)
+6. **Next Action** — exactly what to do next and when (e.g., "Send case study within 24hrs then call Thursday")
+7. **Booking Status** — was a follow-up booked? If yes, when?
+
+Keep it concise but actionable. This is for a sales closer, not a summary reader.
+
+Transcript:
+${text}` }],
+        max_tokens: 500,
       }),
     });
     if (!resp.ok) return null;
