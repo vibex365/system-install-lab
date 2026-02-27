@@ -6,14 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Plus, Target, Eye, Trash2, Copy, ExternalLink,
-  FileText, BarChart3, ArrowRight, Zap, Users,
+  Plus, Target, Trash2,
+  FileText, Users, Zap, Mail, MessageSquare, PhoneCall,
+  Activity, CheckCircle2, XCircle, Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface QuizQuestion {
   id: string;
@@ -40,6 +44,23 @@ interface FunnelData {
   brand_config: { niche?: string; headline?: string; description?: string };
   submissions_count: number;
   created_at: string;
+}
+
+interface AgentRunSummary {
+  agent_slug: string;
+  agent_name: string;
+  total_runs: number;
+  last_run_at: string | null;
+  last_status: string | null;
+  successes: number;
+  failures: number;
+}
+
+interface UsageData {
+  sms_used: number;
+  voice_calls_used: number;
+  campaigns_used: number;
+  leads_used: number;
 }
 
 const defaultQuestions: QuizQuestion[] = [
@@ -71,6 +92,12 @@ const niches = [
   { value: "home_business", label: "Home Business" },
 ];
 
+const AGENT_TOGGLES = [
+  { key: "sms_followup", label: "SMS Follow-up", icon: MessageSquare, description: "Auto-send SMS to new funnel leads with their quiz results" },
+  { key: "email_followup", label: "Email Follow-up", icon: Mail, description: "AI-generated follow-up emails via Resend" },
+  { key: "voice_call", label: "AI Voice Call", icon: PhoneCall, description: "Trigger outbound Twilio AI calls to qualified leads" },
+];
+
 export default function Funnels() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
@@ -88,6 +115,18 @@ export default function Funnels() {
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<QuizQuestion[]>(defaultQuestions);
 
+  // Agent toggles (stored locally, persisted to user preferences later)
+  const [agentToggles, setAgentToggles] = useState<Record<string, boolean>>({
+    sms_followup: true,
+    email_followup: true,
+    voice_call: false,
+  });
+
+  // Agent stats
+  const [agentStats, setAgentStats] = useState<AgentRunSummary[]>([]);
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) navigate("/login", { replace: true });
   }, [user, loading, navigate]);
@@ -95,6 +134,8 @@ export default function Funnels() {
   useEffect(() => {
     if (!user) return;
     fetchFunnels();
+    fetchAgentStats();
+    fetchUsage();
   }, [user]);
 
   const fetchFunnels = async () => {
@@ -115,6 +156,64 @@ export default function Funnels() {
       toast({ title: "Error loading funnels", description: error.message, variant: "destructive" });
     }
     setLoadingFunnels(false);
+  };
+
+  const fetchAgentStats = async () => {
+    setLoadingStats(true);
+    const { data: runs } = await supabase
+      .from("agent_runs")
+      .select("id, status, triggered_at, agent_id")
+      .order("triggered_at", { ascending: false })
+      .limit(100);
+
+    if (runs && runs.length > 0) {
+      const agentIds = [...new Set(runs.map((r) => r.agent_id))];
+      const { data: agents } = await supabase
+        .from("agents")
+        .select("id, name, slug")
+        .in("id", agentIds);
+      const agentMap = Object.fromEntries((agents || []).map((a) => [a.id, { name: a.name, slug: a.slug }]));
+
+      const statsMap: Record<string, AgentRunSummary> = {};
+      for (const run of runs) {
+        const agent = agentMap[run.agent_id];
+        if (!agent) continue;
+        if (!statsMap[agent.slug]) {
+          statsMap[agent.slug] = {
+            agent_slug: agent.slug,
+            agent_name: agent.name,
+            total_runs: 0,
+            last_run_at: null,
+            last_status: null,
+            successes: 0,
+            failures: 0,
+          };
+        }
+        const s = statsMap[agent.slug];
+        s.total_runs++;
+        if (!s.last_run_at) {
+          s.last_run_at = run.triggered_at;
+          s.last_status = run.status;
+        }
+        if (run.status === "completed") s.successes++;
+        if (run.status === "failed") s.failures++;
+      }
+      setAgentStats(Object.values(statsMap));
+    }
+    setLoadingStats(false);
+  };
+
+  const fetchUsage = async () => {
+    if (!user) return;
+    const { data } = await supabase.rpc("get_or_create_usage", { p_user_id: user.id });
+    if (data) {
+      setUsageData({
+        sms_used: (data as any).sms_used || 0,
+        voice_calls_used: (data as any).voice_calls_used || 0,
+        campaigns_used: (data as any).campaigns_used || 0,
+        leads_used: (data as any).leads_used || 0,
+      });
+    }
   };
 
   const createFunnel = async () => {
@@ -390,6 +489,151 @@ export default function Funnels() {
                 </div>
               </DialogContent>
             </Dialog>
+          </motion.div>
+
+          {/* ─── Agent Settings & Status Dashboard ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mb-8 space-y-4"
+          >
+            {/* Global Agent Toggles */}
+            <Card className="border-border bg-card">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Agent Automation</h2>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Toggle which agents auto-trigger when a new lead completes a quiz funnel.
+                </p>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {AGENT_TOGGLES.map((agent) => {
+                    const Icon = agent.icon;
+                    const isOn = agentToggles[agent.key];
+                    return (
+                      <div
+                        key={agent.key}
+                        className={`rounded-lg border p-4 transition-all ${
+                          isOn ? "border-primary/40 bg-primary/5" : "border-border bg-muted/20"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Icon className={`h-4 w-4 ${isOn ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className="text-sm font-medium text-foreground">{agent.label}</span>
+                          </div>
+                          <Switch
+                            checked={isOn}
+                            onCheckedChange={(checked) =>
+                              setAgentToggles((prev) => ({ ...prev, [agent.key]: checked }))
+                            }
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{agent.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Agent Status Dashboard */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Usage Stats Cards */}
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">SMS Sent</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{usageData?.sms_used ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">This billing period</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PhoneCall className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Voice Calls</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{usageData?.voice_calls_used ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">This billing period</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Emails Sent</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{usageData?.campaigns_used ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">This billing period</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Leads Generated</span>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{usageData?.leads_used ?? 0}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">This billing period</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Agent Run History */}
+            {agentStats.length > 0 && (
+              <Card className="border-border bg-card">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Activity className="h-4 w-4 text-primary" />
+                    <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Agent Activity</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {agentStats.slice(0, 6).map((stat) => (
+                      <div key={stat.agent_slug} className="flex items-center justify-between rounded-md border border-border bg-muted/20 p-3">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{stat.agent_name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {stat.last_run_at ? `Last run: ${format(new Date(stat.last_run_at), "MMM d, h:mm a")}` : "No runs yet"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1 text-xs">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                            <span className="text-foreground">{stat.successes}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs">
+                            <XCircle className="h-3 w-3 text-destructive" />
+                            <span className="text-foreground">{stat.failures}</span>
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">
+                            {stat.total_runs} runs
+                          </Badge>
+                          {stat.last_status && (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] ${
+                                stat.last_status === "completed"
+                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  : stat.last_status === "failed"
+                                  ? "bg-destructive/10 text-destructive"
+                                  : "bg-amber-500/10 text-amber-400"
+                              }`}
+                            >
+                              {stat.last_status}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
 
           {/* ─── Funnel Grid ─── */}
