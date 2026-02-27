@@ -81,7 +81,7 @@ const App = () => (
             <Route path="/analytics" element={<PlanGate><Analytics /></PlanGate>} />
             <Route path="/funnels" element={<PlanGate><Funnels /></PlanGate>} />
             <Route path="/calendar" element={<PlanGate><CalendarPage /></PlanGate>} />
-            <Route path="/agents" element={<PlanGate><Agents /></PlanGate>} />
+            {/* Agents marketplace hidden — pivoting to workflow bundles */}
             <Route path="/library" element={<PlanGate><Library /></PlanGate>} />
             <Route path="/submit" element={<PlanGate><Submit /></PlanGate>} />
             <Route path="/magazine/inside" element={<PlanGate><MagazineInside /></PlanGate>} />

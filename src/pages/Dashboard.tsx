@@ -436,7 +436,7 @@ export default function Dashboard() {
             {[
               { label: "Quiz Funnels", to: "/funnels", icon: Target, desc: "Build & manage funnels" },
               { label: "CRM Pipeline", to: "/crm", icon: Users, desc: "Manage your leads" },
-              { label: "Agents", to: "/agents", icon: Zap, desc: "View agent catalog" },
+              
               { label: "Calendar", to: "/calendar", icon: Calendar, desc: "Upcoming calls" },
               { label: "Analytics", to: "/analytics", icon: BarChart3, desc: "Performance data" },
             ].map((link) => (

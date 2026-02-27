@@ -41,7 +41,7 @@ export function Navbar() {
       <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
       <Link to="/dashboard/workflows" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
       <Link to="/crm" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
-      <Link to="/agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
+      
       <Link to="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
       <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
     </>
@@ -117,7 +117,7 @@ export function Navbar() {
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
                 <Link to="/dashboard/workflows" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
                 <Link to="/crm" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
-                <Link to="/agents" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Agents</Link>
+                
                 <Link to="/analytics" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
                 <Link to="/calendar" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
               </>
