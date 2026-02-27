@@ -1,79 +1,52 @@
 
 
-## Plan: Dream 100 Outreach Agents + Invite-Only Affiliate Program
+## Plan: Forum Lead Scout Agent + Reply Templates
 
-Two features: (1) Add outreach agent actions directly on Dream 100 entries, and (2) build an invite-only affiliate/influencer program.
-
----
-
-### Feature 1: Dream 100 Outreach Agents
-
-**New edge function: `agent-dream100-outreach`**
-- Accepts a Dream 100 entry ID + outreach channel (email/DM/SMS)
-- Uses AI to craft a personalized partnership pitch based on the entry's name, platform, niche, followers, and notes
-- For email: sends via Resend
-- For SMS: sends via Twilio
-- Updates `outreach_status` on the `dream_100` row (e.g., `dm_sent`)
-- Logs to `outreach_log` table
-
-**Dream 100 UI changes (`src/pages/Dream100.tsx`)**
-- Add a "Send Outreach" action button per entry (mail icon) that opens a small dialog
-- Dialog lets user pick channel (Email / SMS) and preview the AI-generated message before sending
-- Shows a workflow-style progress indicator (generating message → sending → updating status)
-- Bulk outreach option: "Outreach All Approved" button that runs the agent on all `approved` entries
-
-**Database: Add `email` column to `dream_100` table**
-- Migration to add `email text` and `phone text` columns to `dream_100` so outreach can reach them
-- Update the discovery agent to try extracting email/phone when available
+Three changes: (1) a new edge function that searches forums for high-intent posts, (2) copy-paste reply templates in the Dream 100 UI, and (3) accuracy fixes to niche magazine Scout Agent descriptions.
 
 ---
 
-### Feature 2: Invite-Only Affiliate Program
+### 1. New Edge Function: `agent-forum-scout`
 
-**New table: `affiliate_program`**
-- `id`, `user_id` (the affiliate/influencer), `referral_code` (unique slug), `commission_percent` (default 20), `status` (invited/active/paused/revoked), `invited_by` (admin user_id), `total_earned`, `total_referrals`, `created_at`
-- RLS: users see own row, chief_architect manages all
+- Accepts `user_id`, `niche`, `location` (from profile)
+- Uses Firecrawl search API to find recent posts on Reddit, Facebook groups, Nextdoor, and forums matching queries like:
+  - `"looking for a lawyer" site:reddit.com [city]`
+  - `"anyone recommend a dentist" site:facebook.com [city]`
+  - `"need a personal trainer near" [city]`
+- Uses AI (Gemini 2.5 Flash) to extract structured lead data: post URL, platform, poster intent, urgency score, suggested reply
+- Inserts results into `leads` table with `source = 'forum_scout'`
+- Returns count + preview of found leads
 
-**New table: `affiliate_referrals`**
-- `id`, `affiliate_id` (FK to affiliate_program), `referred_user_id`, `referred_email`, `payment_id` (FK to payments), `commission_amount`, `status` (pending/paid/voided), `created_at`
-- RLS: affiliates see own referrals, admin manages all
+### 2. Dream 100 UI: Forum Scout Button + Reply Templates
 
-**Admin UI: Affiliate Management (`src/pages/admin/AdminAffiliates.tsx`)**
-- Invite influencer by email from Dream 100 (one-click "Invite as Affiliate")
-- Set commission %, view referral stats, pause/revoke affiliates
-- Add to admin navigation
+- Add "Scout Forums" button next to "AI Discover" on Dream100 page
+- When clicked, runs step-by-step workflow (similar to discovery agent) showing:
+  - Searching Reddit → Searching Facebook → AI analyzing posts → Generating replies → Saving leads
+- Results show as lead cards with:
+  - Post snippet + URL (links to original post)
+  - "Copy Reply" button with AI-generated reply text ready to paste
+  - One-click "Add to CRM" to move into leads pipeline
 
-**Affiliate Dashboard (for invited influencers)**
-- New page `/affiliate` showing their unique referral link, total referrals, earnings, and payout history
-- Referral link format: `peoplefailsystemswork.com/?ref=CODE`
+### 3. Niche Magazine Copy Fix
 
-**Dream 100 integration**
-- Add "Invite as Affiliate" button on Dream 100 entries that are `connected` or `partnered`
-- Sends invitation email via Resend with the affiliate signup link
-- Updates entry status to reflect affiliate invitation
-
-**Tracking**
-- Store `ref` query param in localStorage on landing page visit
-- On signup/payment, check for stored ref code and create `affiliate_referrals` entry
+- Update Scout Agent descriptions to clarify it **finds** posts and **generates reply templates** for manual posting
+- Change from implying automated posting to: "Finds high-intent posts and generates a reply template you can post in seconds"
 
 ---
+
+### Database
+
+- No new tables needed — found leads go into existing `leads` table with `source = 'forum_scout'`
+- Add `forum_post_url` and `suggested_reply` columns to `leads` table via migration
+
+### Config
+
+- Add `[functions.agent-forum-scout] verify_jwt = false` to config.toml
 
 ### Implementation Order
 
-1. DB migration: add `email`/`phone` to `dream_100`, create `affiliate_program` + `affiliate_referrals` tables with RLS
-2. Create `agent-dream100-outreach` edge function
-3. Update Dream 100 UI with outreach actions + affiliate invite button
-4. Create admin affiliate management page
-5. Create affiliate dashboard page
-6. Add referral tracking to signup/payment flow
-7. Register new routes in App.tsx and nav
-
----
-
-### Technical Details
-
-- Commission tracking hooks into existing `payments` table via `payment_id` FK
-- Affiliate invitations use existing Resend integration
-- The outreach agent reuses the same AI gateway pattern as `agent-outreach-email` but targets Dream 100 entries instead of leads
-- `referral_code` generated as 8-char alphanumeric slug from user ID
+1. DB migration: add `forum_post_url` and `suggested_reply` to `leads`
+2. Create `agent-forum-scout` edge function
+3. Update Dream 100 UI with forum scout workflow + reply copy buttons
+4. Fix niche magazine Scout Agent descriptions
 
