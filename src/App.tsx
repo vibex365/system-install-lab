@@ -30,6 +30,7 @@ import PostDetail from "./pages/PostDetail";
 import MagazineInside from "./pages/MagazineInside";
 import SystemMagazine from "./pages/SystemMagazine";
 import ChooseCohort from "./pages/ChooseCohort";
+import Dream100 from "./pages/Dream100";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -90,6 +91,7 @@ const App = () => (
             <Route path="/magazine/inside" element={<PlanGate><MagazineInside /></PlanGate>} />
             <Route path="/magazine/system" element={<SystemMagazine />} />
             <Route path="/choose-cohort" element={<PlanGate><ChooseCohort /></PlanGate>} />
+            <Route path="/dream-100" element={<PlanGate><Dream100 /></PlanGate>} />
             <Route path="/board" element={<Navigate to="/board/main" replace />} />
             <Route path="/board/:slug" element={<PlanGate><BoardFeed /></PlanGate>} />
             <Route path="/post/:id" element={<PlanGate><PostDetail /></PlanGate>} />
