@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { magazinePages } from "@/data/magazinePages";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import magazineCover from "@/assets/magazine-cover.jpg";
 import { useSEO } from "@/hooks/use-seo";
 
 const BlueDivider = () => (
@@ -33,65 +30,52 @@ export default function MagazineInside() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Cover page
+  // Cover page — no navbar, no background image
   if (current.isCover) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main>
-          <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-            <img
-              src={magazineCover}
-              alt="PFSW Magazine Cover"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/80" />
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-violet-500/10" />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="cover"
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7 }}
-                className="relative z-10 text-center px-6 max-w-3xl mx-auto"
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="cover"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              <p className="text-xs uppercase tracking-[0.5em] text-primary mb-8">
+                PFSW — The Prompt Engineer's Field Manual
+              </p>
+              <h1 className="font-serif text-6xl sm:text-8xl font-bold text-foreground leading-none mb-6">
+                System Prompts
+                <br />
+                <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Decoded.</span>
+              </h1>
+              <div className="flex items-center justify-center my-8">
+                <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent" />
+              </div>
+              <p className="text-xl sm:text-2xl font-serif text-muted-foreground italic mb-4">
+                "30+ AI tool prompts. Leaked. Analyzed. Weaponized."
+              </p>
+              <p className="text-sm text-muted-foreground/60 tracking-widest uppercase mb-16">
+                Cursor · Lovable · Windsurf · v0 · Claude · Replit & More
+              </p>
+              <Button
+                onClick={() => go(1)}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-violet-500 hover:from-primary/90 hover:to-violet-500/90 tracking-widest px-12 py-6 text-base font-bold uppercase border-0"
               >
-                <p className="text-xs uppercase tracking-[0.5em] text-primary mb-8">
-                  PFSW — The Prompt Engineer's Field Manual
-                </p>
-                <h1 className="font-serif text-6xl sm:text-8xl font-bold text-white leading-none mb-6">
-                  System Prompts
-                  <br />
-                  <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Decoded.</span>
-                </h1>
-                <div className="flex items-center justify-center my-8">
-                  <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent" />
-                </div>
-                <p className="text-xl sm:text-2xl font-serif text-white/80 italic mb-4">
-                  "30+ AI tool prompts. Leaked. Analyzed. Weaponized."
-                </p>
-                <p className="text-sm text-white/50 tracking-widest uppercase mb-16">
-                  Cursor · Lovable · Windsurf · v0 · Claude · Replit & More
-                </p>
-                <Button
-                  onClick={() => go(1)}
-                  size="lg"
-                  className="bg-gradient-to-r from-primary to-violet-500 hover:from-primary/90 hover:to-violet-500/90 tracking-widest px-12 py-6 text-base font-bold uppercase border-0"
-                >
-                  Begin Reading
-                </Button>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </main>
-        <Footer />
+                Begin Reading
+              </Button>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-24 pb-20">
+      <main className="pt-12 pb-20">
         <div className="max-w-2xl mx-auto px-6">
 
           {/* Table of Contents */}
@@ -132,17 +116,6 @@ export default function MagazineInside() {
               transition={{ duration: 0.35 }}
             >
               <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">{current.chapter}</p>
-
-              {current.image && (
-                <div className="relative w-full h-56 sm:h-72 mb-8 overflow-hidden rounded-lg">
-                  <img
-                    src={current.image}
-                    alt={current.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-                </div>
-              )}
 
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground leading-tight mb-3">
                 {current.title}
@@ -226,7 +199,6 @@ export default function MagazineInside() {
           </p>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
