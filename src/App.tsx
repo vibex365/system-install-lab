@@ -35,6 +35,7 @@ import BookingPage from "./pages/BookingPage";
 import IntakeFunnel from "./pages/IntakeFunnel";
 import PublicFunnel from "./pages/PublicFunnel";
 import DemoFunnel from "./pages/DemoFunnel";
+import Partner from "./pages/Partner";
 
 // Lead routes
 import LeadDashboard from "./pages/lead/LeadDashboard";
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/intake-funnel" element={<IntakeFunnel />} />
             <Route path="/f/:slug" element={<PublicFunnel />} />
+            <Route path="/partner" element={<Partner />} />
 
             {/* Lead routes */}
             <Route path="/lead/dashboard" element={<LeadDashboard />} />
