@@ -298,7 +298,7 @@ If phone/email not found, mark as "Research needed". Include 5-10 leads. End wit
         .eq("user_id", userId)
         .maybeSingle();
       if (bsProposal?.booking_slug) {
-        bookingUrl = `\n\nBooking link for CTA: https://system-install-lab.lovable.app/book/${bsProposal.booking_slug}`;
+        bookingUrl = `\n\nBooking link for CTA: https://peoplefailsystemswork.com/book/${bsProposal.booking_slug}`;
       }
 
       result = await callAI(`You are a smart funnel sales expert. Analyze this business's current website and write a compelling proposal for building them a Smart Funnel — a high-converting, AI-powered lead capture and sales system built with Lovable.
@@ -497,7 +497,7 @@ Make everything specific to ${memberName} and their ${productIdea}. No generic a
         .eq("user_id", userId)
         .maybeSingle();
       if (bsSms?.booking_slug) {
-        bookingUrlSms = `https://system-install-lab.lovable.app/book/${bsSms.booking_slug}`;
+        bookingUrlSms = `https://peoplefailsystemswork.com/book/${bsSms.booking_slug}`;
       }
 
       // Check if there's a recent audit for this lead
@@ -595,7 +595,7 @@ Output ONLY the SMS text, nothing else.`);
         .eq("user_id", userId)
         .maybeSingle();
       if (bsCall?.booking_slug) {
-        bookingUrlCall = `https://system-install-lab.lovable.app/book/${bsCall.booking_slug}`;
+        bookingUrlCall = `https://peoplefailsystemswork.com/book/${bsCall.booking_slug}`;
       }
 
       const systemPrompt = `You are a smart funnel consultant making a warm outbound call to a small business owner about upgrading their lead generation.
@@ -670,7 +670,7 @@ Be natural, not salesy. You're a professional offering genuine value, not a tele
         .eq("user_id", userId)
         .maybeSingle();
       if (bookingSettings?.booking_slug) {
-        bookingUrl = `Book a call: https://system-install-lab.lovable.app/book/${bookingSettings.booking_slug}`;
+        bookingUrl = `Book a call: https://peoplefailsystemswork.com/book/${bookingSettings.booking_slug}`;
       }
 
       const emailPrompt = `You are an expert cold email copywriter for web designers.
@@ -759,7 +759,7 @@ Rules:
         .eq("user_id", userId)
         .maybeSingle();
       if (bookingSettingsCold?.booking_slug) {
-        bookingUrl = `Book a call: https://system-install-lab.lovable.app/book/${bookingSettingsCold.booking_slug}`;
+        bookingUrl = `Book a call: https://peoplefailsystemswork.com/book/${bookingSettingsCold.booking_slug}`;
       }
 
       const emailContent = await callAI(`You are an expert cold outreach email copywriter for a smart funnel consultant who builds AI-powered lead generation systems for local businesses.

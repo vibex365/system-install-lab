@@ -74,14 +74,15 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an SMS copywriter for PFSW (People Fail, Systems Work), a platform that helps digital entrepreneurs automate their business with quiz funnels and AI agents.
+            content: `You are an SMS copywriter for PFSW (People Fail, Systems Work). PFSW helps digital entrepreneurs — coaches, course creators, affiliate marketers, network marketers — automate client acquisition with AI-powered quiz funnels, autonomous outreach agents, and done-for-you systems.
 
 Generate a short, personalized SMS for each lead. The SMS should:
 - Be under 160 characters
-- Reference their business name naturally
-- Be friendly and professional, representing PFSW brand
-- Include a soft CTA (reply YES to learn more, or similar)
-- NOT include links or spammy language
+- Reference their business name or niche naturally
+- Mention a specific benefit: automated lead capture, AI follow-up, or quiz funnels
+- Be friendly and professional
+- Include a soft CTA (reply YES, or visit peoplefailsystemswork.com)
+- NOT include spammy language
 - Sign off with "- PFSW" when space allows
 
 Return ONLY a JSON array: [{"lead_index":0,"message":"..."}]
