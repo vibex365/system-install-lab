@@ -304,10 +304,11 @@ export default function Dashboard() {
             transition={{ delay: 0.3 }}
           >
             {[
-              { label: "CRM Pipeline", to: "/dashboard/crm", icon: Target, desc: "Manage your leads" },
-              { label: "Agents", to: "/dashboard/agents", icon: Zap, desc: "View agent catalog" },
-              { label: "Calendar", to: "/dashboard/calendar", icon: Calendar, desc: "Upcoming calls" },
-              { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3, desc: "Performance data" },
+              { label: "Quiz Funnels", to: "/funnels", icon: Target, desc: "Build & manage funnels" },
+              { label: "CRM Pipeline", to: "/crm", icon: Users, desc: "Manage your leads" },
+              { label: "Agents", to: "/agents", icon: Zap, desc: "View agent catalog" },
+              { label: "Calendar", to: "/calendar", icon: Calendar, desc: "Upcoming calls" },
+              { label: "Analytics", to: "/analytics", icon: BarChart3, desc: "Performance data" },
             ].map((link) => (
               <Link
                 key={link.label}
