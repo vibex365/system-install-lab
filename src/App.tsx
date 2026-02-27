@@ -40,6 +40,7 @@ import PublicFunnel from "./pages/PublicFunnel";
 import DemoFunnel from "./pages/DemoFunnel";
 import Partner from "./pages/Partner";
 import ElytSystemFunnel from "./pages/ElytSystemFunnel";
+import NicheMagazine from "./pages/NicheMagazine";
 
 // Lead routes
 import LeadDashboard from "./pages/lead/LeadDashboard";
@@ -119,8 +120,9 @@ const App = () => (
             <Route path="/admin/marketing" element={<AdminMarketing />} />
             <Route path="/admin/calls" element={<AdminCallLog />} />
 
-            {/* Demo funnels */}
+            {/* Demo funnels & niche magazines */}
             <Route path="/demo/:niche" element={<DemoFunnel />} />
+            <Route path="/for/:niche" element={<NicheMagazine />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
