@@ -368,7 +368,7 @@ export default function IntakeFunnel() {
         },
       });
 
-      setCallbackNumber(funnelData?.callback_number || "(866) 642-9937");
+      setCallbackNumber(funnelData?.callback_number || "(866) 479-5373");
       setTimeout(() => setPhase("result"), 3000);
     } catch (err) {
       console.error("Verify/submit error:", err);
