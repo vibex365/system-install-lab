@@ -655,6 +655,39 @@ export type Database = {
           },
         ]
       }
+      credit_purchases: {
+        Row: {
+          credits_remaining: number
+          credits_total: number
+          expires_at: string | null
+          id: string
+          purchased_at: string
+          resource_type: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          credits_remaining: number
+          credits_total: number
+          expires_at?: string | null
+          id?: string
+          purchased_at?: string
+          resource_type: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          credits_remaining?: number
+          credits_total?: number
+          expires_at?: string | null
+          id?: string
+          purchased_at?: string
+          resource_type?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       funnel_leads: {
         Row: {
           answers: Json | null
