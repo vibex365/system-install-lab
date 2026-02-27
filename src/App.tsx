@@ -32,6 +32,7 @@ import SystemMagazine from "./pages/SystemMagazine";
 import ChooseCohort from "./pages/ChooseCohort";
 import Dream100 from "./pages/Dream100";
 import FunnelMarketplace from "./pages/FunnelMarketplace";
+import DeveloperPortal from "./pages/DeveloperPortal";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -90,7 +91,8 @@ const App = () => (
             <Route path="/funnels" element={<PlanGate><Funnels /></PlanGate>} />
             <Route path="/funnel-templates" element={<PlanGate><FunnelMarketplace /></PlanGate>} />
             <Route path="/calendar" element={<PlanGate><CalendarPage /></PlanGate>} />
-            {/* Agents marketplace hidden — pivoting to workflow bundles */}
+            <Route path="/agents" element={<PlanGate><Agents /></PlanGate>} />
+            <Route path="/developers" element={<PlanGate><DeveloperPortal /></PlanGate>} />
             <Route path="/library" element={<PlanGate><Library /></PlanGate>} />
             <Route path="/submit" element={<PlanGate><Submit /></PlanGate>} />
             <Route path="/magazine/inside" element={<PlanGate><MagazineInside /></PlanGate>} />
