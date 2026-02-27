@@ -222,62 +222,105 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ─── Goal Input Preview ─── */}
+      {/* ─── Funnels + Agents. One System. ─── */}
       <section className="py-24 md:py-32">
-        <div className="container max-w-4xl">
-          <SectionHeader
-            title="Funnels + Agents. One System."
-            subtitle="Build a quiz funnel. Set a goal. Agents fill it with qualified buyers."
-          />
-          <motion.div
-            className="rounded-3xl border border-border bg-card/80 backdrop-blur-sm p-8 md:p-10 gold-glow"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Zap className="h-4 w-4 text-primary" />
+        <div className="container">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            {/* Left — Copy */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 mb-6">
+                <Zap className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-primary tracking-wide">One Unified System</span>
               </div>
-              <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Goal Input</span>
-            </div>
-            <div className="rounded-2xl border border-primary/20 bg-background/50 p-5 mb-8">
-              <p className="text-base text-muted-foreground italic">
-                "Find 50 health supplement prospects in Dallas, run them through my quiz funnel, and book calls with anyone who scores above 70."
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-foreground leading-[0.95] mb-6">
+                Funnels + Agents.{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  One System.
+                </span>
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-md mb-8">
+                Build a quiz funnel. Set a goal. Agents fill it with qualified buyers — on autopilot, 24/7.
               </p>
-            </div>
-            <div className="space-y-4">
-              {[
-                { status: "done", text: "Scout — Found 127 potential prospects" },
-                { status: "done", text: "Qualifier — Scored & ranked top 50" },
-                { status: "done", text: "Email Outreach — Driving to quiz funnel" },
-                { status: "active", text: "Quiz Funnel — 23 completions, 18 qualified" },
-                { status: "waiting", text: "Book Calls — Scheduling qualified leads" },
-              ].map((step, i) => (
-                <motion.div
-                  key={i}
-                  className="flex items-center gap-3"
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <div className={`h-2 w-2 rounded-full ${
-                    step.status === "done" ? "bg-emerald-400" :
-                    step.status === "active" ? "bg-primary animate-pulse" :
-                    "bg-muted-foreground/30"
-                  }`} />
-                  <span className={`text-sm font-medium ${
-                    step.status === "done" ? "text-emerald-400" :
-                    step.status === "active" ? "text-primary" :
-                    "text-muted-foreground/50"
-                  }`}>
-                    {step.text}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+              <div className="space-y-4">
+                {[
+                  { icon: Target, text: "Quiz funnels that score & qualify every lead" },
+                  { icon: Bot, text: "AI agents prospect, outreach, and drive traffic" },
+                  { icon: Calendar, text: "Qualified buyers land on your calendar" },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 + i * 0.1 }}
+                  >
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <item.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{item.text}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Right — Goal Input Card */}
+            <motion.div
+              className="rounded-3xl border border-border bg-card/80 backdrop-blur-sm p-8 md:p-10 gold-glow"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+            >
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Goal Input</span>
+              </div>
+              <div className="rounded-2xl border border-primary/20 bg-background/50 p-5 mb-8">
+                <p className="text-base text-muted-foreground italic">
+                  "Find 50 health supplement prospects in Dallas, run them through my quiz funnel, and book calls with anyone who scores above 70."
+                </p>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { status: "done", text: "Scout — Found 127 potential prospects" },
+                  { status: "done", text: "Qualifier — Scored & ranked top 50" },
+                  { status: "done", text: "Email Outreach — Driving to quiz funnel" },
+                  { status: "active", text: "Quiz Funnel — 23 completions, 18 qualified" },
+                  { status: "waiting", text: "Book Calls — Scheduling qualified leads" },
+                ].map((step, i) => (
+                  <motion.div
+                    key={i}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <div className={`h-2 w-2 rounded-full ${
+                      step.status === "done" ? "bg-emerald-400" :
+                      step.status === "active" ? "bg-primary animate-pulse" :
+                      "bg-muted-foreground/30"
+                    }`} />
+                    <span className={`text-sm font-medium ${
+                      step.status === "done" ? "text-emerald-400" :
+                      step.status === "active" ? "text-primary" :
+                      "text-muted-foreground/50"
+                    }`}>
+                      {step.text}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
