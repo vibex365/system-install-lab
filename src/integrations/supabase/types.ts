@@ -262,6 +262,89 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          label: string
+          last_used_at: string | null
+          permissions: string[]
+          revoked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          label?: string
+          last_used_at?: string | null
+          permissions?: string[]
+          revoked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          label?: string
+          last_used_at?: string | null
+          permissions?: string[]
+          revoked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_usage_log: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          credits_consumed: number
+          endpoint: string
+          id: string
+          method: string
+          response_time_ms: number | null
+          status_code: number | null
+          user_id: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          credits_consumed?: number
+          endpoint: string
+          id?: string
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          credits_consumed?: number
+          endpoint?: string
+          id?: string
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_log_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           admin_notes: string | null

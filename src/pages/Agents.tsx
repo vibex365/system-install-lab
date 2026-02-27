@@ -936,9 +936,9 @@ function AgentsContent() {
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs tracking-[0.2em] text-primary uppercase font-semibold mb-2">OpenClaw</p>
-          <h1 className="text-3xl font-bold text-foreground mb-3">Agent Marketplace</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-3">Workflow Marketplace</h1>
           <p className="text-muted-foreground max-w-2xl text-sm">
-            Lease a specialized AI agent that works on your behalf. Each agent runs a dedicated pipeline — outreach, research, content, audits — so you can focus on building.
+            We don't sell tools. We sell execution plans. Each workflow bundle is an automated pipeline that runs end-to-end — no buttons to click, no steps to manage.
           </p>
         </div>
 
@@ -1108,106 +1108,7 @@ function AgentsContent() {
           </div>
         )}
 
-        {/* ── Included with Membership ── */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <p className="text-xs tracking-[0.15em] text-primary uppercase font-semibold">Included with Your Membership</p>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 font-medium">$98/mo value — yours free</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {includedAgents.map((agent) => (
-              <AgentCard
-                key={agent.id}
-                agent={agent}
-                lease={getLease(agent.id)}
-                lastRun={getLastRun(agent.id)}
-                onLease={handleLease}
-                onRun={(a) => setRunModalAgent(a)}
-                onActivateIncluded={handleActivateIncluded}
-                leasing={leasingId === agent.id}
-                activating={activatingId === agent.id}
-                isAdmin={isChiefArchitect}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* My Active Agents strip */}
-        {activeLeases.length > 0 && (
-          <div className="mb-10">
-            <p className="text-xs tracking-[0.15em] text-muted-foreground uppercase font-semibold mb-3">My Active Agents</p>
-            <div className="flex gap-3 flex-wrap">
-              {activeLeases.map((lease) => {
-                const agent = agents.find((a) => a.id === lease.agent_id);
-                if (!agent) return null;
-                const Icon = ICON_MAP[agent.icon_name] || Package;
-                const lastRun = getLastRun(agent.id);
-                return (
-                  <div key={lease.id} className="flex items-center gap-3 bg-card border border-primary/30 rounded-lg px-4 py-3">
-                    <div className={`p-1.5 rounded-md border ${CATEGORY_COLORS[agent.category] || ""}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-foreground">{agent.name}</p>
-                      {lastRun ? (
-                        <p className="text-[10px] text-muted-foreground">Last run {new Date(lastRun.triggered_at).toLocaleDateString()}</p>
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground">Never run</p>
-                      )}
-                    </div>
-                    <Button size="sm" className="h-7 text-xs" onClick={() => setRunModalAgent(agent)}>
-                      <Play className="h-3 w-3 mr-1" /> Run
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Add-On Agents ── */}
-        <div>
-          <p className="text-xs tracking-[0.15em] text-muted-foreground uppercase font-semibold mb-4">Add-On Agents</p>
-          {/* Category filter */}
-          <div className="flex gap-2 flex-wrap mb-6">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
-                  selectedCategory === cat
-                    ? "bg-primary/20 text-primary border-primary/40"
-                    : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-muted"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {filteredAddOns.map((agent) => (
-                <AgentCard
-                  key={agent.id}
-                  agent={agent}
-                  lease={getLease(agent.id)}
-                  lastRun={getLastRun(agent.id)}
-                  onLease={handleLease}
-                  onRun={(a) => setRunModalAgent(a)}
-                  onActivateIncluded={handleActivateIncluded}
-                  leasing={leasingId === agent.id}
-                  activating={activatingId === agent.id}
-                  isAdmin={isChiefArchitect}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Individual agents removed — bundles only */}
 
         {/* Run History */}
         <RunHistory runs={runs} agents={agents} />

@@ -45,6 +45,7 @@ export function Navbar() {
       
       <Link to="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
       <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
+      <Link to="/developers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Developers</Link>
     </>
   ) : null;
 
@@ -122,6 +123,7 @@ export function Navbar() {
                 
                 <Link to="/analytics" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
                 <Link to="/calendar" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
+                <Link to="/developers" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Developers</Link>
               </>
             )}
             {user && !hasAccess && (
