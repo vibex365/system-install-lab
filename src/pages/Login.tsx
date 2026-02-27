@@ -101,14 +101,6 @@ export default function Login() {
               </Tabs>
             </div>
 
-            <div className="mt-6 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                No account? <Link to="/apply" className="text-primary hover:underline">Apply first</Link>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Or <Link to="/waitlist" className="text-primary hover:underline">join the waitlist</Link>
-              </p>
-            </div>
           </div>
         </div>
 
