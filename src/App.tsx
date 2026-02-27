@@ -55,6 +55,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminMarketing from "./pages/admin/AdminMarketing";
 import AdminCallLog from "./pages/admin/AdminCallLog";
+import AdminAffiliates from "./pages/admin/AdminAffiliates";
+import AffiliateDashboard from "./pages/AffiliateDashboard";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +121,10 @@ const App = () => (
             <Route path="/admin/agents" element={<AdminAgents />} />
             <Route path="/admin/marketing" element={<AdminMarketing />} />
             <Route path="/admin/calls" element={<AdminCallLog />} />
+            <Route path="/admin/affiliates" element={<AdminAffiliates />} />
+
+            {/* Affiliate dashboard */}
+            <Route path="/affiliate" element={<AffiliateDashboard />} />
 
             {/* Demo funnels & niche magazines */}
             <Route path="/demo/:niche" element={<DemoFunnel />} />

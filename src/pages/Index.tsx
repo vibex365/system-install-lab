@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
@@ -66,6 +67,16 @@ const faqs = [
 ];
 
 export default function Index() {
+  const [searchParams] = useSearchParams();
+
+  // Track affiliate referral codes
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      localStorage.setItem("pfsw_ref", ref);
+    }
+  }, [searchParams]);
+
   const scrollTo = useCallback((id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   }, []);
