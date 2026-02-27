@@ -17,7 +17,7 @@ import {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, ChevronDown, ChevronUp,
   Play, Zap, CheckCircle2, Clock, Loader2, History, Copy, CheckCheck,
-  Info, Video, Phone,
+  Info, Video, Phone, Layers, Award, Radar, FileSearch, PhoneCall,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,12 +25,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ICON_MAP: Record<string, React.ElementType> = {
   Share2, Search, FileText, MessageSquare, Package, ScanLine,
   CalendarDays, Mail, Eye, UserCheck, Video, Phone,
+  Layers, Award, Radar, FileSearch, PhoneCall, Zap,
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
   Content: "bg-primary/20 text-primary border-primary/30",
   Research: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   Outreach: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  Bundle: "bg-amber-500/20 text-amber-400 border-amber-500/30",
 };
 
 // Input form config per agent slug
@@ -914,9 +916,10 @@ function AgentsContent() {
     }
   };
 
-  const categories = ["All", ...Array.from(new Set(agents.map((a) => a.category)))];
-  const includedAgents = agents.filter((a) => a.included_with_membership);
-  const addOnAgents = agents.filter((a) => !a.included_with_membership);
+  const categories = ["All", ...Array.from(new Set(agents.filter(a => a.category !== "Bundle").map((a) => a.category)))];
+  const bundleAgents = agents.filter((a) => a.category === "Bundle");
+  const includedAgents = agents.filter((a) => a.included_with_membership && a.category !== "Bundle");
+  const addOnAgents = agents.filter((a) => !a.included_with_membership && a.category !== "Bundle");
   const filteredAddOns = selectedCategory === "All" ? addOnAgents : addOnAgents.filter((a) => a.category === selectedCategory);
   const activeLeases = leases.filter((l) => l.status === "active");
 
@@ -1028,6 +1031,82 @@ function AgentsContent() {
             </CardContent>
           </Card>
         </div>
+
+        {/* ── Workflow Bundles ── */}
+        {bundleAgents.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-2">
+              <p className="text-xs tracking-[0.15em] text-amber-400 uppercase font-semibold">Workflow Bundles</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium">Save up to 40%</span>
+            </div>
+            <p className="text-xs text-muted-foreground mb-5">Pre-built multi-agent workflows. One purchase activates an entire team of agents working together.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {bundleAgents.map((bundle) => {
+                const IconComponent = ICON_MAP[bundle.icon_name] || Package;
+                const lease = getLease(bundle.id);
+                const isActive = !!lease && lease.status === "active";
+                const price = (bundle.price_cents / 100).toFixed(0);
+
+                return (
+                  <Card key={bundle.id} className="bg-card border-amber-500/30 flex flex-col relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                    <CardHeader className="pb-3 relative">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-lg border bg-amber-500/20 text-amber-400 border-amber-500/30">
+                            <IconComponent className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-foreground">{bundle.name}</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">{bundle.headline}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          {isActive ? (
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px]">
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Active
+                            </Badge>
+                          ) : null}
+                          <span className="text-lg font-bold text-amber-400">${price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-4 pt-0 relative">
+                      <p className="text-xs text-muted-foreground leading-relaxed">{bundle.what_it_does}</p>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Perfect For</p>
+                        <ul className="space-y-1">
+                          {bundle.use_cases.slice(0, 3).map((uc, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <Zap className="h-3 w-3 text-amber-400 shrink-0 mt-0.5" />
+                              <span>{uc}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="mt-auto pt-2">
+                        {isActive ? (
+                          <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700">
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Bundle Active
+                          </Button>
+                        ) : bundle.stripe_price_id ? (
+                          <Button size="sm" className="w-full bg-amber-600 hover:bg-amber-700 text-white" onClick={() => handleLease(bundle)} disabled={leasingId === bundle.id}>
+                            {leasingId === bundle.id ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Layers className="h-3.5 w-3.5 mr-1.5" />}
+                            Get Bundle — ${price}/mo
+                          </Button>
+                        ) : (
+                          <Button size="sm" className="w-full" variant="outline" disabled>
+                            Coming Soon
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── Included with Membership ── */}
         <div className="mb-12">
