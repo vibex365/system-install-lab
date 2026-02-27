@@ -98,7 +98,7 @@ export default function Index() {
           <img
             src={heroPortrait}
             alt=""
-            className="h-[90%] md:h-full object-contain object-bottom opacity-30 md:opacity-50 select-none pointer-events-none translate-x-[5%]"
+            className="hidden md:block h-full object-contain object-bottom opacity-50 select-none pointer-events-none translate-x-[5%]"
           />
           {/* Gradient masks */}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/20" />
