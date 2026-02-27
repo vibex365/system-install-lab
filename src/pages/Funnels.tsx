@@ -407,10 +407,53 @@ export default function Funnels() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 rounded-lg border border-border" style={{ background: accentColor }}>
-                    <p className="text-sm font-bold" style={{ color: primaryColor }}>Preview: Your Quiz Funnel</p>
-                    <p className="text-xs mt-1 opacity-70" style={{ color: primaryColor }}>This is how your brand colors will look.</p>
+
+                  {/* Live preview card */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">Live Preview</Label>
+                    <div className="rounded-xl overflow-hidden border border-border" style={{ background: accentColor }}>
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="size-8 rounded-full flex items-center justify-center" style={{ background: primaryColor }}>
+                            <Sparkles className="size-4 text-white" />
+                          </div>
+                          <span className="text-sm font-bold" style={{ color: primaryColor }}>
+                            {funnel?.brand_config?.headline || "Your Quiz Funnel"}
+                          </span>
+                        </div>
+                        <p className="text-xs opacity-70" style={{ color: "#fff" }}>
+                          {funnel?.brand_config?.description || "Answer a few questions to get your personalized score."}
+                        </p>
+                        <div className="flex gap-2">
+                          <div className="h-7 rounded-md px-3 flex items-center text-[11px] font-medium text-white" style={{ background: primaryColor }}>
+                            Begin Assessment →
+                          </div>
+                          <div className="h-7 rounded-md px-3 flex items-center text-[11px] border" style={{ borderColor: primaryColor, color: primaryColor }}>
+                            Learn More
+                          </div>
+                        </div>
+                        <div className="h-1.5 rounded-full overflow-hidden bg-white/10 mt-2">
+                          <div className="h-full rounded-full w-2/3 transition-all" style={{ background: primaryColor }} />
+                        </div>
+                      </div>
+                      {/* Swatch strip */}
+                      <div className="flex border-t border-white/10">
+                        <div className="flex-1 py-2 text-center text-[10px] font-medium text-white/60">
+                          Primary
+                          <div className="mx-auto mt-1 size-5 rounded-full border border-white/20" style={{ background: primaryColor }} />
+                        </div>
+                        <div className="flex-1 py-2 text-center text-[10px] font-medium text-white/60">
+                          Accent
+                          <div className="mx-auto mt-1 size-5 rounded-full border border-white/20" style={{ background: accentColor }} />
+                        </div>
+                        <div className="flex-1 py-2 text-center text-[10px] font-medium text-white/60">
+                          Contrast
+                          <div className="mx-auto mt-1 size-5 rounded-full border border-white/20" style={{ background: "#ffffff" }} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
                   <Button onClick={updateColors} disabled={!funnel} className="gap-2">
                     <Palette className="h-4 w-4" /> Save Colors
                   </Button>
