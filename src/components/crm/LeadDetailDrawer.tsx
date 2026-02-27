@@ -114,6 +114,8 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
   const [countryCode, setCountryCode] = useState("+1");
   const [callingLead, setCallingLead] = useState(false);
   const [callSent, setCallSent] = useState(false);
+  const [triggeringTwilio, setTriggeringTwilio] = useState(false);
+  const [twilioCallSent, setTwilioCallSent] = useState(false);
 
   useEffect(() => {
     if (!lead || !open) return;
@@ -121,6 +123,7 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
     setEmailSent(false);
     setSmsSent(false);
     setCallSent(false);
+    setTwilioCallSent(false);
     fetchRuns();
   }, [lead?.id, open]);
 
@@ -207,6 +210,27 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
       toast({ title: "Call failed", description: e.message, variant: "destructive" });
     } finally {
       setCallingLead(false);
+    }
+  };
+
+  const handleTriggerTwilioCall = async () => {
+    if (!lead?.phone) return;
+    setTriggeringTwilio(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("trigger-twilio-call", {
+        body: {
+          lead_id: lead.id,
+          phone_number: lead.phone,
+          respondent_name: lead.contact_name || lead.business_name,
+        },
+      });
+      if (error || data?.error) throw new Error(error?.message || data?.error);
+      setTwilioCallSent(true);
+      toast({ title: "Twilio AI call initiated", description: `Calling ${lead.contact_name || lead.business_name} at ${lead.phone}` });
+    } catch (e: any) {
+      toast({ title: "Twilio call failed", description: e.message, variant: "destructive" });
+    } finally {
+      setTriggeringTwilio(false);
     }
   };
 
@@ -442,6 +466,33 @@ export function LeadDetailDrawer({ lead, open, onOpenChange }: LeadDetailDrawerP
               {callSent && (
                 <div className="flex items-center gap-2 text-xs text-green-400">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Call initiated successfully
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Trigger Twilio AI Call */}
+          {lead.phone && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Twilio AI Call</h3>
+                {twilioCallSent && <Badge variant="outline" className="text-[10px] bg-green-500/20 text-green-400 ml-auto">Called</Badge>}
+              </div>
+              {!twilioCallSent ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleTriggerTwilioCall}
+                  disabled={triggeringTwilio}
+                >
+                  {triggeringTwilio ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
+                  {triggeringTwilio ? "Initiating..." : "Trigger Twilio AI Call"}
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Twilio call initiated successfully
                 </div>
               )}
             </section>
