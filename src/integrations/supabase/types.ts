@@ -970,6 +970,86 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_log: {
+        Row: {
+          channel: string
+          click_count: number | null
+          clicked_at: string | null
+          company_name: string | null
+          created_at: string
+          delivery_status: string
+          email_body: string | null
+          email_subject: string | null
+          grade: string | null
+          id: string
+          issues: string[] | null
+          lead_id: string | null
+          niche: string | null
+          open_count: number | null
+          opened_at: string | null
+          phone_found: string | null
+          recipient_email: string | null
+          recipient_phone: string | null
+          sms_body: string | null
+          source_url: string | null
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          click_count?: number | null
+          clicked_at?: string | null
+          company_name?: string | null
+          created_at?: string
+          delivery_status?: string
+          email_body?: string | null
+          email_subject?: string | null
+          grade?: string | null
+          id?: string
+          issues?: string[] | null
+          lead_id?: string | null
+          niche?: string | null
+          open_count?: number | null
+          opened_at?: string | null
+          phone_found?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sms_body?: string | null
+          source_url?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          click_count?: number | null
+          clicked_at?: string | null
+          company_name?: string | null
+          created_at?: string
+          delivery_status?: string
+          email_body?: string | null
+          email_subject?: string | null
+          grade?: string | null
+          id?: string
+          issues?: string[] | null
+          lead_id?: string | null
+          niche?: string | null
+          open_count?: number | null
+          opened_at?: string | null
+          phone_found?: string | null
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sms_body?: string | null
+          source_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1518,6 +1598,30 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          agent_toggles: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_toggles?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_toggles?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
