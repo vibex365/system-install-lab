@@ -1152,6 +1152,8 @@ export type Database = {
           last_attended_at: string | null
           member_status: Database["public"]["Enums"]["member_status"]
           member_tier: string | null
+          niche: string | null
+          target_location: string | null
         }
         Insert: {
           attendance_count?: number
@@ -1167,6 +1169,8 @@ export type Database = {
           last_attended_at?: string | null
           member_status?: Database["public"]["Enums"]["member_status"]
           member_tier?: string | null
+          niche?: string | null
+          target_location?: string | null
         }
         Update: {
           attendance_count?: number
@@ -1182,6 +1186,8 @@ export type Database = {
           last_attended_at?: string | null
           member_status?: Database["public"]["Enums"]["member_status"]
           member_tier?: string | null
+          niche?: string | null
+          target_location?: string | null
         }
         Relationships: [
           {
