@@ -20,7 +20,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const cleanPhone = phone.replace(/[^\d+]/g, "");
+    // Clean phone to E.164 — must match send-otp logic
+    let cleanPhone = phone.replace(/[^\d+]/g, "");
+    if (!cleanPhone.startsWith("+")) {
+      cleanPhone = cleanPhone.replace(/^1?/, "+1");
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

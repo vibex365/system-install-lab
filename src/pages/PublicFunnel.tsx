@@ -25,7 +25,7 @@ interface FunnelConfig {
   title: string;
   slug: string;
   quiz_config: { questions?: QuizQuestion[] };
-  brand_config: { niche?: string; headline?: string; description?: string };
+  brand_config: { niche?: string; headline?: string; description?: string; primary_color?: string; accent_color?: string };
   user_id: string;
 }
 
@@ -331,8 +331,37 @@ export default function PublicFunnel() {
   const headline = funnel?.brand_config?.headline || funnel?.title || "Take the Quiz";
   const description = funnel?.brand_config?.description || "Answer a few quick questions to get your personalized score.";
 
+  const brandPrimary = funnel?.brand_config?.primary_color;
+  const brandAccent = funnel?.brand_config?.accent_color;
+
+  // Convert hex to HSL values string for CSS custom properties
+  const hexToHsl = (hex: string): string => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
+  const brandStyle: React.CSSProperties = {};
+  if (brandPrimary) {
+    (brandStyle as any)["--primary"] = hexToHsl(brandPrimary);
+  }
+  if (brandAccent) {
+    (brandStyle as any)["--accent"] = hexToHsl(brandAccent);
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8" style={brandStyle}>
       <div className="w-full max-w-2xl">
         <AnimatePresence mode="wait">
 
