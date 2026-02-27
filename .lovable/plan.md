@@ -1,123 +1,72 @@
 
 
-## Plan: Port VibeX Twilio Voice Webhook, Funnel-Call, SMS Reply Handlers & Resend Email Setup to PFSW
+## Plan: ELYT Partner Funnel — Inbound Callback + SMS Affiliate Link
 
-This is a large migration. VibeX uses Twilio for real voice calls (not Vapi), with a full conversational AI webhook that injects quiz answers into a live phone call. PFSW currently uses Vapi for calls. We need to bring over the Twilio-native voice system and adapt it to PFSW's data model.
-
----
-
-### Database Changes Required
-
-PFSW's `call_logs` table is missing columns that VibeX relies on:
-- `quiz_score` (integer)
-- `quiz_result_label` (text)
-- `quiz_answers` (jsonb) — stores conversation history, quiz summary
-- `quiz_id` (uuid)
-- `submission_id` (text)
-- `lead_id` (uuid)
-- `call_summary` (text)
-- `call_duration_seconds` (integer)
-- `call_recording_url` (text)
-- `appointment_id` (uuid)
-- `booking_made` (boolean)
-
-PFSW's `leads` table is missing:
-- `sms_opt_out` (boolean, default false)
-
-New tables needed:
-- `appointments` — for booking from voice calls (id, user_id, lead_id, title, description, start_at, end_at, status, location, created_at)
-- `availability_slots` — for user scheduling preferences (id, user_id, day_of_week, start_time, end_time, is_active, created_at)
+The flow: Lead completes quiz → gets SMS with callback number → calls in → AI voice agent reviews quiz results → after call ends, system sends SMS with the partner's ELYT affiliate link. This reuses the existing inbound callback infrastructure and adds the affiliate link delivery as a post-call step.
 
 ---
 
-### Edge Functions to Create/Adapt (5 functions)
+### Database Migration
 
-#### 1. `funnel-call` (NEW — from VibeX)
-- Called after quiz completion in IntakeFunnel.tsx
-- Creates a lead in `leads` table from quiz data
-- Creates a `call_logs` entry with `status: 'awaiting_callback'` and quiz context
-- Sends SMS via Twilio with callback number
-- Adapted: use PFSW field names (`business_name`/`contact_name` instead of `first_name`/`last_name`), route to admin user, reference PFSW product not VibeX/roofing
+**Add 3 columns to `user_funnels`:**
+- `partner_mode` boolean default false
+- `affiliate_url` text nullable
+- `completion_action` text default 'callback' (values: `callback` | `send_link`)
 
-#### 2. `twilio-voice-webhook` (NEW — from VibeX, 1176 lines)
-- Twilio calls this endpoint when someone calls the TWILIO_PHONE_NUMBER
-- Handles: inbound call recognition, multi-turn AI conversation via Lovable AI (replacing Anthropic), gather/speech events, recording, status callbacks, appointment booking, booking SMS/email confirmations
-- Adapted: Replace all VibeX/roofing references with PFSW digital entrepreneur context. Replace Anthropic API calls with Lovable AI gateway (`google/gemini-2.5-flash`). Remove `_shared/get-niche-config.ts` dependency (use PFSW's `niche_config` table directly). Use PFSW field names on leads table.
+**Add `affiliate_url` to `profiles`:**
+- `affiliate_url` text nullable
 
-#### 3. `trigger-twilio-call` (NEW — from VibeX)
-- Admin/CRM can trigger outbound calls to leads
-- Creates call log, initiates Twilio call with webhook URL pointing to `twilio-voice-webhook`
-- Adapted: use PFSW auth pattern, field names
+---
 
-#### 4. `twilio-webhook` (NEW — from VibeX)
-- SMS reply handler for STOP/START/YES keywords
-- On YES reply: triggers a voice call to the lead
-- Adapted: use PFSW leads table fields, remove VibeX profile references
+### Edge Function Changes
 
-#### 5. `send-email-followup` (NEW — from VibeX)
-- AI-generated follow-up emails to leads via Resend
-- Supports: follow_up, post_call, nurture types
-- Adapted: use PFSW product context, field names, niche_config table
+**1. Update `funnel-call`** — after creating the lead and call log, check the funnel's `completion_action`:
+- If `callback` (default + ELYT flow): existing behavior — SMS callback number
+- After voice call completes (handled in step 2), send affiliate link
+
+**2. Update `twilio-voice-webhook`** — at call completion, check if the call_log has an associated funnel with `partner_mode = true`:
+- If yes, send a follow-up SMS with the affiliate URL from the funnel record
+- Message: "Thanks for chatting with us! Here's your exclusive link to get started: {affiliate_url}"
+
+**3. Create `agent-send-link`** — new workflow agent for orchestrator:
+- Sends SMS with affiliate URL to a lead
+- Used as the final step in partner workflows
 
 ---
 
 ### Frontend Changes
 
-#### IntakeFunnel.tsx — Connect quiz completion to `funnel-call`
-- After `submitLead` saves to `funnel_leads` and `waitlist`, also call `funnel-call` edge function with quiz data (score, tier, answers, phone) to create CRM lead + trigger SMS
+**4. Add `travel_mlm` to NICHES array in `Funnels.tsx`:**
+- `{ value: "travel_mlm", label: "Travel / Lifestyle MLM" }`
 
-#### CRM KanbanBoard — Show quiz data on funnel leads
-- Leads with `source: 'quiz_funnel'` show a badge with quiz score/tier
-- Detail drawer shows quiz answers from notes field
+**5. Add Partner Mode UI to `Funnels.tsx`:**
+- Toggle switch for "Partner Mode" in funnel settings
+- Text input for "Affiliate URL" (placeholder: `https://www.elytlifestyle.com/?ref=`)
+- Only visible when partner_mode is toggled on
+- Save to `user_funnels` record
+
+**6. Update `PublicFunnel.tsx` result/confirmed phases:**
+- When funnel has `partner_mode = true`, update CTA text:
+  - Result: "Call us to review your results — we'll text you your exclusive link after!"
+  - Confirmed: "After your call, check your texts for your exclusive membership link!"
 
 ---
 
-### Config Changes
+### Config
 
 Add to `supabase/config.toml`:
-```
-[functions.funnel-call]
-verify_jwt = false
-
-[functions.twilio-voice-webhook]
-verify_jwt = false
-
-[functions.trigger-twilio-call]
-verify_jwt = false
-
-[functions.twilio-webhook]
-verify_jwt = false
-
-[functions.send-email-followup]
+```toml
+[functions.agent-send-link]
 verify_jwt = false
 ```
-
----
-
-### Key Adaptations from VibeX → PFSW
-
-| VibeX | PFSW |
-|-------|------|
-| `first_name` / `last_name` on leads | `contact_name` / `business_name` on leads |
-| `lead_activities` table | `lead_activity_log` table |
-| `client_websites` / `client_slug` | Not needed (single product) |
-| Anthropic Claude for voice AI | Lovable AI gateway (gemini-2.5-flash) |
-| `vibex` / `client` funnel types | `pfsw` single funnel type |
-| `noreply@vibex.ai` emails | `noreply@[PFSW domain]` or Resend dev sender |
-| `agency_name` on profiles | Not on PFSW profiles (use "PFSW" brand) |
-| `increment_usage` RPC | `get_or_create_usage` + direct update |
 
 ---
 
 ### Implementation Order
-
-1. Database migration (add columns to call_logs, leads; create appointments & availability_slots tables)
-2. Create `funnel-call` edge function
-3. Create `twilio-voice-webhook` edge function (largest piece)
-4. Create `trigger-twilio-call` edge function
-5. Create `twilio-webhook` SMS reply handler
-6. Create `send-email-followup` edge function
-7. Update IntakeFunnel.tsx to call `funnel-call` on completion
-8. Update CRM to show quiz badges on funnel leads
-9. Update config.toml entries
+1. Database migration (add columns to `user_funnels` and `profiles`)
+2. Update `Funnels.tsx` — add travel_mlm niche + partner mode UI
+3. Update `PublicFunnel.tsx` — partner mode result/confirmed copy
+4. Update `funnel-call` — pass affiliate context to call log
+5. Update `twilio-voice-webhook` — post-call affiliate SMS delivery
+6. Create `agent-send-link` edge function for workflow use
 
