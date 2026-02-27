@@ -268,6 +268,83 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_at: string
+          id: string
+          lead_id: string | null
+          location: string | null
+          start_at: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_at: string
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          start_at: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_at?: string
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          start_at?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_slots: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          start_time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          start_time: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       boards: {
         Row: {
           created_at: string
@@ -386,45 +463,93 @@ export type Database = {
       }
       call_logs: {
         Row: {
+          appointment_id: string | null
+          booking_made: boolean | null
+          call_duration_seconds: number | null
+          call_recording_url: string | null
+          call_summary: string | null
           call_type: string
           context: Json | null
           country_code: string | null
           created_at: string
           duration_seconds: number | null
           id: string
+          lead_id: string | null
           phone_number: string
+          quiz_answers: Json | null
+          quiz_id: string | null
+          quiz_result_label: string | null
+          quiz_score: number | null
           status: string
+          submission_id: string | null
           updated_at: string
           user_id: string
           vapi_call_id: string | null
         }
         Insert: {
+          appointment_id?: string | null
+          booking_made?: boolean | null
+          call_duration_seconds?: number | null
+          call_recording_url?: string | null
+          call_summary?: string | null
           call_type: string
           context?: Json | null
           country_code?: string | null
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          lead_id?: string | null
           phone_number: string
+          quiz_answers?: Json | null
+          quiz_id?: string | null
+          quiz_result_label?: string | null
+          quiz_score?: number | null
           status?: string
+          submission_id?: string | null
           updated_at?: string
           user_id: string
           vapi_call_id?: string | null
         }
         Update: {
+          appointment_id?: string | null
+          booking_made?: boolean | null
+          call_duration_seconds?: number | null
+          call_recording_url?: string | null
+          call_summary?: string | null
           call_type?: string
           context?: Json | null
           country_code?: string | null
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          lead_id?: string | null
           phone_number?: string
+          quiz_answers?: Json | null
+          quiz_id?: string | null
+          quiz_result_label?: string | null
+          quiz_score?: number | null
           status?: string
+          submission_id?: string | null
           updated_at?: string
           user_id?: string
           vapi_call_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cohort_members: {
         Row: {
@@ -723,6 +848,7 @@ export type Database = {
           phone: string | null
           pipeline_status: string
           rating: number | null
+          sms_opt_out: boolean | null
           source: string
           updated_at: string
           user_id: string
@@ -743,6 +869,7 @@ export type Database = {
           phone?: string | null
           pipeline_status?: string
           rating?: number | null
+          sms_opt_out?: boolean | null
           source?: string
           updated_at?: string
           user_id: string
@@ -763,6 +890,7 @@ export type Database = {
           phone?: string | null
           pipeline_status?: string
           rating?: number | null
+          sms_opt_out?: boolean | null
           source?: string
           updated_at?: string
           user_id?: string

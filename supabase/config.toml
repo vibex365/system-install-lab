@@ -59,3 +59,21 @@ verify_jwt = false
 
 [functions.notify-lead-booked]
 verify_jwt = false
+
+[functions.funnel-call]
+verify_jwt = false
+
+[functions.twilio-voice-webhook]
+verify_jwt = false
+
+[functions.trigger-twilio-call]
+verify_jwt = false
+
+[functions.twilio-webhook]
+verify_jwt = false
+
+[functions.send-email-followup]
+verify_jwt = false
+
+[functions.send-approved-email]
+verify_jwt = false
