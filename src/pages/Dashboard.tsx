@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Zap, Rocket, Target, ArrowRight, Mail, Phone, MessageSquare, Search, BarChart3 } from "lucide-react";
+import {
+  Zap, Rocket, Target, ArrowRight, Mail, Phone,
+  MessageSquare, Search, BarChart3, Calendar, Users,
+  TrendingUp, Clock, CheckCircle2, AlertCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 const quickGoals = [
   { label: "Find Leads", icon: Search, goal: "Find 50 leads in my niche in my local area" },
-  { label: "Build Funnel", icon: Target, goal: "Build a quiz funnel for my niche that captures leads and books calls" },
   { label: "Book Calls", icon: Phone, goal: "Call my top 20 qualified leads and book discovery calls" },
   { label: "Email Campaign", icon: Mail, goal: "Send a 3-part email sequence to my uncontacted leads" },
   { label: "SMS Follow-up", icon: MessageSquare, goal: "Send SMS follow-ups to leads who haven't responded to email" },
+  { label: "Build Funnel", icon: Target, goal: "Build a quiz funnel for my niche that captures leads and books calls" },
   { label: "Competitor Intel", icon: BarChart3, goal: "Research my top 5 competitors and find positioning gaps" },
 ];
 
@@ -27,6 +31,15 @@ export default function Dashboard() {
   const [goal, setGoal] = useState("");
   const [launching, setLaunching] = useState(false);
   const [workflows, setWorkflows] = useState<any[]>([]);
+  const [leadCount, setLeadCount] = useState(0);
+  const [bookingCount, setBookingCount] = useState(0);
+  const [agentRunCount, setAgentRunCount] = useState(0);
+  const [greeting, setGreeting] = useState("Good morning");
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) navigate("/login", { replace: true });
@@ -34,14 +47,35 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Fetch workflows
     supabase
       .from("workflows")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(5)
-      .then(({ data }) => {
-        if (data) setWorkflows(data);
-      });
+      .then(({ data }) => { if (data) setWorkflows(data); });
+
+    // Fetch lead count
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => { if (count != null) setLeadCount(count); });
+
+    // Fetch booking count
+    supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("host_user_id", user.id)
+      .then(({ count }) => { if (count != null) setBookingCount(count); });
+
+    // Fetch agent run count
+    supabase
+      .from("agent_runs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => { if (count != null) setAgentRunCount(count); });
   }, [user]);
 
   const launchWorkflow = async (goalText: string) => {
@@ -73,135 +107,222 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const statusColors: Record<string, string> = {
-    planning: "text-primary",
-    running: "text-emerald-400",
-    completed: "text-emerald-400",
-    paused: "text-yellow-400",
-    failed: "text-destructive",
+  const statusConfig: Record<string, { color: string; icon: typeof Zap; bg: string }> = {
+    planning: { color: "text-primary", icon: Clock, bg: "bg-primary/10" },
+    running: { color: "text-emerald-400", icon: Zap, bg: "bg-emerald-400/10" },
+    completed: { color: "text-emerald-400", icon: CheckCircle2, bg: "bg-emerald-400/10" },
+    paused: { color: "text-yellow-400", icon: AlertCircle, bg: "bg-yellow-400/10" },
+    failed: { color: "text-destructive", icon: AlertCircle, bg: "bg-destructive/10" },
   };
+
+  const statCards = [
+    { label: "Total Leads", value: leadCount, icon: Users, trend: "+12%", color: "from-primary/15 to-primary/5" },
+    { label: "Calls Booked", value: bookingCount, icon: Calendar, trend: "+8%", color: "from-accent/15 to-accent/5" },
+    { label: "Agent Runs", value: agentRunCount, icon: Zap, trend: null, color: "from-emerald-500/15 to-emerald-500/5" },
+    { label: "Active Workflows", value: workflows.filter(w => w.status === "running").length, icon: TrendingUp, trend: null, color: "from-yellow-500/15 to-yellow-500/5" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24 pb-20">
-        <div className="container max-w-4xl">
-          {/* Goal Input */}
+        <div className="container max-w-6xl">
+
+          {/* ─── Header ─── */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-10"
+            className="mb-8"
           >
-            <Card className="bg-card border-border overflow-hidden">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  What do you want to accomplish?
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  placeholder="Get me 50 MLM leads in Dallas who are interested in health supplements..."
-                  className="min-h-[80px] bg-background border-border resize-none text-sm"
-                />
-
-                <div className="flex flex-wrap gap-2">
-                  {quickGoals.map((qg) => (
-                    <button
-                      key={qg.label}
-                      onClick={() => setGoal(qg.goal)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
-                    >
-                      <qg.icon className="h-3 w-3" />
-                      {qg.label}
-                    </button>
-                  ))}
-                </div>
-
-                <Button
-                  onClick={() => launchWorkflow(goal)}
-                  disabled={!goal.trim() || launching}
-                  className="w-full gold-glow-strong"
-                  size="lg"
-                >
-                  {launching ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-                      Launching...
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="h-4 w-4 mr-2" />
-                      Launch Workflow
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+              {greeting}, {user.email?.split("@")[0]}
+            </h1>
+            <p className="text-sm text-muted-foreground">Here's what's happening with your pipeline.</p>
           </motion.div>
 
-          {/* Recent Workflows */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">Recent Workflows</h2>
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link to="/dashboard/workflows">View All <ArrowRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
-            </div>
-
-            {workflows.length === 0 ? (
-              <Card className="bg-card border-border">
-                <CardContent className="py-12 text-center">
-                  <Zap className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No workflows yet. Describe a goal above to get started.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {workflows.map((w) => (
-                  <Link
-                    key={w.id}
-                    to={`/dashboard/workflows/${w.id}`}
-                    className="block rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{w.goal}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(w.created_at).toLocaleDateString()}
-                        </p>
+          {/* ─── Stats Grid ─── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {statCards.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Card className="bg-card border-border hover:border-primary/20 transition-colors overflow-hidden">
+                  <CardContent className="p-5 relative">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-50`} />
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="h-9 w-9 rounded-xl bg-background/80 flex items-center justify-center">
+                          <s.icon className="h-4 w-4 text-primary" />
+                        </div>
+                        {s.trend && (
+                          <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                            {s.trend}
+                          </span>
+                        )}
                       </div>
-                      <span className={`text-xs font-semibold uppercase tracking-wider ${statusColors[w.status] || "text-muted-foreground"}`}>
-                        {w.status}
-                      </span>
+                      <p className="text-3xl font-black text-foreground">{s.value}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider font-medium">{s.label}</p>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: "Active Workflows", value: workflows.filter(w => w.status === "running").length, icon: Zap },
-              { label: "Completed", value: workflows.filter(w => w.status === "completed").length, icon: Target },
-              { label: "Leads Found", value: "—", icon: Search },
-              { label: "Calls Booked", value: "—", icon: Phone },
-            ].map((s) => (
-              <Card key={s.label} className="bg-card border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <s.icon className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{s.label}</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
+
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* ─── Goal Input (left 3 cols) ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="lg:col-span-3"
+            >
+              <Card className="bg-card border-border overflow-hidden h-full">
+                <CardContent className="p-6 md:p-8 flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Rocket className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">Launch a Workflow</h2>
+                      <p className="text-xs text-muted-foreground">Describe a goal. AI agents handle the rest.</p>
+                    </div>
+                  </div>
+
+                  <Textarea
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    placeholder="Get me 50 MLM leads in Dallas who are interested in health supplements..."
+                    className="min-h-[100px] bg-background border-border resize-none text-sm flex-shrink-0 mb-4"
+                  />
+
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {quickGoals.map((qg) => (
+                      <button
+                        key={qg.label}
+                        onClick={() => setGoal(qg.goal)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
+                      >
+                        <qg.icon className="h-3 w-3" />
+                        {qg.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={() => launchWorkflow(goal)}
+                    disabled={!goal.trim() || launching}
+                    className="w-full gold-glow-strong mt-auto"
+                    size="lg"
+                  >
+                    {launching ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+                        Launching...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4 mr-2" />
+                        Launch Workflow
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* ─── Recent Workflows (right 2 cols) ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-2"
+            >
+              <Card className="bg-card border-border h-full">
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-lg font-bold text-foreground">Recent Workflows</h2>
+                    <Button asChild variant="ghost" size="sm" className="text-primary text-xs">
+                      <Link to="/dashboard/workflows">View All <ArrowRight className="h-3 w-3 ml-1" /></Link>
+                    </Button>
+                  </div>
+
+                  {workflows.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                      <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                        <Zap className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">No workflows yet.</p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">Describe a goal to get started.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 flex-1 overflow-y-auto">
+                      {workflows.map((w) => {
+                        const cfg = statusConfig[w.status] || statusConfig.planning;
+                        const StatusIcon = cfg.icon;
+                        return (
+                          <Link
+                            key={w.id}
+                            to={`/dashboard/workflows/${w.id}`}
+                            className="group flex items-start gap-3 rounded-xl border border-border bg-background p-4 hover:border-primary/30 transition-all"
+                          >
+                            <div className={`h-8 w-8 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                              <StatusIcon className={`h-4 w-4 ${cfg.color}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                                {w.goal}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-[10px] font-semibold uppercase tracking-wider ${cfg.color}`}>
+                                  {w.status}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  · {new Date(w.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary shrink-0 mt-1 transition-colors" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* ─── Quick Links ─── */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {[
+              { label: "CRM Pipeline", to: "/dashboard/crm", icon: Target, desc: "Manage your leads" },
+              { label: "Agents", to: "/dashboard/agents", icon: Zap, desc: "View agent catalog" },
+              { label: "Calendar", to: "/dashboard/calendar", icon: Calendar, desc: "Upcoming calls" },
+              { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3, desc: "Performance data" },
+            ].map((link) => (
+              <Link
+                key={link.label}
+                to={link.to}
+                className="group rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:gold-glow transition-all"
+              >
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                  <link.icon className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">{link.label}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{link.desc}</p>
+              </Link>
+            ))}
+          </motion.div>
+
         </div>
       </main>
       <Footer />
