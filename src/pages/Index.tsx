@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { Zap, Bot, Search, Mail, Phone, Target, BarChart3, MessageSquare, Check } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
+import heroPortrait from "@/assets/hero-portrait.png";
 
 const agents = [
   { icon: Search, name: "Scout Agent", desc: "Discovers leads by niche and location via web search. Returns names, phones, emails, websites." },
@@ -79,8 +80,12 @@ export default function Index() {
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+        <div className="absolute inset-0 flex justify-end items-end overflow-hidden">
+          <img src={heroPortrait} alt="" className="h-[85%] object-contain object-bottom opacity-20 md:opacity-30 select-none pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-[150px]" />
-        <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/5 blur-[120px]" />
 
         <div className="container relative z-10 text-center py-24 md:py-32">
           <motion.div
