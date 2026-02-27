@@ -30,6 +30,8 @@ Deno.serve(async (req) => {
       quiz_result_label,
       quiz_title,
       quiz_questions_summary,
+      funnel_slug,
+      funnel_owner_id,
     } = await req.json();
 
     if (!phone_number) throw new Error("Phone number is required");
@@ -42,14 +44,28 @@ Deno.serve(async (req) => {
 
     const contactName = (respondent_name || "").trim() || "Unknown";
 
-    // Route to admin user
-    const { data: adminRole } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin")
-      .limit(1)
-      .single();
-    const targetUserId = adminRole?.user_id || "00000000-0000-0000-0000-000000000000";
+    // Look up funnel for partner mode context
+    let funnelRecord: any = null;
+    if (funnel_slug) {
+      const { data: fData } = await supabase
+        .from("user_funnels")
+        .select("id, partner_mode, affiliate_url, completion_action, user_id")
+        .eq("slug", funnel_slug)
+        .maybeSingle();
+      funnelRecord = fData;
+    }
+
+    // Route to funnel owner or admin user
+    let targetUserId = funnel_owner_id || funnelRecord?.user_id || null;
+    if (!targetUserId) {
+      const { data: adminRole } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin")
+        .limit(1)
+        .single();
+      targetUserId = adminRole?.user_id || "00000000-0000-0000-0000-000000000000";
+    }
 
     // Create lead in CRM pipeline
     const { data: leadData, error: leadError } = await supabase
@@ -83,6 +99,9 @@ Deno.serve(async (req) => {
           score: quiz_score,
           result: quiz_result_label,
           respondent_name: contactName,
+          partner_mode: funnelRecord?.partner_mode || false,
+          affiliate_url: funnelRecord?.affiliate_url || null,
+          funnel_id: funnelRecord?.id || null,
         },
         quiz_score: quiz_score || 0,
         quiz_result_label: quiz_result_label || null,

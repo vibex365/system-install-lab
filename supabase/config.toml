@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.regenerate-call-summary]
 verify_jwt = false
+
+[functions.agent-send-link]
+verify_jwt = false

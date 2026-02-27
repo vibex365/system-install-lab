@@ -27,6 +27,9 @@ interface FunnelConfig {
   quiz_config: { questions?: QuizQuestion[] };
   brand_config: { niche?: string; headline?: string; description?: string; primary_color?: string; accent_color?: string };
   user_id: string;
+  partner_mode?: boolean;
+  affiliate_url?: string;
+  completion_action?: string;
 }
 
 type Phase = "loading" | "not_found" | "intro" | "quiz" | "analyzing" | "insight" | "capture" | "otp_verify" | "generating" | "result" | "booking" | "confirmed";
@@ -84,7 +87,7 @@ export default function PublicFunnel() {
     (async () => {
       const { data, error } = await supabase
         .from("user_funnels")
-        .select("title, slug, quiz_config, brand_config, user_id")
+        .select("title, slug, quiz_config, brand_config, user_id, partner_mode, affiliate_url, completion_action")
         .eq("slug", slug)
         .eq("status", "active")
         .single();
@@ -93,6 +96,9 @@ export default function PublicFunnel() {
         ...data,
         quiz_config: typeof data.quiz_config === "object" ? (data.quiz_config as any) : {},
         brand_config: typeof data.brand_config === "object" ? (data.brand_config as any) : {},
+        partner_mode: (data as any).partner_mode || false,
+        affiliate_url: (data as any).affiliate_url || "",
+        completion_action: (data as any).completion_action || "callback",
       });
       setPhase("intro");
     })();
@@ -280,6 +286,7 @@ export default function PublicFunnel() {
               quiz_result_label: tier.label,
               quiz_title: funnel.title,
               quiz_questions_summary: quizSummary,
+              funnel_slug: funnel.slug,
               funnel_owner_id: funnel.user_id,
             },
           });
@@ -598,8 +605,16 @@ export default function PublicFunnel() {
                   <div className="mx-auto size-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 animate-pulse">
                     <Phone className="size-8 text-primary" />
                   </div>
-                  <p className="text-lg font-bold text-foreground">A PFSW growth specialist will call you shortly!</p>
-                  <p className="text-sm text-muted-foreground">We're connecting you with a live specialist to walk through your results.</p>
+                  <p className="text-lg font-bold text-foreground">
+                    {funnel?.partner_mode
+                      ? "Call us to review your results — we'll text you your exclusive link after!"
+                      : "A PFSW growth specialist will call you shortly!"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {funnel?.partner_mode
+                      ? "Our specialist will walk through your quiz results on the call."
+                      : "We're connecting you with a live specialist to walk through your results."}
+                  </p>
                   <Badge variant="outline" className="text-primary border-primary/30">📞 Call incoming...</Badge>
                 </CardContent>
               </Card>
@@ -614,7 +629,9 @@ export default function PublicFunnel() {
                   <CheckCircle2 className="size-14 text-primary mx-auto" />
                   <h2 className="text-xl font-bold text-foreground">You're All Set{name ? `, ${name.split(" ")[0]}` : ""}!</h2>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    A PFSW growth specialist will reach out shortly. In the meantime, you can also call us directly.
+                    {funnel?.partner_mode
+                      ? "After your call, check your texts for your exclusive membership link!"
+                      : "A PFSW growth specialist will reach out shortly. In the meantime, you can also call us directly."}
                   </p>
                   <a href={`tel:${callbackNumber.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-2 text-primary font-bold text-lg hover:underline">
                     <Phone className="size-5" /> {callbackNumber}
@@ -656,7 +673,11 @@ export default function PublicFunnel() {
 
                   {/* CTA */}
                   <div className="text-center pt-4 space-y-3">
-                    <p className="text-sm font-medium text-foreground">Ready to level up your automation?</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {funnel?.partner_mode
+                        ? "Call us to review your results — we'll text you your exclusive link after!"
+                        : "Ready to level up your automation?"}
+                    </p>
                     <a href={`tel:${callbackNumber.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-2 text-primary font-bold text-lg hover:underline">
                       <Phone className="size-5" /> Call Us: {callbackNumber}
                     </a>

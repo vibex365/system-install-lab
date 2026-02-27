@@ -74,6 +74,7 @@ Available agents:
 - booker: AI voice call to book meetings (params: script, hot_leads_only)
 - funnel_builder: Generate a quiz funnel (params: niche, goal)
 - competitor_intel: Research competitors (params: niche, location)
+- send_link: Send an affiliate/signup link via SMS to a lead (params: lead_id, affiliate_url, message)
 
 Given a user's goal, return a JSON array of steps. Each step has: agent (string), params (object).
 Return ONLY valid JSON array, no explanation.${nicheContext}`,
