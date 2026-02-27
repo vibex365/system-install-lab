@@ -69,7 +69,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Legal Intake Team",
         subtitle: "Five autonomous agents working 24/7 so your associates focus on billable hours.",
         agents: [
-          { name: "Scout Agent", action: "Finds law firms and potential referral partners in your practice area", icon: "Search" },
+          { name: "Scout Agent", action: "Finds people actively searching for legal help — forum posts, social threads, local queries like 'does anyone know a good lawyer?'", icon: "Search" },
           { name: "Qualifier Agent", action: "Scores incoming leads by case type, urgency, and budget fit", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends personalized follow-ups via email and SMS", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules consultations on available slots", icon: "Calendar" },
@@ -137,7 +137,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Training Staff",
         subtitle: "Autonomous agents that handle lead gen while you train clients.",
         agents: [
-          { name: "Scout Agent", action: "Discovers local prospects interested in fitness coaching", icon: "Search" },
+          { name: "Scout Agent", action: "Finds people posting about wanting a trainer, gym recommendations, or weight loss help on Reddit, Facebook groups, and local forums", icon: "Search" },
           { name: "Qualifier Agent", action: "Assesses fitness goals, experience, and readiness to commit", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends goal-specific follow-ups that drive trial bookings", icon: "Send" },
           { name: "Booker Agent", action: "Schedules trial sessions and sends prep instructions", icon: "Calendar" },
@@ -205,7 +205,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Real Estate Team",
         subtitle: "Five agents that never take a listing day off.",
         agents: [
-          { name: "Scout Agent", action: "Identifies motivated buyers and sellers in your farm area", icon: "Search" },
+          { name: "Scout Agent", action: "Finds people actively posting about buying or selling homes — 'looking for a realtor in [city]' on Reddit, Nextdoor, and Facebook groups", icon: "Search" },
           { name: "Qualifier Agent", action: "Scores leads by timeline, price range, and motivation level", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends personalized market updates and CMA invitations", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules showings and home valuations", icon: "Calendar" },
@@ -273,7 +273,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Front Desk",
         subtitle: "Autonomous agents that handle patient acquisition so your team focuses on care.",
         agents: [
-          { name: "Scout Agent", action: "Discovers local residents searching for dental services", icon: "Search" },
+          { name: "Scout Agent", action: "Finds people asking for dentist recommendations on local forums, Google reviews, and community groups — 'need a good dentist near me'", icon: "Search" },
           { name: "Qualifier Agent", action: "Screens by dental concern, insurance type, and urgency", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends appointment reminders and recall notifications", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules checkups into available hygienist slots", icon: "Calendar" },
