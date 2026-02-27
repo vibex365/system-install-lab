@@ -6,22 +6,10 @@ import { Navbar } from "@/components/Navbar";
 import { useAuth, PLAN_TIERS, type PlanTier } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Zap, Rocket, Crown, Loader2 } from "lucide-react";
+import { Check, Rocket, Crown, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const plans = [
-  {
-    key: "starter" as const,
-    icon: Zap,
-    features: [
-      "3 Quiz Funnels",
-      "100 Leads / month",
-      "50 SMS / month",
-      "3 Workflows / month",
-      "1 Campaign",
-      "Email support",
-    ],
-  },
   {
     key: "growth" as const,
     icon: Rocket,
@@ -31,7 +19,7 @@ const plans = [
       "500 Leads / month",
       "200 SMS / month",
       "20 Voice Calls / month",
-      "10 Workflows / month",
+      "5 Workflows / month",
       "5 Campaigns",
       "Priority support",
     ],
@@ -125,7 +113,7 @@ export default function Upgrade() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {plans.map((plan, i) => {
               const tier = PLAN_TIERS[plan.key];
               const isCurrentPlan = planTier === plan.key;
@@ -159,7 +147,7 @@ export default function Upgrade() {
                         <div>
                           <h3 className="text-lg font-bold text-foreground">{tier.name}</h3>
                           <p className="text-2xl font-black text-foreground">
-                            ${(tier.price / 100).toFixed(0)}
+                            ${tier.price}
                             <span className="text-sm font-normal text-muted-foreground">/mo</span>
                           </p>
                         </div>

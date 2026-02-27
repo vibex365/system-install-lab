@@ -26,14 +26,6 @@ const agents = [
 
 const tiers = [
   {
-    name: "Starter",
-    price: "$47",
-    period: "/mo",
-    features: ["3 quiz funnels", "100 leads/month", "Email outreach agent", "1 active workflow", "Basic CRM"],
-    cta: "Start Free Trial",
-    highlighted: false,
-  },
-  {
     name: "Growth",
     price: "$97",
     period: "/mo",
@@ -406,7 +398,7 @@ export default function Index() {
       <section className="py-24 md:py-32 border-t border-border" id="pricing">
         <div className="container">
           <SectionHeader title="Simple Pricing" subtitle="Start free. Scale when you're ready." />
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {tiers.map((t, i) => (
               <motion.div
                 key={t.name}

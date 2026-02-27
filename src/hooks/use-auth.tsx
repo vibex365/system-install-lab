@@ -10,23 +10,16 @@ type AppRole = "chief_architect" | "architect_lead" | "member";
 
 // Plan tier config with Stripe product/price IDs and limits
 export const PLAN_TIERS = {
-  starter: {
-    name: "Starter",
-    price: 497,
-    price_id: "price_1T4j2lAsrgxssNTVI1seOaSF",
-    product_id: "prod_U2oggIHaCBOJbk",
-    limits: { leads: 100, funnels: 3, sms: 50, voice_calls: 0, workflows: 3, campaigns: 1 },
-  },
   growth: {
     name: "Growth",
-    price: 997,
+    price: 97,
     price_id: "price_1T4j2mAsrgxssNTVAgxwbT4v",
     product_id: "prod_U2ogyutSubPFyX",
-    limits: { leads: 500, funnels: -1, sms: 200, voice_calls: 20, workflows: 10, campaigns: 5 },
+    limits: { leads: 500, funnels: -1, sms: 200, voice_calls: 20, workflows: 5, campaigns: 5 },
   },
   scale: {
     name: "Scale",
-    price: 2500,
+    price: 197,
     price_id: "price_1T4j2nAsrgxssNTVEJFb8l6Q",
     product_id: "prod_U2ogWvsT0aWj4o",
     limits: { leads: 2000, funnels: -1, sms: -1, voice_calls: -1, workflows: -1, campaigns: -1 },
