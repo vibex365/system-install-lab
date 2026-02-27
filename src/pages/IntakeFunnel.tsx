@@ -17,6 +17,10 @@ import {
   DollarSign,
   Users,
   Star,
+  Bot,
+  Search,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -50,12 +54,13 @@ const STEPS: Step[] = [
   {
     type: "question",
     data: {
-      question: "How are you currently building funnels for your clients?",
+      question: "What type of digital business are you building?",
       options: [
-        { label: "Manually coding from scratch every time", score: 5 },
-        { label: "Using templates but heavily customizing", score: 15 },
-        { label: "Drag-and-drop builders (ClickFunnels, GoHighLevel)", score: 25 },
-        { label: "I don't build funnels — I just do static sites", score: 10 },
+        { label: "Network Marketing / MLM", score: 20 },
+        { label: "Affiliate Marketing", score: 20 },
+        { label: "Online Coaching or Consulting", score: 25 },
+        { label: "E-Commerce / Digital Products", score: 15 },
+        { label: "Home-based business / Other", score: 10 },
       ],
     },
   },
@@ -63,52 +68,52 @@ const STEPS: Step[] = [
     type: "education",
     data: {
       title: "Did You Know?",
-      stat: "72%",
-      body: "of agencies spend over 10 hours per funnel build — time that could be spent closing new clients instead of wrestling with page builders.",
+      stat: "3.2x",
+      body: "Interactive quiz funnels convert 3.2x better than static landing pages. Most digital entrepreneurs still use flat pages with a contact form — leaving money on the table.",
     },
   },
   {
     type: "question",
     data: {
-      question: "How long does it take you to deliver a complete funnel to a client?",
+      question: "How are you currently finding new prospects?",
       options: [
-        { label: "2+ weeks", score: 5 },
-        { label: "1-2 weeks", score: 15 },
-        { label: "3-5 days", score: 25 },
-        { label: "Same day or next day", score: 35 },
+        { label: "Mostly word-of-mouth and warm market", score: 5 },
+        { label: "Social media posting and DMs manually", score: 15 },
+        { label: "Paid ads to a landing page", score: 25 },
+        { label: "I have a full system: prospecting → outreach → close", score: 35 },
       ],
     },
   },
   {
     type: "question",
     data: {
-      question: "Do your funnels include lead capture that actually stores data for the client?",
+      question: "How do you qualify whether a prospect is a good fit?",
       options: [
-        { label: "No — leads go to email or a spreadsheet", score: 5 },
-        { label: "Sometimes — depends on the client's setup", score: 15 },
-        { label: "Yes — I set up a basic form submission", score: 25 },
-        { label: "Yes — with CRM integration and automated follow-up", score: 35 },
+        { label: "I don't — I pitch everyone the same way", score: 5 },
+        { label: "I ask a few questions on a call", score: 15 },
+        { label: "I use a form or survey to pre-screen", score: 25 },
+        { label: "I have automated scoring that filters prospects", score: 35 },
       ],
-      hint: "Proper lead capture is the foundation of any high-converting funnel.",
+      hint: "Top earners qualify before they ever get on a call.",
     },
   },
   {
     type: "education",
     data: {
-      title: "The Funnel Gap",
-      stat: "3.2x",
-      body: "Interactive quiz funnels convert 3.2x better than static landing pages. Yet most agencies still deliver flat pages with a contact form.",
+      title: "The Qualification Gap",
+      stat: "67%",
+      body: "of sales calls are wasted on unqualified prospects. A quiz funnel pre-screens buyers so you only talk to people ready to take action.",
     },
   },
   {
     type: "question",
     data: {
-      question: "What's your biggest bottleneck when scaling your agency?",
+      question: "What's your biggest bottleneck right now?",
       options: [
-        { label: "Finding new clients", score: 20 },
-        { label: "Delivering fast enough to keep clients happy", score: 10 },
-        { label: "Building high-converting assets (funnels, sites)", score: 5 },
-        { label: "Managing everything solo — no systems", score: 8 },
+        { label: "Not enough leads coming in", score: 20 },
+        { label: "Leads go cold before I can follow up", score: 15 },
+        { label: "Spending too much time on manual outreach", score: 10 },
+        { label: "Can't scale without burning out", score: 8 },
       ],
       multiSelect: true,
       hint: "Select all that apply.",
@@ -117,32 +122,32 @@ const STEPS: Step[] = [
   {
     type: "question",
     data: {
-      question: "How much are you charging per funnel build?",
+      question: "How much time do you spend on prospecting each week?",
       options: [
-        { label: "Under $500", score: 5 },
-        { label: "$500 – $1,500", score: 15 },
-        { label: "$1,500 – $5,000", score: 25 },
-        { label: "$5,000+", score: 35 },
+        { label: "10+ hours — it's all manual", score: 5 },
+        { label: "5–10 hours — mix of manual and some tools", score: 15 },
+        { label: "2–5 hours — I have some systems", score: 25 },
+        { label: "Under 2 hours — mostly automated", score: 35 },
       ],
     },
   },
   {
     type: "education",
     data: {
-      title: "Speed = Revenue",
-      stat: "$4,200",
-      body: "Agencies using AI-powered funnel generation report an average deal size of $4,200 — because they deliver faster, look more premium, and include data-driven features.",
+      title: "AI Changes Everything",
+      stat: "80%",
+      body: "of prospecting work can be automated with AI agents — from finding leads to sending outreach to booking calls. Top digital entrepreneurs spend their time closing, not chasing.",
     },
   },
   {
     type: "question",
     data: {
-      question: "How do you currently prospect for new clients?",
+      question: "How interested are you in using AI to automate prospecting and outreach?",
       options: [
-        { label: "Referrals only — no outbound", score: 10 },
-        { label: "Cold email / DMs manually", score: 15 },
-        { label: "Paid ads to my own offer page", score: 25 },
-        { label: "I have a full system: prospecting → outreach → close", score: 35 },
+        { label: "Very — I need this yesterday", score: 35 },
+        { label: "Interested — show me how it works", score: 25 },
+        { label: "Curious but skeptical", score: 15 },
+        { label: "Just researching for now", score: 5 },
       ],
     },
   },
@@ -150,49 +155,49 @@ const STEPS: Step[] = [
 
 const TIERS = [
   {
-    min: 0, max: 40, label: "Critical", color: "text-red-400", bgColor: "bg-red-500/10", borderColor: "border-red-500/30",
-    message: "You're leaving serious money on the table. Your current process is costing you clients and revenue every week.",
-    urgency: "Immediate Action Recommended",
+    min: 0, max: 35, label: "Critical", color: "text-red-400", bgColor: "bg-red-500/10", borderColor: "border-red-500/30",
+    message: "Your current process is costing you prospects and revenue every week. Manual prospecting and no qualification system are holding you back.",
+    urgency: "Immediate Action Needed",
     urgencyColor: "bg-red-500/20 text-red-400 border-red-500/30",
   },
   {
-    min: 41, max: 70, label: "Needs Work", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30",
-    message: "You have some pieces in place, but major gaps in your funnel delivery and client acquisition process are holding you back.",
-    urgency: "Significant Improvement Needed",
+    min: 36, max: 60, label: "Needs Work", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30",
+    message: "You have some pieces in place, but major gaps in prospecting and qualification are slowing your growth.",
+    urgency: "Significant Improvement Available",
     urgencyColor: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   },
   {
-    min: 71, max: 85, label: "Solid", color: "text-primary", bgColor: "bg-primary/10", borderColor: "border-primary/30",
-    message: "You're ahead of most agencies, but there's still room to automate, systematize, and charge more for premium funnel builds.",
+    min: 61, max: 80, label: "Solid Foundation", color: "text-primary", bgColor: "bg-primary/10", borderColor: "border-primary/30",
+    message: "You're ahead of most digital entrepreneurs. Automating your remaining manual processes could unlock your next level.",
     urgency: "Optimization Opportunities Available",
     urgencyColor: "bg-primary/20 text-primary border-primary/30",
   },
   {
-    min: 86, max: 100, label: "Elite", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30",
-    message: "You're operating at a high level. PFSW would help you scale even further with AI-powered tools and a builder collective.",
+    min: 81, max: 100, label: "System Operator", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30",
+    message: "You're running a systematized operation. PFSW would help you scale further with AI agents and quiz funnels that run on autopilot.",
     urgency: "Ready to Scale",
     urgencyColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   },
 ];
 
 const INSIGHT_MAP: Record<number, { icon: typeof Target; title: string; description: string }> = {
-  0: { icon: Zap, title: "Funnel Build Process", description: "Your current build method is slowing you down. AI-generated funnels can cut delivery time by 80%." },
-  2: { icon: TrendingUp, title: "Delivery Speed", description: "Faster delivery means happier clients and more capacity for new deals. Top agencies deliver in hours, not weeks." },
-  3: { icon: Target, title: "Lead Capture & Data", description: "Without proper lead capture, your clients' funnels are leaking revenue. Every form submission should feed a CRM." },
-  5: { icon: AlertTriangle, title: "Scaling Bottleneck", description: "Your biggest bottleneck is solvable with the right systems. Automation removes the ceiling on your growth." },
-  6: { icon: DollarSign, title: "Pricing Strategy", description: "You may be undercharging. Agencies with AI-powered delivery consistently command $3K–$5K+ per funnel." },
-  8: { icon: Users, title: "Client Acquisition", description: "A systemized prospecting pipeline is the difference between feast-or-famine and predictable revenue." },
+  0: { icon: Users, title: "Business Model", description: "Your niche has massive upside with the right system. Quiz funnels + AI agents are tailor-made for this." },
+  2: { icon: Search, title: "Lead Generation", description: "Your prospecting is too manual. AI Scout Agents can find qualified prospects in your niche automatically." },
+  3: { icon: Target, title: "Prospect Qualification", description: "Without automated qualification, you're wasting time on bad-fit prospects. A quiz funnel fixes this instantly." },
+  5: { icon: AlertTriangle, title: "Growth Bottleneck", description: "Your biggest bottleneck is solvable with automation. AI agents remove the ceiling on your growth." },
+  6: { icon: TrendingUp, title: "Time Investment", description: "You're spending too many hours on prospecting. AI agents can cut this by 80% and deliver better results." },
+  8: { icon: Zap, title: "Automation Readiness", description: "Your interest level shows you're ready. The gap between where you are and where you could be is one system." },
 };
 
-const MAX_SCORE = 200;
+const MAX_SCORE = 220;
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function IntakeFunnel() {
   useSEO({
-    title: "Are You Building Your Clients' Funnels The Hard Way? | PFSW",
+    title: "Are You Leaving Money on the Table? | PFSW Quiz",
     description:
-      "Take the 2-minute Funnel Efficiency quiz and get your personalized score. Discover how top agencies build and deliver high-converting funnels in hours, not weeks.",
+      "Take the 2-minute Business Automation quiz. Discover how quiz funnels and AI agents can automate your prospecting, qualification, and sales.",
   });
 
   const { toast } = useToast();
@@ -215,7 +220,6 @@ export default function IntakeFunnel() {
   const normalizedScore = Math.round((rawScore / MAX_SCORE) * 100);
   const tier = TIERS.find((t) => normalizedScore >= t.min && normalizedScore <= t.max) || TIERS[0];
 
-  // Find the 3 lowest-scoring question answers for insights
   const getInsightCards = () => {
     const questionStepIndices = STEPS.map((s, i) => (s.type === "question" ? i : -1)).filter((i) => i !== -1);
     const scored = questionStepIndices
@@ -276,7 +280,6 @@ export default function IntakeFunnel() {
     }
     setSubmitting(true);
     try {
-      // Save to funnel_leads for CRM visibility
       await supabase.from("funnel_leads" as any).insert({
         name: name.trim(),
         email: email.trim(),
@@ -286,10 +289,9 @@ export default function IntakeFunnel() {
         answers: answers,
         funnel_name: "intake",
       });
-      // Also save to waitlist for backwards compatibility
       await supabase.from("waitlist").insert({
         email: email.trim(),
-        note: `[Smart Funnel] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label})`,
+        note: `[PFSW Quiz] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label})`,
       });
       setPhase("result");
     } catch {
@@ -299,11 +301,9 @@ export default function IntakeFunnel() {
     }
   };
 
-  // ── Render ──
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Progress bar — hidden on landing */}
+      {/* Progress bar */}
       {phase !== "landing" && phase !== "result" && (
         <div className="fixed top-0 left-0 right-0 z-50">
           <div className="max-w-xl mx-auto px-4 pt-14">
@@ -323,7 +323,7 @@ export default function IntakeFunnel() {
         </div>
       )}
 
-      {/* Persistent brand header */}
+      {/* Brand header */}
       <header className="fixed top-0 left-0 right-0 z-50 py-3 bg-background/80 backdrop-blur-sm border-b border-border">
         <p className="text-center text-xs font-bold tracking-[0.3em] uppercase text-foreground">
           PFSW
@@ -333,7 +333,7 @@ export default function IntakeFunnel() {
       <div className="flex-1 flex items-center justify-center px-4 py-20">
         <div className="w-full max-w-xl">
           <AnimatePresence mode="wait">
-            {/* ─── LANDING PHASE ─── */}
+            {/* ─── LANDING ─── */}
             {phase === "landing" && (
               <motion.div
                 key="landing"
@@ -345,37 +345,45 @@ export default function IntakeFunnel() {
               >
                 <div className="space-y-4">
                   <p className="text-xs text-primary tracking-[0.25em] uppercase font-semibold">
-                    ARE YOU LEAVING MONEY ON THE TABLE?
+                    FREE BUSINESS AUTOMATION AUDIT
                   </p>
                   <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground leading-tight">
-                    Are You Building Your Clients' Funnels{" "}
-                    <span className="text-primary">The Hard Way?</span>
+                    Is Manual Prospecting{" "}
+                    <span className="text-primary">Killing Your Growth?</span>
                   </h1>
                   <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto leading-relaxed">
-                    Answer 6 quick questions. Get your Funnel Efficiency Score in under 2 minutes.
+                    Answer 6 quick questions. Get your Automation Readiness Score and see how quiz funnels + AI agents can transform your business.
                   </p>
                 </div>
 
                 <Button
                   size="lg"
-                  className="text-base md:text-lg px-10 py-7 font-bold tracking-wide"
+                  className="text-base md:text-lg px-10 py-7 font-bold tracking-wide gold-glow-strong"
                   onClick={() => setPhase("quiz")}
                 >
-                  TAKE THE FREE QUIZ NOW <ArrowRight className="ml-2 h-5 w-5" />
+                  TAKE THE FREE QUIZ <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 
-                <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" />
-                    ))}
+                <div className="flex items-center justify-center gap-4 text-muted-foreground text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Bot className="h-3.5 w-3.5 text-primary" />
+                    <span>AI-Powered</span>
                   </div>
-                  <span className="text-xs ml-1.5">Trusted by 50+ agency owners</span>
+                  <span>·</span>
+                  <div className="flex items-center gap-1.5">
+                    <Target className="h-3.5 w-3.5 text-primary" />
+                    <span>Quiz Funnels</span>
+                  </div>
+                  <span>·</span>
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-primary" />
+                    <span>6 Agents</span>
+                  </div>
                 </div>
               </motion.div>
             )}
 
-            {/* ─── QUIZ PHASE ─── */}
+            {/* ─── QUIZ ─── */}
             {phase === "quiz" && (
               <motion.div
                 key={`step-${currentStep}`}
@@ -409,7 +417,7 @@ export default function IntakeFunnel() {
               </motion.div>
             )}
 
-            {/* ─── LEAD CAPTURE PHASE ─── */}
+            {/* ─── CAPTURE ─── */}
             {phase === "capture" && (
               <motion.div
                 key="capture"
@@ -425,30 +433,30 @@ export default function IntakeFunnel() {
                     Where should we send your results?
                   </h2>
                   <p className="text-muted-foreground text-sm">
-                    Enter your details below to receive your personalized Funnel Efficiency Score.
+                    Enter your details to receive your personalized Automation Readiness Score.
                   </p>
                 </div>
                 <Card className="bg-card border-border">
                   <CardContent className="pt-6 space-y-4">
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">Full Name *</label>
-                      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Marcus Johnson" className="bg-secondary border-border" />
+                      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sarah Johnson" className="bg-secondary border-border" />
                     </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">Email Address *</label>
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="marcus@agency.com" className="bg-secondary border-border" />
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@business.com" className="bg-secondary border-border" />
                     </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">Phone Number <span className="font-normal text-muted-foreground">(optional)</span></label>
                       <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 000-0000" className="bg-secondary border-border" />
                     </div>
-                    <Button className="w-full py-6 text-base font-bold" onClick={submitLead} disabled={submitting}>
+                    <Button className="w-full py-6 text-base font-bold gold-glow-strong" onClick={submitLead} disabled={submitting}>
                       {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Get My Funnel Score
+                      Get My Automation Score
                     </Button>
                     <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
                       <Lock className="h-3 w-3" />
-                      <span>Your information is secure and will never be shared with third parties.</span>
+                      <span>Your information is secure and never shared.</span>
                     </div>
                     <button onClick={() => setPhase("quiz")} className="block mx-auto text-xs text-muted-foreground hover:text-foreground transition-colors">
                       ← Go Back
@@ -458,7 +466,7 @@ export default function IntakeFunnel() {
               </motion.div>
             )}
 
-            {/* ─── RESULTS PHASE ─── */}
+            {/* ─── RESULTS ─── */}
             {phase === "result" && (
               <motion.div
                 key="result"
@@ -467,20 +475,18 @@ export default function IntakeFunnel() {
                 transition={{ duration: 0.5 }}
                 className="space-y-8"
               >
-                {/* Greeting */}
                 <div className="text-center space-y-2">
                   <p className="text-xs text-primary tracking-widest uppercase font-semibold">Your Results</p>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Thank You, {name.split(" ")[0]}! 🎉
+                    {name.split(" ")[0]}, here's your score.
                   </h2>
-                  <p className="text-muted-foreground text-sm">Your Funnel Efficiency Assessment is complete</p>
+                  <p className="text-muted-foreground text-sm">Your Automation Readiness Assessment is complete.</p>
                 </div>
 
                 {/* Score Card */}
                 <Card className="bg-secondary border-border overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row items-center gap-6">
-                      {/* Gauge */}
                       <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
                         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 120 120">
                           <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
@@ -505,20 +511,18 @@ export default function IntakeFunnel() {
                           {normalizedScore}
                         </motion.span>
                       </div>
-                      {/* Tier info */}
                       <div className="flex-1 text-center sm:text-left space-y-2">
                         <h3 className={`text-xl font-bold ${tier.color}`}>{tier.label}</h3>
                         <p className="text-muted-foreground text-sm leading-relaxed">{tier.message}</p>
                       </div>
                     </div>
-                    {/* Urgency banner */}
                     <div className={`mt-4 px-4 py-2.5 rounded-lg border text-center text-sm font-semibold ${tier.urgencyColor}`}>
                       ⚡ {tier.urgency}
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Why Your Score Section */}
+                {/* Insights */}
                 {getInsightCards().length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-foreground">Why Your Score Is {normalizedScore}</h3>
@@ -540,26 +544,26 @@ export default function IntakeFunnel() {
                 {/* Recommendations */}
                 <Card className="bg-card border-border">
                   <CardContent className="pt-6 space-y-3">
-                    <h3 className="text-sm font-semibold text-foreground">Your Personalized Recommendations</h3>
-                    {normalizedScore < 50 && (
+                    <h3 className="text-sm font-semibold text-foreground">What PFSW Can Do For You</h3>
+                    {normalizedScore < 40 && (
                       <>
-                        <Rec text="Replace manual funnel builds with AI-generated interactive quiz funnels that convert 3x better." />
-                        <Rec text="Implement a lead prospecting system so you're never waiting on referrals again." />
-                        <Rec text="Set up automated email sequences to nurture leads without manual follow-up." />
+                        <Rec icon={Search} text="Deploy AI Scout Agents to find qualified prospects in your niche automatically — no more cold DMs." />
+                        <Rec icon={Target} text="Build a quiz funnel that pre-qualifies buyers so you only talk to high-intent prospects." />
+                        <Rec icon={Mail} text="Set up automated email + SMS sequences that nurture leads without manual follow-up." />
                       </>
                     )}
-                    {normalizedScore >= 50 && normalizedScore < 80 && (
+                    {normalizedScore >= 40 && normalizedScore < 75 && (
                       <>
-                        <Rec text="Upgrade from static pages to interactive quiz funnels with built-in lead capture and scoring." />
-                        <Rec text="Add a site audit step before outreach — knowing a prospect's weak points triples your close rate." />
-                        <Rec text="Automate your outreach pipeline: prospect → audit → email → call → proposal." />
+                        <Rec icon={Target} text="Replace static landing pages with interactive quiz funnels that score and segment prospects automatically." />
+                        <Rec icon={Bot} text="Add AI agents that handle prospecting, outreach, and follow-up while you focus on closing." />
+                        <Rec icon={Phone} text="Activate the Voice Booker agent to call qualified leads and book meetings on your calendar." />
                       </>
                     )}
-                    {normalizedScore >= 80 && (
+                    {normalizedScore >= 75 && (
                       <>
-                        <Rec text="Scale your delivery with AI-generated funnel prompts that produce client-ready assets in minutes." />
-                        <Rec text="Join a builder collective to share strategies, win bigger deals, and access premium tools." />
-                        <Rec text="Leverage done-for-you automation agents for prospecting, outreach, and proposal generation." />
+                        <Rec icon={Zap} text="Scale your system with autonomous workflows — describe a goal and let agents execute end-to-end." />
+                        <Rec icon={TrendingUp} text="Use competitor intel agents to find positioning gaps and dominate your market." />
+                        <Rec icon={Users} text="White-label your quiz funnels and run them for multiple niches or product lines simultaneously." />
                       </>
                     )}
                   </CardContent>
@@ -569,23 +573,23 @@ export default function IntakeFunnel() {
                 <div className="space-y-3 text-center">
                   <Button
                     size="lg"
-                    className="w-full text-base py-6 font-bold"
-                    onClick={() => window.open("https://peoplefailsystemswork.com/apply", "_blank")}
+                    className="w-full text-base py-6 font-bold gold-glow-strong"
+                    onClick={() => window.location.href = "/login"}
                   >
-                    Apply to Join the Collective <ArrowRight className="ml-2 h-5 w-5" />
+                    Get Started with PFSW <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    Limited spots · Application-only · $197/mo
+                    Quiz funnels + AI agents · No credit card required
                   </p>
                 </div>
 
-                {/* Trust */}
+                {/* Trust footer */}
                 <div className="flex items-center justify-center gap-6 text-muted-foreground text-[10px] tracking-widest uppercase pt-4 border-t border-border">
-                  <span>AI-Powered Tools</span>
+                  <span>Quiz Funnels</span>
                   <span>•</span>
-                  <span>6-Step Pipeline</span>
+                  <span>6 AI Agents</span>
                   <span>•</span>
-                  <span>Builder Collective</span>
+                  <span>Autonomous Workflows</span>
                 </div>
               </motion.div>
             )}
@@ -593,7 +597,6 @@ export default function IntakeFunnel() {
         </div>
       </div>
 
-      {/* Footer branding */}
       <footer className="py-4 text-center border-t border-border">
         <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
           People Fail. Systems Work.
@@ -721,10 +724,10 @@ function EducationStep({
   );
 }
 
-function Rec({ text }: { text: string }) {
+function Rec({ text, icon: Icon }: { text: string; icon: typeof CheckCircle2 }) {
   return (
     <div className="flex gap-2 items-start">
-      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+      <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
       <p className="text-sm text-muted-foreground">{text}</p>
     </div>
   );
