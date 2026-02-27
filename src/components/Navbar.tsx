@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { useAuth } from "@/hooks/use-auth";
 
 const publicLinks = [
@@ -75,9 +76,12 @@ export function Navbar() {
           )}
 
           {user ? (
-            <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <LogOut className="h-3.5 w-3.5" /> Log Out
-            </button>
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <LogOut className="h-3.5 w-3.5" /> Log Out
+              </button>
+            </div>
           ) : (
             <>
               <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Log In</Link>
