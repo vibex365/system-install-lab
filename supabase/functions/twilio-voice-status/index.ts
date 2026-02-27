@@ -52,6 +52,24 @@ Deno.serve(async (req) => {
       const updates: Record<string, any> = { status: mappedStatus };
       if (duration > 0) updates.call_duration_seconds = duration;
       await supabase.from("call_logs").update(updates).eq("id", logs[0].id);
+
+      // Auto-trigger voice memo follow-up on completed calls
+      if (mappedStatus === "completed" && duration > 15) {
+        try {
+          const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/voice-memo-followup`;
+          await fetch(fnUrl, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ call_log_id: logs[0].id }),
+          });
+          console.log(`Voice memo follow-up triggered for call ${logs[0].id}`);
+        } catch (vmErr) {
+          console.error("Voice memo trigger failed:", vmErr);
+        }
+      }
     }
 
     return new Response("OK", { status: 200 });

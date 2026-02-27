@@ -688,6 +688,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_100: {
+        Row: {
+          ai_suggested: boolean
+          created_at: string
+          followers_estimate: number | null
+          id: string
+          last_checked_at: string | null
+          name: string
+          niche: string | null
+          notes: string | null
+          outreach_status: string
+          platform: string
+          status: string
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_suggested?: boolean
+          created_at?: string
+          followers_estimate?: number | null
+          id?: string
+          last_checked_at?: string | null
+          name: string
+          niche?: string | null
+          notes?: string | null
+          outreach_status?: string
+          platform?: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_suggested?: boolean
+          created_at?: string
+          followers_estimate?: number | null
+          id?: string
+          last_checked_at?: string | null
+          name?: string
+          niche?: string | null
+          notes?: string | null
+          outreach_status?: string
+          platform?: string
+          status?: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       funnel_leads: {
         Row: {
           answers: Json | null
@@ -1703,6 +1754,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      voice_memos: {
+        Row: {
+          call_log_id: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          phone_number: string
+          script: string
+          status: string
+          twilio_call_sid: string | null
+          user_id: string
+        }
+        Insert: {
+          call_log_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          phone_number: string
+          script: string
+          status?: string
+          twilio_call_sid?: string | null
+          user_id: string
+        }
+        Update: {
+          call_log_id?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          phone_number?: string
+          script?: string
+          status?: string
+          twilio_call_sid?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_memos_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_memos_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       votes: {
         Row: {
