@@ -1020,6 +1020,7 @@ export type Database = {
           contact_name: string | null
           created_at: string
           email: string | null
+          forum_post_url: string | null
           id: string
           notes: string | null
           phone: string | null
@@ -1027,6 +1028,7 @@ export type Database = {
           rating: number | null
           sms_opt_out: boolean | null
           source: string
+          suggested_reply: string | null
           updated_at: string
           user_id: string
           website: string | null
@@ -1041,6 +1043,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           email?: string | null
+          forum_post_url?: string | null
           id?: string
           notes?: string | null
           phone?: string | null
@@ -1048,6 +1051,7 @@ export type Database = {
           rating?: number | null
           sms_opt_out?: boolean | null
           source?: string
+          suggested_reply?: string | null
           updated_at?: string
           user_id: string
           website?: string | null
@@ -1062,6 +1066,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           email?: string | null
+          forum_post_url?: string | null
           id?: string
           notes?: string | null
           phone?: string | null
@@ -1069,6 +1074,7 @@ export type Database = {
           rating?: number | null
           sms_opt_out?: boolean | null
           source?: string
+          suggested_reply?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null

@@ -69,7 +69,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Client Acquisition Team",
         subtitle: "Five autonomous agents finding and closing clients for your firm 24/7.",
         agents: [
-          { name: "Scout Agent", action: "Searches Reddit, Avvo, Facebook groups, Nextdoor, and local forums in your service area for posts like 'need a lawyer for...' or 'anyone recommend an attorney in [city]?'", icon: "Search" },
+          { name: "Scout Agent", action: "Finds high-intent posts on Reddit, Avvo, Facebook groups, and Nextdoor where people ask 'need a lawyer for...' — then generates a reply template you can post in seconds", icon: "Search" },
           { name: "Qualifier Agent", action: "Scores each prospect by case type, urgency, and whether they match your practice area", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends a personalized message offering a free consultation — before competing firms even see the post", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules consultations directly onto your calendar", icon: "Calendar" },
@@ -137,7 +137,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Client Finder",
         subtitle: "Autonomous agents that find paying clients while you focus on training.",
         agents: [
-          { name: "Scout Agent", action: "Searches r/fitness, r/personaltraining, local Facebook groups, and Nextdoor in your service area for posts like 'looking for a personal trainer' or 'best gym near [city]'", icon: "Search" },
+          { name: "Scout Agent", action: "Finds high-intent posts on r/fitness, Facebook groups, and Nextdoor where people ask for trainer recommendations — then generates a reply template you can post in seconds", icon: "Search" },
           { name: "Qualifier Agent", action: "Assesses each prospect's fitness goals, budget, and readiness to commit", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends a personalized message offering a free trial session — before other trainers see the post", icon: "Send" },
           { name: "Booker Agent", action: "Schedules trial sessions directly onto your calendar with prep instructions", icon: "Calendar" },
@@ -205,7 +205,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Client Acquisition Team",
         subtitle: "Five agents finding buyers and sellers in your area 24/7.",
         agents: [
-          { name: "Scout Agent", action: "Searches Reddit (r/realestate, r/firsttimehomebuyer), Nextdoor, Facebook Marketplace, and local community groups for posts like 'looking for a realtor in [city]' or 'thinking of selling my home'", icon: "Search" },
+          { name: "Scout Agent", action: "Finds high-intent posts on Reddit, Nextdoor, and Facebook where people ask about buying or selling homes — then generates a reply template you can post in seconds", icon: "Search" },
           { name: "Qualifier Agent", action: "Scores each prospect by timeline, price range, and motivation level", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends a personalized message with a free home valuation or market report — before other agents respond", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules showings and home valuations onto your calendar", icon: "Calendar" },
@@ -273,7 +273,7 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         title: "Your AI Patient Acquisition Team",
         subtitle: "Autonomous agents finding new patients in your area so your team focuses on care.",
         agents: [
-          { name: "Scout Agent", action: "Searches Nextdoor, Facebook groups, Google reviews, and local community boards for posts like 'need a good dentist near me' or 'dentist recommendations in [city]'", icon: "Search" },
+          { name: "Scout Agent", action: "Finds high-intent posts on Nextdoor, Facebook groups, and local forums where people ask for dentist recommendations — then generates a reply template you can post in seconds", icon: "Search" },
           { name: "Qualifier Agent", action: "Screens each prospect by dental concern, insurance type, and urgency", icon: "Filter" },
           { name: "Outreach Agent", action: "Sends a personalized message offering a new patient special — before competing practices respond", icon: "Send" },
           { name: "Booker Agent", action: "Auto-schedules checkups and cleanings into available hygienist slots", icon: "Calendar" },
