@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles } from "lucide-react";
+import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles, Cpu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const FUNNEL_URL = "https://peoplefailsystemswork.com/intake-funnel";
 const MAGAZINE_URL = "https://peoplefailsystemswork.com/magazine/inside";
 const ELYT_DEMO_URL = "https://peoplefailsystemswork.com/elyt-demo";
+const SYSTEM_MAG_URL = "https://peoplefailsystemswork.com/magazine/system";
 
 export default function AdminMarketing() {
   const { toast } = useToast();
@@ -180,6 +181,45 @@ export default function AdminMarketing() {
                 <p>📧 <strong>Pre-call:</strong> "Before our call, I put together something for you —" + paste URL</p>
                 <p>📲 <strong>Social:</strong> Share as free value content → drives to quiz funnel at the end</p>
                 <p>🔗 <strong>Lead magnet:</strong> Use in ads as a free guide → captures leads via quiz CTA</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* System Magazine Card */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-primary" />
+              Magazine — Inside the Machine (System Breakdown)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Technical hype magazine explaining how the PFSW system works — AI agents, workflow chains, voice system, CRM pipeline. No tech stack reveals. Drives readers into the ELYT demo quiz at the end.
+            </p>
+
+            <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
+              <code className="text-xs text-foreground flex-1 truncate">{SYSTEM_MAG_URL}</code>
+              <Button size="sm" variant="ghost" onClick={() => copyUrl(SYSTEM_MAG_URL)} className="shrink-0">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => window.open("/magazine/system", "_blank")}
+                className="shrink-0"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <h4 className="text-xs font-semibold text-foreground mb-2">How to Use</h4>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>📲 <strong>ELYT group blast:</strong> "Want to see exactly how our AI system works? Read this 5-min breakdown:" + paste URL</p>
+                <p>💬 <strong>1-on-1 DM:</strong> "Before our call, check this out — it shows how everything connects:" + paste URL</p>
+                <p>🎯 <strong>After quiz:</strong> Send as a follow-up to ELYT demo quiz completions to build conviction</p>
               </div>
             </div>
           </CardContent>

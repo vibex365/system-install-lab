@@ -28,6 +28,7 @@ import Submit from "./pages/Submit";
 import BoardFeed from "./pages/BoardFeed";
 import PostDetail from "./pages/PostDetail";
 import MagazineInside from "./pages/MagazineInside";
+import SystemMagazine from "./pages/SystemMagazine";
 import ChooseCohort from "./pages/ChooseCohort";
 
 // Public routes
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/library" element={<PlanGate><Library /></PlanGate>} />
             <Route path="/submit" element={<PlanGate><Submit /></PlanGate>} />
             <Route path="/magazine/inside" element={<PlanGate><MagazineInside /></PlanGate>} />
+            <Route path="/magazine/system" element={<SystemMagazine />} />
             <Route path="/choose-cohort" element={<PlanGate><ChooseCohort /></PlanGate>} />
             <Route path="/board" element={<Navigate to="/board/main" replace />} />
             <Route path="/board/:slug" element={<PlanGate><BoardFeed /></PlanGate>} />
