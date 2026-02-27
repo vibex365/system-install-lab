@@ -8,7 +8,8 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Loader2, XCircle, Pause, Play, Users, BarChart3 } from "lucide-react";
+import { LeadTimeline } from "@/components/workflow/LeadTimeline";
+import { ArrowLeft, CheckCircle2, Circle, Loader2, XCircle, Pause, Play, BarChart3, Activity } from "lucide-react";
 
 const stepIcons: Record<string, React.ReactNode> = {
   pending: <Circle className="h-4 w-4 text-muted-foreground" />,
@@ -16,6 +17,15 @@ const stepIcons: Record<string, React.ReactNode> = {
   completed: <CheckCircle2 className="h-4 w-4 text-emerald-400" />,
   failed: <XCircle className="h-4 w-4 text-destructive" />,
   skipped: <Circle className="h-4 w-4 text-muted-foreground/50" />,
+};
+
+const statusColors: Record<string, string> = {
+  scraped: "bg-muted text-muted-foreground",
+  qualified: "bg-primary/10 text-primary border-primary/20",
+  contacted: "bg-accent/10 text-accent-foreground border-accent/20",
+  sms_sent: "bg-secondary text-secondary-foreground",
+  booked: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  closed: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
 };
 
 export default function WorkflowDetail() {
@@ -26,6 +36,7 @@ export default function WorkflowDetail() {
   const [workflow, setWorkflow] = useState<any>(null);
   const [steps, setSteps] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
@@ -36,20 +47,22 @@ export default function WorkflowDetail() {
     if (!user || !id) return;
 
     const fetchData = async () => {
-      const [wf, st, ld] = await Promise.all([
+      const [wf, st, ld, act] = await Promise.all([
         supabase.from("workflows").select("*").eq("id", id).single(),
         supabase.from("workflow_steps").select("*").eq("workflow_id", id).order("position"),
         supabase.from("leads").select("id, business_name, pipeline_status, rating, city, category").eq("user_id", user.id),
+        supabase.from("lead_activity_log").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
       ]);
       if (wf.data) setWorkflow(wf.data);
       if (st.data) setSteps(st.data);
       if (ld.data) setLeads(ld.data);
+      if (act.data) setActivities(act.data);
       setFetching(false);
     };
 
     fetchData();
 
-    // Realtime subscription
+    // Realtime subscriptions
     const channel = supabase
       .channel(`workflow-${id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "workflows", filter: `id=eq.${id}` }, (payload) => {
@@ -59,6 +72,14 @@ export default function WorkflowDetail() {
         supabase.from("workflow_steps").select("*").eq("workflow_id", id).order("position").then(({ data }) => {
           if (data) setSteps(data);
         });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `user_id=eq.${user.id}` }, () => {
+        supabase.from("leads").select("id, business_name, pipeline_status, rating, city, category").eq("user_id", user.id).then(({ data }) => {
+          if (data) setLeads(data);
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "lead_activity_log", filter: `user_id=eq.${user.id}` }, (payload) => {
+        setActivities((prev) => [payload.new as any, ...prev].slice(0, 100));
       })
       .subscribe();
 
@@ -80,14 +101,11 @@ export default function WorkflowDetail() {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [leads]);
 
-  const statusColors: Record<string, string> = {
-    scraped: "bg-muted text-muted-foreground",
-    qualified: "bg-primary/10 text-primary border-primary/20",
-    contacted: "bg-accent/10 text-accent-foreground border-accent/20",
-    sms_sent: "bg-secondary text-secondary-foreground",
-    booked: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    closed: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  };
+  const leadMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    leads.forEach((l) => { m[l.id] = l.business_name; });
+    return m;
+  }, [leads]);
 
   const completedCount = steps.filter(s => s.status === "completed").length;
 
@@ -147,33 +165,47 @@ export default function WorkflowDetail() {
             />
           </div>
 
-          {/* Pipeline Stats */}
-          {pipelineStats.length > 0 && (
-            <Card className="bg-card border-border mb-8">
+          {/* Pipeline Stats + Timeline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {pipelineStats.length > 0 && (
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-3 pt-4 px-5">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Lead Pipeline
+                    <Badge variant="secondary" className="ml-auto text-[10px]">
+                      {leads.length} total
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5 pb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {pipelineStats.map(([status, count]) => (
+                      <div
+                        key={status}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${statusColors[status] || "bg-muted text-muted-foreground"}`}
+                      >
+                        <span className="capitalize">{status.replace(/_/g, " ")}</span>
+                        <span className="font-bold">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="bg-card border-border">
               <CardHeader className="pb-3 pt-4 px-5">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  Lead Pipeline
-                  <Badge variant="secondary" className="ml-auto text-[10px]">
-                    {leads.length} total
-                  </Badge>
+                  <Activity className="h-4 w-4 text-primary" />
+                  Pipeline Activity
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-5 pb-4">
-                <div className="flex flex-wrap gap-2">
-                  {pipelineStats.map(([status, count]) => (
-                    <div
-                      key={status}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${statusColors[status] || "bg-muted text-muted-foreground"}`}
-                    >
-                      <span className="capitalize">{status.replace(/_/g, " ")}</span>
-                      <span className="font-bold">{count}</span>
-                    </div>
-                  ))}
-                </div>
+                <LeadTimeline activities={activities} leadMap={leadMap} />
               </CardContent>
             </Card>
-          )}
+          </div>
 
           {/* Steps */}
           <div className="space-y-3">
@@ -187,11 +219,7 @@ export default function WorkflowDetail() {
                         <span className="text-sm font-semibold text-foreground capitalize">{step.agent_id.replace(/_/g, " ")}</span>
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{step.status}</span>
                       </div>
-
-                      {step.error && (
-                        <p className="text-xs text-destructive mt-1">{step.error}</p>
-                      )}
-
+                      {step.error && <p className="text-xs text-destructive mt-1">{step.error}</p>}
                       {step.output && (
                         <div className="mt-2 rounded-lg bg-background border border-border p-3">
                           <pre className="text-[11px] text-muted-foreground overflow-auto max-h-32 whitespace-pre-wrap">
@@ -199,7 +227,6 @@ export default function WorkflowDetail() {
                           </pre>
                         </div>
                       )}
-
                       {step.completed_at && (
                         <p className="text-[10px] text-muted-foreground mt-1">
                           Completed {new Date(step.completed_at).toLocaleString()}
