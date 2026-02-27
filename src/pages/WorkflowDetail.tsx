@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Circle, Loader2, XCircle, Pause, Play } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Loader2, XCircle, Pause, Play, Users, BarChart3 } from "lucide-react";
 
 const stepIcons: Record<string, React.ReactNode> = {
   pending: <Circle className="h-4 w-4 text-muted-foreground" />,
@@ -24,6 +25,7 @@ export default function WorkflowDetail() {
   const navigate = useNavigate();
   const [workflow, setWorkflow] = useState<any>(null);
   const [steps, setSteps] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
@@ -34,12 +36,14 @@ export default function WorkflowDetail() {
     if (!user || !id) return;
 
     const fetchData = async () => {
-      const [wf, st] = await Promise.all([
+      const [wf, st, ld] = await Promise.all([
         supabase.from("workflows").select("*").eq("id", id).single(),
         supabase.from("workflow_steps").select("*").eq("workflow_id", id).order("position"),
+        supabase.from("leads").select("id, business_name, pipeline_status, rating, city, category").eq("user_id", user.id),
       ]);
       if (wf.data) setWorkflow(wf.data);
       if (st.data) setSteps(st.data);
+      if (ld.data) setLeads(ld.data);
       setFetching(false);
     };
 
@@ -68,6 +72,25 @@ export default function WorkflowDetail() {
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
   };
 
+  const pipelineStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    leads.forEach((l) => {
+      counts[l.pipeline_status] = (counts[l.pipeline_status] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [leads]);
+
+  const statusColors: Record<string, string> = {
+    scraped: "bg-muted text-muted-foreground",
+    qualified: "bg-primary/10 text-primary border-primary/20",
+    contacted: "bg-accent/10 text-accent-foreground border-accent/20",
+    sms_sent: "bg-secondary text-secondary-foreground",
+    booked: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    closed: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  };
+
+  const completedCount = steps.filter(s => s.status === "completed").length;
+
   if (loading || fetching) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -92,8 +115,6 @@ export default function WorkflowDetail() {
       </div>
     );
   }
-
-  const completedCount = steps.filter(s => s.status === "completed").length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,6 +146,34 @@ export default function WorkflowDetail() {
               style={{ width: steps.length ? `${(completedCount / steps.length) * 100}%` : "0%" }}
             />
           </div>
+
+          {/* Pipeline Stats */}
+          {pipelineStats.length > 0 && (
+            <Card className="bg-card border-border mb-8">
+              <CardHeader className="pb-3 pt-4 px-5">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  Lead Pipeline
+                  <Badge variant="secondary" className="ml-auto text-[10px]">
+                    {leads.length} total
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 pb-4">
+                <div className="flex flex-wrap gap-2">
+                  {pipelineStats.map(([status, count]) => (
+                    <div
+                      key={status}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${statusColors[status] || "bg-muted text-muted-foreground"}`}
+                    >
+                      <span className="capitalize">{status.replace(/_/g, " ")}</span>
+                      <span className="font-bold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Steps */}
           <div className="space-y-3">
