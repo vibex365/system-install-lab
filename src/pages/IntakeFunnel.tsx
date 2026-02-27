@@ -21,6 +21,7 @@ import {
   Search,
   Mail,
   Phone,
+  Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -204,12 +205,20 @@ export default function IntakeFunnel() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [multiSelectAnswers, setMultiSelectAnswers] = useState<Record<number, number[]>>({});
-  const [phase, setPhase] = useState<"landing" | "quiz" | "capture" | "result">("landing");
+  const [phase, setPhase] = useState<"landing" | "quiz" | "capture" | "verify" | "analyzing" | "result">("landing");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [callbackNumber, setCallbackNumber] = useState("");
+
+  // OTP state
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [formattedPhone, setFormattedPhone] = useState("");
 
   const totalQuestions = STEPS.filter((s) => s.type === "question").length;
   const answeredCount = Object.keys(answers).length;
@@ -273,16 +282,52 @@ export default function IntakeFunnel() {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
-  const submitLead = async () => {
-    if (!name.trim() || !email.trim()) {
-      toast({ title: "Name and email are required", variant: "destructive" });
+  // ─── OTP: Send verification code ───
+  const handleCaptureSubmit = async () => {
+    if (!name.trim() || !phone.trim()) {
+      toast({ title: "Name and phone number are required", variant: "destructive" });
       return;
     }
-    setSubmitting(true);
+    setOtpSending(true);
+    setOtpError("");
     try {
-      // Build quiz summary for notes
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone: phone.trim() },
+      });
+      if (error) throw error;
+      setFormattedPhone(data?.formatted_phone || phone.trim());
+      setPhase("verify");
+    } catch (err) {
+      console.error("OTP send error:", err);
+      setOtpError("Failed to send verification code. Please check your number and try again.");
+    }
+    setOtpSending(false);
+  };
+
+  // ─── OTP: Verify code & submit lead ───
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim() || otpCode.trim().length !== 4) {
+      setOtpError("Please enter the 4-digit code.");
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError("");
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: formattedPhone, code: otpCode.trim() },
+      });
+      if (error) throw error;
+      if (!data?.verified) {
+        setOtpError(data?.error || "Invalid code. Please try again.");
+        setOtpVerifying(false);
+        return;
+      }
+
+      // Verified! Now submit lead and trigger funnel-call
+      setPhase("analyzing");
+
       const questionSteps = STEPS.filter(s => s.type === "question");
-      const summaryLines = questionSteps.map((s, i) => {
+      const summaryLines = questionSteps.map((s) => {
         const q = s.data as QuizQuestion;
         const stepIdx = STEPS.indexOf(s);
         const selectedScore = answers[stepIdx];
@@ -291,51 +336,64 @@ export default function IntakeFunnel() {
       });
       const quizSummary = summaryLines.join("\n\n");
 
+      // Save funnel lead
       await supabase.from("funnel_leads" as any).insert({
         name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim() || null,
+        email: email.trim() || null,
+        phone: formattedPhone,
         score: normalizedScore,
         tier: tier.label,
         answers: answers,
         funnel_name: "intake",
       });
-      await supabase.from("waitlist").insert({
-        email: email.trim(),
-        note: `[PFSW Quiz] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label})`,
-      });
 
-      // Call funnel-call edge function to create CRM lead + trigger SMS
-      if (phone.trim()) {
-        try {
-          await supabase.functions.invoke("funnel-call", {
-            body: {
-              phone_number: phone.trim(),
-              respondent_name: name.trim(),
-              respondent_email: email.trim(),
-              quiz_score: normalizedScore,
-              quiz_result_label: tier.label,
-              quiz_title: "Automation Readiness Quiz",
-              quiz_questions_summary: quizSummary,
-            },
-          });
-        } catch (funnelErr) {
-          console.error("funnel-call error (non-blocking):", funnelErr);
-        }
+      // Save waitlist entry
+      if (email.trim()) {
+        await supabase.from("waitlist").insert({
+          email: email.trim(),
+          note: `[PFSW Quiz] Name: ${name.trim()} | Phone: ${formattedPhone} | Score: ${normalizedScore}/100 (${tier.label})`,
+        });
       }
 
-      setPhase("result");
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
+      // Call funnel-call: creates CRM lead + sends SMS with callback number
+      const { data: funnelData } = await supabase.functions.invoke("funnel-call", {
+        body: {
+          phone_number: formattedPhone,
+          respondent_name: name.trim(),
+          respondent_email: email.trim(),
+          quiz_score: normalizedScore,
+          quiz_result_label: tier.label,
+          quiz_title: "Automation Readiness Quiz",
+          quiz_questions_summary: quizSummary,
+        },
+      });
+
+      setCallbackNumber(funnelData?.callback_number || "(866) 642-9937");
+      setTimeout(() => setPhase("result"), 3000);
+    } catch (err) {
+      console.error("Verify/submit error:", err);
+      setOtpError("Something went wrong. Please try again.");
+      setPhase("verify");
     }
+    setOtpVerifying(false);
+  };
+
+  const handleResendOtp = async () => {
+    setOtpSending(true);
+    setOtpError("");
+    setOtpCode("");
+    try {
+      await supabase.functions.invoke("send-otp", { body: { phone: phone.trim() } });
+    } catch {
+      setOtpError("Failed to resend. Please try again.");
+    }
+    setOtpSending(false);
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress bar */}
-      {phase !== "landing" && phase !== "result" && (
+      {(phase === "quiz" || phase === "capture") && (
         <div className="fixed top-0 left-0 right-0 z-50">
           <div className="max-w-xl mx-auto px-4 pt-14">
             <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
@@ -448,7 +506,7 @@ export default function IntakeFunnel() {
               </motion.div>
             )}
 
-            {/* ─── CAPTURE ─── */}
+            {/* ─── CAPTURE (Name, Phone required, Email optional) ─── */}
             {phase === "capture" && (
               <motion.div
                 key="capture"
@@ -459,12 +517,12 @@ export default function IntakeFunnel() {
                 className="space-y-6"
               >
                 <div className="text-center space-y-2">
-                  <p className="text-xs text-primary tracking-widest uppercase font-semibold">Almost There</p>
+                  <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-400" />
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Where should we send your results?
+                    Your Report Is Ready!
                   </h2>
                   <p className="text-muted-foreground text-sm">
-                    Enter your details to receive your personalized Automation Readiness Score.
+                    Enter your details to receive your personalized Automation Readiness Report. We'll send a verification code to confirm your number.
                   </p>
                 </div>
                 <Card className="bg-card border-border">
@@ -474,16 +532,18 @@ export default function IntakeFunnel() {
                       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sarah Johnson" className="bg-secondary border-border" />
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-1.5 block">Email Address *</label>
-                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@business.com" className="bg-secondary border-border" />
+                      <label className="text-sm font-semibold text-foreground mb-1.5 block">Phone Number *</label>
+                      <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 000-0000" className="bg-secondary border-border" />
+                      <p className="text-xs text-muted-foreground mt-1">We'll send a 4-digit verification code to confirm your number.</p>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-1.5 block">Phone Number <span className="font-normal text-muted-foreground">(optional)</span></label>
-                      <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 000-0000" className="bg-secondary border-border" />
+                      <label className="text-sm font-semibold text-foreground mb-1.5 block">Email Address <span className="font-normal text-muted-foreground">(optional)</span></label>
+                      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@business.com" className="bg-secondary border-border" />
                     </div>
-                    <Button className="w-full py-6 text-base font-bold gold-glow-strong" onClick={submitLead} disabled={submitting}>
-                      {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Get My Automation Score
+                    {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
+                    <Button className="w-full py-6 text-base font-bold gold-glow-strong" onClick={handleCaptureSubmit} disabled={!name.trim() || !phone.trim() || otpSending}>
+                      {otpSending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Verify & Continue <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                     <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
                       <Lock className="h-3 w-3" />
@@ -494,6 +554,70 @@ export default function IntakeFunnel() {
                     </button>
                   </CardContent>
                 </Card>
+              </motion.div>
+            )}
+
+            {/* ─── VERIFY OTP ─── */}
+            {phase === "verify" && (
+              <motion.div
+                key="verify"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-6"
+              >
+                <div className="text-center space-y-3">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-8 w-8 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground">Verify Your Phone Number</h2>
+                  <p className="text-sm text-muted-foreground">
+                    We sent a 4-digit code to <span className="font-semibold text-foreground">{formattedPhone || phone}</span>
+                  </p>
+                </div>
+                <Card className="bg-card border-border">
+                  <CardContent className="pt-6 space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Enter 4-Digit Code</label>
+                      <Input
+                        value={otpCode}
+                        onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 4)); setOtpError(""); }}
+                        placeholder="1234"
+                        className="text-center text-2xl tracking-[0.5em] font-mono h-14 bg-secondary border-border"
+                        maxLength={4}
+                        inputMode="numeric"
+                        autoFocus
+                      />
+                    </div>
+                    {otpError && <p className="text-sm text-destructive text-center">{otpError}</p>}
+                    <Button className="w-full py-6 text-base font-bold gold-glow-strong" onClick={handleVerifyOtp} disabled={otpVerifying || otpCode.length !== 4}>
+                      {otpVerifying ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Verify & Get My Results <ArrowRight className="ml-2 h-5 w-5" /></>}
+                    </Button>
+                    <div className="text-center">
+                      <button onClick={handleResendOtp} disabled={otpSending} className="text-sm text-primary hover:underline disabled:opacity-50">
+                        {otpSending ? "Sending..." : "Didn't receive the code? Resend"}
+                      </button>
+                    </div>
+                    <button onClick={() => setPhase("capture")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto transition-colors">
+                      <ArrowLeft className="h-4 w-4" /> Change phone number
+                    </button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* ─── ANALYZING ─── */}
+            {phase === "analyzing" && (
+              <motion.div
+                key="analyzing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center space-y-6 py-12"
+              >
+                <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
+                <p className="text-lg font-semibold text-foreground">Analyzing your automation profile...</p>
+                <p className="text-sm text-muted-foreground">Comparing against top-performing digital entrepreneurs</p>
               </motion.div>
             )}
 
@@ -509,7 +633,7 @@ export default function IntakeFunnel() {
                 <div className="text-center space-y-2">
                   <p className="text-xs text-primary tracking-widest uppercase font-semibold">Your Results</p>
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {name.split(" ")[0]}, here's your score.
+                    🎯 {name.split(" ")[0]}, here's your score.
                   </h2>
                   <p className="text-muted-foreground text-sm">Your Automation Readiness Assessment is complete.</p>
                 </div>
@@ -550,6 +674,28 @@ export default function IntakeFunnel() {
                     <div className={`mt-4 px-4 py-2.5 rounded-lg border text-center text-sm font-semibold ${tier.urgencyColor}`}>
                       ⚡ {tier.urgency}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Call CTA */}
+                <Card className="bg-emerald-500/10 border-emerald-500/30">
+                  <CardContent className="p-6 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                        <Phone className="h-6 w-6 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-base font-bold text-foreground">Talk to a Growth Specialist Now</p>
+                        <p className="text-sm text-muted-foreground">Our AI specialist is standing by to walk you through your personalized growth plan — no obligation.</p>
+                      </div>
+                    </div>
+                    {callbackNumber && (
+                      <a href={`tel:${callbackNumber}`} className="flex items-center justify-center gap-2 w-full h-12 rounded-full bg-emerald-500 text-white font-bold text-lg hover:opacity-90 transition-opacity">
+                        <Phone className="h-5 w-5" />
+                        Call Now: {callbackNumber}
+                      </a>
+                    )}
+                    <p className="text-xs text-center text-muted-foreground">📱 We also sent you a text with this number. Call anytime — we'll have your results ready.</p>
                   </CardContent>
                 </Card>
 
