@@ -347,6 +347,9 @@ function CRMContent() {
               leads={leads}
               onLeadClick={(lead) => setDrawerLead(lead)}
               onStatusChange={updateStatus}
+              onSendSms={(lead) => runAgentOnLead(lead, "sms-outreach")}
+              onTriggerCall={(lead) => runAgentOnLead(lead, "cold-call")}
+              actionLoading={runningAgent}
             />
           ) : (
             <>

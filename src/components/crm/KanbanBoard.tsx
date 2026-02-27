@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, Globe, Star, GripVertical } from "lucide-react";
+import { Phone, Mail, Globe, Star, GripVertical, PhoneCall, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Lead {
@@ -36,6 +36,9 @@ interface KanbanBoardProps {
   leads: Lead[];
   onLeadClick: (lead: Lead) => void;
   onStatusChange: (id: string, status: string) => void;
+  onSendSms?: (lead: Lead) => void;
+  onTriggerCall?: (lead: Lead) => void;
+  actionLoading?: string | null;
 }
 
 const STAGE_COLORS = [
@@ -51,7 +54,7 @@ const STAGE_COLORS = [
   "border-t-indigo-500/60",
 ];
 
-export function KanbanBoard({ leads, onLeadClick, onStatusChange }: KanbanBoardProps) {
+export function KanbanBoard({ leads, onLeadClick, onStatusChange, onSendSms, onTriggerCall, actionLoading }: KanbanBoardProps) {
   const [niches, setNiches] = useState<NicheOption[]>([]);
   const [selectedNiche, setSelectedNiche] = useState<string>("");
   const [draggedLead, setDraggedLead] = useState<string | null>(null);
@@ -190,8 +193,29 @@ export function KanbanBoard({ leads, onLeadClick, onStatusChange }: KanbanBoardP
                           </Badge>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {lead.phone && <Phone className="h-3 w-3 text-muted-foreground/60" />}
+                      <div className="flex items-center gap-1 mt-2 flex-wrap">
+                        {lead.phone && (
+                          <>
+                            <Button
+                              size="sm" variant="ghost"
+                              className="h-6 w-6 p-0"
+                              disabled={actionLoading === `${lead.id}-sms`}
+                              onClick={(e) => { e.stopPropagation(); onSendSms?.(lead); }}
+                              title="Send SMS"
+                            >
+                              {actionLoading === `${lead.id}-sms` ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3 text-muted-foreground hover:text-primary" />}
+                            </Button>
+                            <Button
+                              size="sm" variant="ghost"
+                              className="h-6 w-6 p-0"
+                              disabled={actionLoading === `${lead.id}-call`}
+                              onClick={(e) => { e.stopPropagation(); onTriggerCall?.(lead); }}
+                              title="Call"
+                            >
+                              {actionLoading === `${lead.id}-call` ? <Loader2 className="h-3 w-3 animate-spin" /> : <PhoneCall className="h-3 w-3 text-muted-foreground hover:text-primary" />}
+                            </Button>
+                          </>
+                        )}
                         {lead.email && <Mail className="h-3 w-3 text-muted-foreground/60" />}
                         {lead.website && <Globe className="h-3 w-3 text-muted-foreground/60" />}
                         {lead.rating != null && (
