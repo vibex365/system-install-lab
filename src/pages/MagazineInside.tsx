@@ -5,12 +5,12 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { magazinePages } from "@/data/magazinePages";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import magazineCover from "@/assets/magazine-cover.jpg";
 import { useSEO } from "@/hooks/use-seo";
 
-const GoldDivider = () => (
+const BlueDivider = () => (
   <div className="flex items-center justify-center py-8">
     <div className="h-px w-20 bg-gradient-to-r from-transparent via-primary to-transparent" />
   </div>
@@ -18,9 +18,9 @@ const GoldDivider = () => (
 
 export default function MagazineInside() {
   useSEO({
-    title: "The Web Designer's Toolkit — PFSW Field Manual",
-    description: "Read the PFSW product guide: how web designers use AI agents to scrape leads, audit sites, send cold emails, and close clients with Lovable-built websites.",
-    canonical: "https://system-install-lab.lovable.app/magazine/inside",
+    title: "The Prompt Engineer's Field Manual — PFSW",
+    description: "Leaked system prompts from Cursor, Lovable, Windsurf, v0 & 30+ AI tools. Learn how to build automated systems with prompt engineering.",
+    canonical: "https://peoplefailsystemswork.com/magazine/inside",
   });
 
   const { user } = useAuth();
@@ -45,7 +45,8 @@ export default function MagazineInside() {
               alt="PFSW Magazine Cover"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/75" />
+            <div className="absolute inset-0 bg-black/80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-violet-500/10" />
             <AnimatePresence mode="wait">
               <motion.div
                 key="cover"
@@ -55,26 +56,26 @@ export default function MagazineInside() {
                 className="relative z-10 text-center px-6 max-w-3xl mx-auto"
               >
                 <p className="text-xs uppercase tracking-[0.5em] text-primary mb-8">
-                  PFSW — Client Acquisition Toolkit for Web Designers
+                  PFSW — The Prompt Engineer's Field Manual
                 </p>
                 <h1 className="font-serif text-6xl sm:text-8xl font-bold text-white leading-none mb-6">
-                  People Fail.
+                  System Prompts
                   <br />
-                  <span className="text-primary">Systems Work.</span>
+                  <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Decoded.</span>
                 </h1>
                 <div className="flex items-center justify-center my-8">
                   <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent" />
                 </div>
                 <p className="text-xl sm:text-2xl font-serif text-white/80 italic mb-4">
-                  "The system finds the clients. You build the sites."
+                  "30+ AI tool prompts. Leaked. Analyzed. Weaponized."
                 </p>
                 <p className="text-sm text-white/50 tracking-widest uppercase mb-16">
-                  The Web Design Agency Playbook · Volume I
+                  Cursor · Lovable · Windsurf · v0 · Claude · Replit & More
                 </p>
                 <Button
                   onClick={() => go(1)}
                   size="lg"
-                  className="gold-glow-strong tracking-widest px-12 py-6 text-base font-bold uppercase"
+                  className="bg-gradient-to-r from-primary to-violet-500 hover:from-primary/90 hover:to-violet-500/90 tracking-widest px-12 py-6 text-base font-bold uppercase border-0"
                 >
                   Begin Reading
                 </Button>
@@ -152,7 +153,7 @@ export default function MagazineInside() {
 
               {current.sections.map((s, i) => (
                 <div key={i}>
-                  <GoldDivider />
+                  <BlueDivider />
                   <section className="py-2">
                     {s.heading && (
                       <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground mb-4">{s.heading}</h2>
@@ -162,33 +163,36 @@ export default function MagazineInside() {
                 </div>
               ))}
 
-              {/* Final page CTA */}
+              {/* Final page CTA — drive to quiz funnel */}
               {page === total - 1 && (
                 <>
-                  <GoldDivider />
+                  <BlueDivider />
                   <div className="text-center py-8">
-                    {user ? (
-                      <>
-                        <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
-                          <Link to="/apply">Apply Now</Link>
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-4">Application required · $5 processing fee · $197/month upon acceptance</p>
-                      </>
-                    ) : (
-                      <>
-                        <Button asChild size="lg" className="tracking-wide px-10 py-6 text-lg font-bold gold-glow-strong">
-                          <Link to="/login">Create Account to Apply</Link>
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-4">Free account required · $5 application fee · $197/month upon acceptance</p>
-                      </>
-                    )}
+                    <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-6">
+                      <Zap className="h-3.5 w-3.5" />
+                      Ready to build?
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground mb-3">
+                      Find Out Where You Stand
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      Take the 2-minute Prompt Systems Quiz. Get your score, see where the gaps are, and discover how PFSW workflows can automate your execution.
+                    </p>
+                    <Button
+                      asChild
+                      size="lg"
+                      className="bg-gradient-to-r from-primary to-violet-500 hover:from-primary/90 hover:to-violet-500/90 tracking-wide px-10 py-6 text-lg font-bold border-0"
+                    >
+                      <Link to="/intake-funnel">Take the Quiz →</Link>
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-4">Free · 2 minutes · No signup required</p>
                   </div>
                 </>
               )}
             </motion.div>
           </AnimatePresence>
 
-          <GoldDivider />
+          <BlueDivider />
 
           {/* Pagination */}
           <div className="flex items-center justify-between">
@@ -218,7 +222,7 @@ export default function MagazineInside() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground tracking-wide pt-8 pb-4">
-            PFSW — Client Acquisition Toolkit for Web Designers
+            PFSW — The Prompt Engineer's Field Manual
           </p>
         </div>
       </main>

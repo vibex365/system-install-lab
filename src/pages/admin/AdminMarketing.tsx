@@ -1,14 +1,44 @@
+import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen } from "lucide-react";
+import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const FUNNEL_URL = "https://peoplefailsystemswork.com/intake-funnel";
 const MAGAZINE_URL = "https://peoplefailsystemswork.com/magazine/inside";
 
 export default function AdminMarketing() {
   const { toast } = useToast();
+  const [stats, setStats] = useState<{ leads: number; avgScore: string; conversions: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const [leadsRes, applicationsRes] = await Promise.all([
+        supabase.from("funnel_leads").select("score", { count: "exact" }),
+        supabase.from("applications").select("id", { count: "exact" }),
+      ]);
+
+      const leads = leadsRes.count || 0;
+      const scores = (leadsRes.data || []).map((l: any) => l.score).filter((s: any) => s != null);
+      const avgScore = scores.length > 0
+        ? (scores.reduce((a: number, b: number) => a + b, 0) / scores.length).toFixed(1)
+        : "—";
+      const conversions = applicationsRes.count || 0;
+
+      setStats({ leads, avgScore, conversions });
+    } catch {
+      setStats({ leads: 0, avgScore: "—", conversions: 0 });
+    }
+    setLoading(false);
+  };
 
   const copyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -52,9 +82,17 @@ export default function AdminMarketing() {
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <MiniStat icon={Users} label="Leads Captured" value="—" sub="via waitlist table" />
-              <MiniStat icon={BarChart3} label="Avg Score" value="—" sub="calculated" />
-              <MiniStat icon={MousePointerClick} label="Conversion" value="—" sub="quiz → apply" />
+              {loading ? (
+                <div className="col-span-3 flex items-center justify-center py-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  <MiniStat icon={Users} label="Leads Captured" value={String(stats?.leads || 0)} sub="from quiz funnel" />
+                  <MiniStat icon={BarChart3} label="Avg Score" value={stats?.avgScore || "—"} sub="funnel score" />
+                  <MiniStat icon={MousePointerClick} label="Applications" value={String(stats?.conversions || 0)} sub="quiz → apply" />
+                </>
+              )}
             </div>
 
             <div className="border-t border-border pt-4">
@@ -73,12 +111,12 @@ export default function AdminMarketing() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />
-              Magazine — Authority & Lead Nurturing Asset
+              Magazine — The Prompt Engineer's Field Manual
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Send this to prospects before the pitch call. Builds authority, demonstrates expertise, and warms leads before they ever talk to you.
+              Free content asset with leaked AI system prompts & prompt engineering frameworks. Drives readers into the quiz funnel at the end.
             </p>
 
             <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
@@ -100,8 +138,8 @@ export default function AdminMarketing() {
               <h4 className="text-xs font-semibold text-foreground mb-2">How to Use</h4>
               <div className="space-y-2 text-xs text-muted-foreground">
                 <p>📧 <strong>Pre-call:</strong> "Before our call, I put together something for you —" + paste URL</p>
-                <p>📲 <strong>Follow-up:</strong> Send after a discovery call to reinforce credibility</p>
-                <p>🔗 <strong>Social:</strong> Share as a content piece to attract inbound leads</p>
+                <p>📲 <strong>Social:</strong> Share as free value content → drives to quiz funnel at the end</p>
+                <p>🔗 <strong>Lead magnet:</strong> Use in ads as a free guide → captures leads via quiz CTA</p>
               </div>
             </div>
           </CardContent>
