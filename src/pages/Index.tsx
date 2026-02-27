@@ -16,12 +16,12 @@ import { useSEO } from "@/hooks/use-seo";
 import heroPortrait from "@/assets/hero-portrait.png";
 
 const agents = [
-  { icon: Search, name: "Scout Agent", desc: "Finds prospects in your niche and location. Returns names, phones, emails, and websites — no manual searching." },
-  { icon: Target, name: "Qualifier Agent", desc: "AI-scores every prospect for fit. Only the highest-potential leads make it to your pipeline." },
-  { icon: Mail, name: "Email Outreach", desc: "Sends personalized multi-step email sequences with pain points and booking CTAs on autopilot." },
-  { icon: MessageSquare, name: "SMS Agent", desc: "Automated text follow-ups that drive replies and move prospects toward booking a call." },
-  { icon: Phone, name: "Voice Booker", desc: "AI voice agent calls your leads, pitches your offer, and books meetings directly on your calendar." },
-  { icon: BarChart3, name: "Intel Agent", desc: "Scans competitor positioning, pricing, and strategies so you always have the edge in your market." },
+  { icon: Search, name: "Scout Agent", desc: "Finds prospects in your niche and location automatically. Returns names, phones, emails, and websites." },
+  { icon: Target, name: "Qualifier Agent", desc: "AI-scores every prospect for fit. Only high-potential leads enter your funnel and pipeline." },
+  { icon: Mail, name: "Email Outreach", desc: "Sends personalized multi-step email sequences that drive prospects into your quiz funnels." },
+  { icon: MessageSquare, name: "SMS Agent", desc: "Automated text follow-ups that re-engage cold prospects and push them toward your funnel." },
+  { icon: Phone, name: "Voice Booker", desc: "AI voice agent calls qualified leads, pitches your offer, and books meetings on your calendar." },
+  { icon: BarChart3, name: "Intel Agent", desc: "Scans competitor positioning, pricing, and strategies so you dominate your market." },
 ];
 
 const tiers = [
@@ -29,15 +29,15 @@ const tiers = [
     name: "Starter",
     price: "$47",
     period: "/mo",
-    features: ["100 leads/month", "Email outreach agent", "1 active workflow", "Basic CRM pipeline"],
-    cta: "Get Started",
+    features: ["3 quiz funnels", "100 leads/month", "Email outreach agent", "1 active workflow", "Basic CRM"],
+    cta: "Start Free Trial",
     highlighted: false,
   },
   {
     name: "Growth",
     price: "$97",
     period: "/mo",
-    features: ["500 leads/month", "SMS + email agents", "5 active workflows", "Booking agent", "Full CRM"],
+    features: ["Unlimited funnels", "500 leads/month", "SMS + email agents", "5 active workflows", "Booking agent", "Full CRM"],
     cta: "Start Growing",
     highlighted: true,
   },
@@ -45,17 +45,17 @@ const tiers = [
     name: "Scale",
     price: "$197",
     period: "/mo",
-    features: ["Everything in Growth", "2,000 leads/month", "Voice agent", "Unlimited workflows", "Competitor intel", "Priority support"],
+    features: ["Everything in Growth", "2,000 leads/month", "Voice agent", "Unlimited workflows", "Competitor intel", "White-label funnels"],
     cta: "Scale Now",
     highlighted: false,
   },
 ];
 
 const steps = [
-  { num: "01", icon: Target, title: "Describe Your Goal", desc: "Tell the system what you need: \"Find 50 health supplement prospects in Dallas and book calls.\"" },
-  { num: "02", icon: Zap, title: "AI Plans the Workflow", desc: "The orchestrator breaks your goal into executable steps — scout, qualify, outreach, book." },
-  { num: "03", icon: Bot, title: "Agents Execute", desc: "Each agent runs automatically. Leads are found, scored, contacted, and followed up — no manual work." },
-  { num: "04", icon: Calendar, title: "You Close", desc: "Qualified prospects land in your pipeline with calls booked. You show up and close deals." },
+  { num: "01", icon: Target, title: "Build Your Funnel", desc: "Create a quiz funnel tailored to your product. Prospects answer questions, get scored, and self-qualify." },
+  { num: "02", icon: Zap, title: "Set Your Goal", desc: "Tell the system what you need: \"Find 50 supplement prospects in Dallas and drive them through my funnel.\"" },
+  { num: "03", icon: Bot, title: "Agents Execute", desc: "AI agents find leads, run outreach, and push qualified prospects into your quiz funnel — automatically." },
+  { num: "04", icon: Calendar, title: "You Close", desc: "Warm, pre-qualified leads land in your pipeline with calls booked. You show up and close." },
 ];
 
 const stats = [
@@ -66,11 +66,11 @@ const stats = [
 ];
 
 const faqs = [
-  { q: "Who is PFSW for?", a: "Digital entrepreneurs — network marketers, affiliate promoters, coaches, and online business owners who want AI to handle prospecting, outreach, and booking so they can focus on closing." },
-  { q: "Do I need technical skills?", a: "No. Describe your goal in plain English. The system decomposes it into tasks and agents execute everything end-to-end." },
-  { q: "How does the workflow system work?", a: "You type a goal like 'Find 50 prospects in Dallas interested in supplements.' The orchestrator builds a plan: Scout → Qualify → Email → SMS → Book. Every step runs automatically." },
-  { q: "What kind of businesses use this?", a: "Network marketing, affiliate marketing, online coaching, e-commerce, and any digital business that needs a steady flow of qualified prospects and booked calls." },
-  { q: "Can I cancel anytime?", a: "Yes. No contracts. Cancel anytime. Your leads, workflows, and data stay with you." },
+  { q: "Who is PFSW for?", a: "Digital entrepreneurs — network marketers, affiliate promoters, coaches, and online sellers who want quiz funnels and AI agents to automate prospecting, qualification, and sales." },
+  { q: "What are quiz funnels?", a: "Quiz funnels are interactive landing pages where prospects answer questions about their needs. The system scores and segments them automatically, so you only talk to high-intent buyers." },
+  { q: "Do I need technical skills?", a: "No. Pick a funnel template, customize your questions, and let AI agents drive traffic to it. The system handles scoring, outreach, and booking." },
+  { q: "How do agents and funnels work together?", a: "Agents find and contact prospects via email, SMS, and voice. They drive leads into your quiz funnel, which qualifies them. Qualified leads get booked on your calendar automatically." },
+  { q: "Can I cancel anytime?", a: "Yes. No contracts. Cancel anytime. Your funnels, leads, and data stay with you." },
 ];
 
 export default function Index() {
@@ -79,8 +79,8 @@ export default function Index() {
   }, []);
 
   useSEO({
-    title: "PFSW — AI Agents for Digital Entrepreneurs",
-    description: "Autonomous AI agents that find leads, qualify prospects, send outreach, and book calls for digital entrepreneurs. Describe a goal — the system executes.",
+    title: "PFSW — Quiz Funnels + AI Agents for Digital Entrepreneurs",
+    description: "Sell your products on autopilot. Quiz funnels qualify buyers while AI agents find leads, run outreach, and book calls — built for digital entrepreneurs.",
     canonical: "https://system-install-lab.lovable.app/",
   });
 
@@ -142,7 +142,7 @@ export default function Index() {
               transition={{ duration: 0.5 }}
             >
               <Bot className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium text-primary tracking-wide">Built for Digital Entrepreneurs</span>
+              <span className="text-xs font-medium text-primary tracking-wide">Quiz Funnels + AI Agents for Digital Entrepreneurs</span>
             </motion.div>
 
             <motion.h1
@@ -164,7 +164,7 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
             >
-              You describe the goal. AI agents find prospects, qualify them, run outreach, and book calls — while you focus on closing.
+              Quiz funnels that qualify buyers. AI agents that find leads, run outreach, and book calls. Your entire sales engine — automated.
             </motion.p>
 
             <motion.div
@@ -174,8 +174,8 @@ export default function Index() {
               className="flex flex-col sm:flex-row items-start gap-4"
             >
               <Button asChild size="lg" className="tracking-wide text-lg px-10 py-6 font-bold gold-glow-strong group">
-                <Link to="/login">
-                  Get Started Free
+                <Link to="/intake-funnel">
+                  Take the Quiz
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -226,8 +226,8 @@ export default function Index() {
       <section className="py-24 md:py-32">
         <div className="container max-w-4xl">
           <SectionHeader
-            title="One Goal. Full Execution."
-            subtitle="Type what you want. The system figures out the rest."
+            title="Funnels + Agents. One System."
+            subtitle="Build a quiz funnel. Set a goal. Agents fill it with qualified buyers."
           />
           <motion.div
             className="rounded-3xl border border-border bg-card/80 backdrop-blur-sm p-8 md:p-10 gold-glow"
@@ -243,16 +243,16 @@ export default function Index() {
             </div>
             <div className="rounded-2xl border border-primary/20 bg-background/50 p-5 mb-8">
               <p className="text-base text-muted-foreground italic">
-                "Get me 50 MLM leads in Dallas who are interested in health supplements"
+                "Find 50 health supplement prospects in Dallas, run them through my quiz funnel, and book calls with anyone who scores above 70."
               </p>
             </div>
             <div className="space-y-4">
               {[
-                { status: "done", text: "Scout — Found 127 potential leads" },
+                { status: "done", text: "Scout — Found 127 potential prospects" },
                 { status: "done", text: "Qualifier — Scored & ranked top 50" },
-                { status: "active", text: "Email Outreach — Sending sequences..." },
-                { status: "waiting", text: "SMS Follow-up — Waiting" },
-                { status: "waiting", text: "Book Calls — Waiting" },
+                { status: "done", text: "Email Outreach — Driving to quiz funnel" },
+                { status: "active", text: "Quiz Funnel — 23 completions, 18 qualified" },
+                { status: "waiting", text: "Book Calls — Scheduling qualified leads" },
               ].map((step, i) => (
                 <motion.div
                   key={i}
@@ -316,7 +316,7 @@ export default function Index() {
       <section className="py-24 md:py-32 border-t border-border relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-card/50 via-background to-card/30" />
         <div className="container relative z-10">
-          <SectionHeader title="The Agent Stack" subtitle="Six AI agents that run your prospecting and outreach end-to-end." />
+          <SectionHeader title="The Agent Stack" subtitle="Six AI agents that prospect, outreach, and fill your funnels on autopilot." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {agents.map((a, i) => (
               <motion.div
@@ -352,7 +352,7 @@ export default function Index() {
               <TrendingUp className="h-5 w-5 text-accent" />
             </div>
             <blockquote className="text-2xl md:text-3xl font-bold text-foreground leading-snug mb-6">
-              "I typed one goal and woke up to 50 qualified leads in my pipeline with calls already booked."
+              "I built a quiz funnel, set one goal, and the agents filled my calendar with pre-qualified buyers in 48 hours."
             </blockquote>
             <p className="text-sm text-muted-foreground">— Early Beta User, Digital Entrepreneur</p>
           </motion.div>
@@ -404,7 +404,7 @@ export default function Index() {
                     className={`w-full py-5 ${t.highlighted ? "gold-glow-strong" : ""}`}
                     variant={t.highlighted ? "default" : "outline"}
                   >
-                    <Link to="/login">{t.cta}</Link>
+                    <Link to="/intake-funnel">{t.cta}</Link>
                   </Button>
                 </div>
               </motion.div>
@@ -425,12 +425,12 @@ export default function Index() {
       <section className="border-t border-border">
         <div className="container">
           <CTASection
-            headline="Stop prospecting manually. Let AI agents build your pipeline while you close deals."
-            primaryLabel="Get Started Free"
-            primaryTo="/login"
+            headline="Quiz funnels that qualify. Agents that sell. Your business on autopilot."
+            primaryLabel="Take the Quiz"
+            primaryTo="/intake-funnel"
             secondaryLabel="See Pricing"
             secondaryTo="/#pricing"
-            disclaimer="No credit card required. Cancel anytime."
+            disclaimer="No credit card required. Start with a free trial."
           />
         </div>
       </section>
