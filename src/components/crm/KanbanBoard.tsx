@@ -182,6 +182,14 @@ export function KanbanBoard({ leads, onLeadClick, onStatusChange }: KanbanBoardP
                       {lead.city && (
                         <p className="text-[10px] text-muted-foreground mt-0.5">{lead.city}</p>
                       )}
+                      {/* Quiz funnel badge */}
+                      {lead.source === "quiz_funnel" && lead.notes && (
+                        <div className="mt-1.5">
+                          <Badge className="text-[9px] h-4 bg-primary/20 text-primary border-primary/30">
+                            🎯 {lead.notes.match(/Score: (\d+)/)?.[1] || "?"}/100
+                          </Badge>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {lead.phone && <Phone className="h-3 w-3 text-muted-foreground/60" />}
                         {lead.email && <Mail className="h-3 w-3 text-muted-foreground/60" />}

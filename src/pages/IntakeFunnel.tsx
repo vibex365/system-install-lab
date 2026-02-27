@@ -280,6 +280,17 @@ export default function IntakeFunnel() {
     }
     setSubmitting(true);
     try {
+      // Build quiz summary for notes
+      const questionSteps = STEPS.filter(s => s.type === "question");
+      const summaryLines = questionSteps.map((s, i) => {
+        const q = s.data as QuizQuestion;
+        const stepIdx = STEPS.indexOf(s);
+        const selectedScore = answers[stepIdx];
+        const selectedOpt = q.options.find(o => o.score === selectedScore);
+        return `Q: ${q.question}\nA: ${selectedOpt?.label || "N/A"}`;
+      });
+      const quizSummary = summaryLines.join("\n\n");
+
       await supabase.from("funnel_leads" as any).insert({
         name: name.trim(),
         email: email.trim(),
@@ -293,6 +304,26 @@ export default function IntakeFunnel() {
         email: email.trim(),
         note: `[PFSW Quiz] Name: ${name.trim()} | Phone: ${phone.trim() || "N/A"} | Score: ${normalizedScore}/100 (${tier.label})`,
       });
+
+      // Call funnel-call edge function to create CRM lead + trigger SMS
+      if (phone.trim()) {
+        try {
+          await supabase.functions.invoke("funnel-call", {
+            body: {
+              phone_number: phone.trim(),
+              respondent_name: name.trim(),
+              respondent_email: email.trim(),
+              quiz_score: normalizedScore,
+              quiz_result_label: tier.label,
+              quiz_title: "Automation Readiness Quiz",
+              quiz_questions_summary: quizSummary,
+            },
+          });
+        } catch (funnelErr) {
+          console.error("funnel-call error (non-blocking):", funnelErr);
+        }
+      }
+
       setPhase("result");
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
