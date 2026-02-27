@@ -37,8 +37,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     sections: [
       {
         type: "hero",
-        title: "Your Intake Process Is Bleeding Revenue",
-        subtitle: "Every missed call, slow email reply, and forgotten follow-up is a retained client that went to opposing counsel.",
+        title: "We Find Your Next Clients Before They Find Your Competition",
+        subtitle: "People are posting on Reddit, Facebook, and local forums right now asking 'does anyone know a good lawyer?' — we find them, qualify them, and book them on your calendar automatically.",
       },
       {
         type: "before_after",
@@ -56,24 +56,24 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         after: {
           title: "With PFSW Deployed",
           points: [
-            "AI qualifies leads in under 60 seconds via quiz funnel",
-            "High-intent prospects auto-booked onto your calendar",
-            "SMS callback triggers AI consultation briefing",
+            "AI scans Reddit, Facebook groups, and local forums for people asking for legal help in your area",
+            "Qualified prospects auto-booked onto your calendar",
+            "SMS and email outreach engages them before competing firms respond",
             "Automated follow-up sequences nurture undecided prospects",
-            "Full pipeline visibility: inquiry → consultation → retained",
+            "Full pipeline visibility: forum post found → contacted → consultation → retained",
           ],
         },
       },
       {
         type: "agent_stack",
-        title: "Your AI Legal Intake Team",
-        subtitle: "Five autonomous agents working 24/7 so your associates focus on billable hours.",
+        title: "Your AI Client Acquisition Team",
+        subtitle: "Five autonomous agents finding and closing clients for your firm 24/7.",
         agents: [
-          { name: "Scout Agent", action: "Finds people actively searching for legal help — forum posts, social threads, local queries like 'does anyone know a good lawyer?'", icon: "Search" },
-          { name: "Qualifier Agent", action: "Scores incoming leads by case type, urgency, and budget fit", icon: "Filter" },
-          { name: "Outreach Agent", action: "Sends personalized follow-ups via email and SMS", icon: "Send" },
-          { name: "Booker Agent", action: "Auto-schedules consultations on available slots", icon: "Calendar" },
-          { name: "Voice Agent", action: "AI-powered callback briefs prospects on their case assessment", icon: "Phone" },
+          { name: "Scout Agent", action: "Searches Reddit, Avvo, Facebook groups, Nextdoor, and local forums in your service area for posts like 'need a lawyer for...' or 'anyone recommend an attorney in [city]?'", icon: "Search" },
+          { name: "Qualifier Agent", action: "Scores each prospect by case type, urgency, and whether they match your practice area", icon: "Filter" },
+          { name: "Outreach Agent", action: "Sends a personalized message offering a free consultation — before competing firms even see the post", icon: "Send" },
+          { name: "Booker Agent", action: "Auto-schedules consultations directly onto your calendar", icon: "Calendar" },
+          { name: "Voice Agent", action: "AI-powered callback confirms appointment and briefs the prospect on next steps", icon: "Phone" },
         ],
       },
       {
@@ -105,8 +105,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     sections: [
       {
         type: "hero",
-        title: "Your DMs Are Full. Your Calendar Is Empty.",
-        subtitle: "Instagram followers and free trial signups mean nothing if you cannot convert them into paying members.",
+        title: "We Find People Ready to Train — You Just Show Up and Coach",
+        subtitle: "Right now, people in your area are posting on Reddit, Facebook, and local groups asking for trainer recommendations. We find them, reach out, and fill your calendar.",
       },
       {
         type: "before_after",
@@ -124,24 +124,24 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         after: {
           title: "With PFSW Deployed",
           points: [
-            "Quiz funnel pre-qualifies prospects by goal, commitment, and budget",
-            "AI books trial sessions directly onto your calendar",
+            "AI scans Reddit fitness subs, Facebook groups, and local community boards for people looking for trainers in your area",
+            "Qualified leads auto-booked for trial sessions on your calendar",
             "Automated SMS reminders reduce no-shows by 60%",
-            "Voice agent calls prospects to confirm and upsell packages",
-            "Full pipeline: Lead → Trial Booked → Completed → Member",
+            "Voice agent calls to confirm and build rapport before the first session",
+            "Full pipeline: Forum post found → Contacted → Trial Booked → Member",
           ],
         },
       },
       {
         type: "agent_stack",
-        title: "Your AI Training Staff",
-        subtitle: "Autonomous agents that handle lead gen while you train clients.",
+        title: "Your AI Client Finder",
+        subtitle: "Autonomous agents that find paying clients while you focus on training.",
         agents: [
-          { name: "Scout Agent", action: "Finds people posting about wanting a trainer, gym recommendations, or weight loss help on Reddit, Facebook groups, and local forums", icon: "Search" },
-          { name: "Qualifier Agent", action: "Assesses fitness goals, experience, and readiness to commit", icon: "Filter" },
-          { name: "Outreach Agent", action: "Sends goal-specific follow-ups that drive trial bookings", icon: "Send" },
-          { name: "Booker Agent", action: "Schedules trial sessions and sends prep instructions", icon: "Calendar" },
-          { name: "Voice Agent", action: "Personalized callback confirms commitment and builds rapport", icon: "Phone" },
+          { name: "Scout Agent", action: "Searches r/fitness, r/personaltraining, local Facebook groups, and Nextdoor in your service area for posts like 'looking for a personal trainer' or 'best gym near [city]'", icon: "Search" },
+          { name: "Qualifier Agent", action: "Assesses each prospect's fitness goals, budget, and readiness to commit", icon: "Filter" },
+          { name: "Outreach Agent", action: "Sends a personalized message offering a free trial session — before other trainers see the post", icon: "Send" },
+          { name: "Booker Agent", action: "Schedules trial sessions directly onto your calendar with prep instructions", icon: "Calendar" },
+          { name: "Voice Agent", action: "Personalized callback confirms the session and builds rapport before day one", icon: "Phone" },
         ],
       },
       {
@@ -173,8 +173,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     sections: [
       {
         type: "hero",
-        title: "Speed Kills — And You Are Losing the Race",
-        subtitle: "In real estate, the agent who responds first wins. Your current process takes hours. Ours takes seconds.",
+        title: "We Find Buyers and Sellers Before They Hit Zillow",
+        subtitle: "People post on Reddit, Nextdoor, and Facebook groups every day asking 'anyone know a good realtor in [city]?' — we find them first, reach out, and book the showing.",
       },
       {
         type: "before_after",
@@ -192,24 +192,24 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         after: {
           title: "With PFSW Deployed",
           points: [
-            "Quiz funnel qualifies buyers/sellers by timeline and budget in 90 seconds",
-            "AI schedules home valuations and showings automatically",
-            "Market reports auto-sent to nurture long-timeline prospects",
-            "Voice agent calls qualified leads to confirm interest",
-            "Full pipeline: Lead → Showing → Offer → Contract → Closed",
+            "AI scans Reddit, Nextdoor, Facebook groups, and local forums for people actively asking about buying or selling in your farm area",
+            "Qualified prospects auto-booked for showings or home valuations",
+            "Personalized outreach reaches them before competing agents",
+            "Voice agent calls to confirm interest and pre-qualify",
+            "Full pipeline: Forum post found → Contacted → Showing → Offer → Closed",
           ],
         },
       },
       {
         type: "agent_stack",
-        title: "Your AI Real Estate Team",
-        subtitle: "Five agents that never take a listing day off.",
+        title: "Your AI Client Acquisition Team",
+        subtitle: "Five agents finding buyers and sellers in your area 24/7.",
         agents: [
-          { name: "Scout Agent", action: "Finds people actively posting about buying or selling homes — 'looking for a realtor in [city]' on Reddit, Nextdoor, and Facebook groups", icon: "Search" },
-          { name: "Qualifier Agent", action: "Scores leads by timeline, price range, and motivation level", icon: "Filter" },
-          { name: "Outreach Agent", action: "Sends personalized market updates and CMA invitations", icon: "Send" },
-          { name: "Booker Agent", action: "Auto-schedules showings and home valuations", icon: "Calendar" },
-          { name: "Voice Agent", action: "AI callback confirms showing details and pre-qualifies", icon: "Phone" },
+          { name: "Scout Agent", action: "Searches Reddit (r/realestate, r/firsttimehomebuyer), Nextdoor, Facebook Marketplace, and local community groups for posts like 'looking for a realtor in [city]' or 'thinking of selling my home'", icon: "Search" },
+          { name: "Qualifier Agent", action: "Scores each prospect by timeline, price range, and motivation level", icon: "Filter" },
+          { name: "Outreach Agent", action: "Sends a personalized message with a free home valuation or market report — before other agents respond", icon: "Send" },
+          { name: "Booker Agent", action: "Auto-schedules showings and home valuations onto your calendar", icon: "Calendar" },
+          { name: "Voice Agent", action: "AI callback confirms details and pre-qualifies the prospect before you meet", icon: "Phone" },
         ],
       },
       {
@@ -241,8 +241,8 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
     sections: [
       {
         type: "hero",
-        title: "Empty Chairs Are Not a Marketing Problem. They Are a Systems Problem.",
-        subtitle: "Your hygienists are ready. Your chairs are open. But your front desk cannot keep up with follow-ups, recalls, and new patient intake.",
+        title: "We Fill Your Chairs With New Patients — Automatically",
+        subtitle: "People in your area are posting on Facebook, Nextdoor, and Google right now asking 'who's a good dentist near me?' — we find them, reach out, and book the appointment.",
       },
       {
         type: "before_after",
@@ -260,24 +260,24 @@ export const NICHE_MAGAZINES: NicheMagazine[] = [
         after: {
           title: "With PFSW Deployed",
           points: [
-            "Quiz funnel screens patients by concern, insurance, and urgency",
-            "AI books checkups and cleanings onto your schedule",
-            "Automated SMS reminders cut no-shows by 55%",
-            "Voice agent confirms appointments and collects pre-visit info",
-            "Full pipeline: Inquiry → Booked → Exam → Treatment Plan → Active",
+            "AI scans Nextdoor, Facebook groups, Google reviews, and local forums for people asking for dentist recommendations in your area",
+            "Qualified new patients auto-booked onto your schedule",
+            "Personalized outreach reaches them before competing practices",
+            "Voice agent confirms appointments and collects insurance details",
+            "Full pipeline: Forum post found → Contacted → Booked → Exam → Active Patient",
           ],
         },
       },
       {
         type: "agent_stack",
-        title: "Your AI Front Desk",
-        subtitle: "Autonomous agents that handle patient acquisition so your team focuses on care.",
+        title: "Your AI Patient Acquisition Team",
+        subtitle: "Autonomous agents finding new patients in your area so your team focuses on care.",
         agents: [
-          { name: "Scout Agent", action: "Finds people asking for dentist recommendations on local forums, Google reviews, and community groups — 'need a good dentist near me'", icon: "Search" },
-          { name: "Qualifier Agent", action: "Screens by dental concern, insurance type, and urgency", icon: "Filter" },
-          { name: "Outreach Agent", action: "Sends appointment reminders and recall notifications", icon: "Send" },
-          { name: "Booker Agent", action: "Auto-schedules checkups into available hygienist slots", icon: "Calendar" },
-          { name: "Voice Agent", action: "Confirms appointments and collects insurance details by phone", icon: "Phone" },
+          { name: "Scout Agent", action: "Searches Nextdoor, Facebook groups, Google reviews, and local community boards for posts like 'need a good dentist near me' or 'dentist recommendations in [city]'", icon: "Search" },
+          { name: "Qualifier Agent", action: "Screens each prospect by dental concern, insurance type, and urgency", icon: "Filter" },
+          { name: "Outreach Agent", action: "Sends a personalized message offering a new patient special — before competing practices respond", icon: "Send" },
+          { name: "Booker Agent", action: "Auto-schedules checkups and cleanings into available hygienist slots", icon: "Calendar" },
+          { name: "Voice Agent", action: "Confirms appointments and collects insurance details by phone before the visit", icon: "Phone" },
         ],
       },
       {
