@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.agent-dream100-discover]
 verify_jwt = false
+
+[functions.funnel-complete]
+verify_jwt = false

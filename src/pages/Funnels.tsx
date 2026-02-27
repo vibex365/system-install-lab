@@ -57,6 +57,10 @@ const NICHES = [
   { value: "coaching", label: "Online Coaching" },
   { value: "home_business", label: "Home Business" },
   { value: "travel_mlm", label: "Travel / Lifestyle MLM" },
+  { value: "lawyer", label: "Lawyers / Law Firms" },
+  { value: "fitness", label: "Fitness Trainers / Gyms" },
+  { value: "real_estate", label: "Real Estate Agents" },
+  { value: "dentist", label: "Dentists / Clinics" },
 ];
 
 const AGENT_TOGGLES = [
@@ -269,7 +273,12 @@ export default function Funnels() {
       <main className="pt-24 pb-20">
         <div className="container max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-foreground mb-1">Your Quiz Funnel</h1>
+            <div className="flex items-center justify-between mb-1">
+              <h1 className="text-2xl font-bold text-foreground">Your Quiz Funnel</h1>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/funnel-templates")}>
+                <Sparkles className="h-3 w-3" /> Browse Templates
+              </Button>
+            </div>
             <p className="text-sm text-muted-foreground mb-8">AI-generated quiz funnel tailored to your niche. One funnel, fully dynamic.</p>
           </motion.div>
 
