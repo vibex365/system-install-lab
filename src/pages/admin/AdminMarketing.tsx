@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2 } from "lucide-react";
+import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const FUNNEL_URL = "https://peoplefailsystemswork.com/intake-funnel";
 const MAGAZINE_URL = "https://peoplefailsystemswork.com/magazine/inside";
+const ELYT_DEMO_URL = "https://peoplefailsystemswork.com/elyt-demo";
 
 export default function AdminMarketing() {
   const { toast } = useToast();
@@ -101,6 +102,45 @@ export default function AdminMarketing() {
                 <p>🎯 <strong>Hook:</strong> "Most agencies spend 10+ hours building a single funnel. We do it in minutes."</p>
                 <p>📊 <strong>Body:</strong> "Take the 2-minute Funnel Efficiency Quiz and find out if your process is costing you clients."</p>
                 <p>🔗 <strong>CTA:</strong> "Take the Quiz → {FUNNEL_URL}"</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ELYT System Demo Funnel Card */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              ELYT System Demo — "Is Your Follow-Up Costing You Sign-Ups?"
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Quiz funnel for ELYT travel members. Qualifies them on lead gen, follow-up, and automation readiness — then routes to SMS callback for a live AI demo.
+            </p>
+
+            <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
+              <code className="text-xs text-foreground flex-1 truncate">{ELYT_DEMO_URL}</code>
+              <Button size="sm" variant="ghost" onClick={() => copyUrl(ELYT_DEMO_URL)} className="shrink-0">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => window.open("/elyt-demo", "_blank")}
+                className="shrink-0"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <h4 className="text-xs font-semibold text-foreground mb-2">How to Use</h4>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>📲 <strong>Group blast:</strong> Send to all ELYT members — "Take this 2-min quiz to see how AI can automate your travel biz"</p>
+                <p>💬 <strong>1-on-1:</strong> "Hey, I built something for us — check your score:" + paste URL</p>
+                <p>📱 <strong>After quiz:</strong> They get a callback number → AI walks them through results → sells the system</p>
               </div>
             </div>
           </CardContent>
