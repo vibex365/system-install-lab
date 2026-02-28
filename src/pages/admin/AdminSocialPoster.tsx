@@ -496,7 +496,7 @@ export default function AdminSocialPoster() {
     toast({ title: "Image added to post" });
   };
 
-  const handleExportCsv = useCallback(() => {
+  const handleExportCsv = useCallback(async () => {
     // Filter posts that are approved/scheduled and not yet published
     const exportable = posts.filter((p: any) => 
       p.approval_status === "approved" && p.status !== "published"
@@ -525,21 +525,33 @@ export default function AdminSocialPoster() {
     });
     const lateProfileId = [...profileIdSet][0] || "";
 
-    const rows = exportable.map((post: any) => {
+    const rows = [];
+    for (const post of exportable) {
       const platforms = (post.platforms || []).join(",");
       const profileIds = lateProfileId;
       const scheduleTime = post.scheduled_date ? `${post.scheduled_date} 10:00` : "";
-      const mediaUrls = (post.media_urls || []).join(",");
+      
+      // Resolve media URLs — if empty, try uploading brand image
+      let mediaUrls = (post.media_urls || []).filter(Boolean);
+      if (!mediaUrls.length && post.image_variant) {
+        const brandUrl = await uploadBrandImageToStorage(post.image_variant);
+        if (brandUrl) {
+          mediaUrls = [brandUrl];
+          // Persist so we don't re-upload next time
+          await supabase.from("social_posts").update({ media_urls: mediaUrls } as any).eq("id", post.id);
+        }
+      }
+      const mediaUrlsStr = mediaUrls.join(",");
       const hashtags = (post.content.match(/#\w+/g) || []).join(",");
 
-      return [
+      rows.push([
         csvEscape(post.content || ""),       // post_content
         csvEscape(platforms),                 // platforms
         csvEscape(profileIds),               // profiles
         csvEscape(scheduleTime),             // schedule_time
         "","","","","","","","","","","","",  // platform-specific schedule times
         csvEscape("America/New_York"),       // tz
-        csvEscape(mediaUrls),                // media_urls
+        csvEscape(mediaUrlsStr),             // media_urls
         '"false"',                           // is_draft
         '"false"',                           // publish_now
         '"false"',                           // use_queue
@@ -550,8 +562,8 @@ export default function AdminSocialPoster() {
         '""',                                // mentions
         '"true"',                            // crossposting_enabled
         '""',                                // metadata
-      ].join(",");
-    });
+      ].join(","));
+    }
 
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -562,7 +574,7 @@ export default function AdminSocialPoster() {
     a.click();
     URL.revokeObjectURL(url);
     toast({ title: `Exported ${exportable.length} post(s) to CSV` });
-  }, [posts, connectedProfiles, toast]);
+  }, [posts, connectedProfiles, toast, uploadBrandImageToStorage]);
 
   const pendingCount = posts.filter((p: any) => (p as any).approval_status === "pending").length;
 
