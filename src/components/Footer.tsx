@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-card/50">
       <div className="container py-16 md:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-10 md:gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="text-lg font-bold tracking-[0.2em] text-foreground">PFSW</Link>
@@ -14,26 +14,14 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Platform */}
+          {/* Product */}
           <div>
-            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Platform</h4>
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Product</h4>
             <nav className="flex flex-col gap-2.5">
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
-              <Link to="/crm" className="text-sm text-muted-foreground hover:text-foreground transition-colors">CRM &amp; Leads</Link>
-              <Link to="/campaigns" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Ad Campaigns</Link>
-              <Link to="/dashboard/workflows" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
-              <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
-            </nav>
-          </div>
-
-          {/* Developers */}
-          <div>
-            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Developers</h4>
-            <nav className="flex flex-col gap-2.5">
-              <Link to="/developers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Documentation</Link>
-              <Link to="/developers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Keys</Link>
-              <Link to="/partner" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Partner Program</Link>
-              <Link to="/affiliate" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Affiliates</Link>
+              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
+              <a href="#agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AI Agents</a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+              <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
             </nav>
           </div>
 
