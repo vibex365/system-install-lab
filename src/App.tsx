@@ -35,6 +35,7 @@ import FunnelMarketplace from "./pages/FunnelMarketplace";
 import DeveloperPortal from "./pages/DeveloperPortal";
 import MediaBuyer from "./pages/MediaBuyer";
 import ApiDocs from "./pages/ApiDocs";
+import DeveloperLogin from "./pages/DeveloperLogin";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -80,6 +81,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/api-docs" element={<ApiDocs />} />
+            <Route path="/developer-login" element={<DeveloperLogin />} />
 
             {/* Plan selection (accessible to all logged-in users) */}
             <Route path="/upgrade" element={<Upgrade />} />

@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Users, Link2, Copy, Loader2, TrendingUp } from "lucide-react";
+import { DollarSign, Users, Link2, Copy, Loader2, TrendingUp, Download, FileText, Image, Mail } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
 interface AffiliateInfo {
@@ -152,6 +153,76 @@ function AffiliateDashboardContent() {
                   <Copy className="h-3 w-3 mr-1" /> Copy
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Marketing Assets */}
+          <Card className="bg-card border-border mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Marketing Assets</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="swipe" className="space-y-4">
+                <TabsList className="h-8">
+                  <TabsTrigger value="swipe" className="text-xs gap-1.5"><FileText className="h-3 w-3" /> Swipe Copy</TabsTrigger>
+                  <TabsTrigger value="banners" className="text-xs gap-1.5"><Image className="h-3 w-3" /> Banners</TabsTrigger>
+                  <TabsTrigger value="emails" className="text-xs gap-1.5"><Mail className="h-3 w-3" /> Email Templates</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="swipe" className="space-y-3">
+                  {[
+                    { title: "Social Media Post — Pain Point", copy: "Still spending hours chasing leads? Our AI agents do the prospecting, outreach, and follow-up for you — 24/7. No hiring. No training. Just results.\n\n→ [Your Referral Link]" },
+                    { title: "DM Script — Cold Outreach", copy: "Hey [Name], quick question — are you manually prospecting for clients right now?\n\nI've been using an AI system that finds leads, audits their websites, and sends outreach automatically. It's saved me 20+ hours/week.\n\nWant me to send you the link? [Your Referral Link]" },
+                    { title: "Story/Reel Hook", copy: "POV: You stopped chasing leads and let AI agents close deals while you sleep 💰\n\nLink in bio 👆" },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-muted/30 border border-border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold text-foreground">{item.title}</p>
+                        <Button size="sm" variant="ghost" className="h-6 text-xs gap-1" onClick={() => { navigator.clipboard.writeText(item.copy.replace("[Your Referral Link]", referralLink)); toast({ title: "Copied!" }); }}>
+                          <Copy className="h-3 w-3" /> Copy
+                        </Button>
+                      </div>
+                      <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap font-sans">{item.copy}</pre>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="banners" className="space-y-3">
+                  {[
+                    { title: "Instagram Story (1080×1920)", size: "1080 × 1920", desc: "Vertical banner for IG/TikTok stories" },
+                    { title: "Facebook Ad (1200×628)", size: "1200 × 628", desc: "Landscape banner for FB/LinkedIn ads" },
+                    { title: "Twitter Header (1500×500)", size: "1500 × 500", desc: "Profile header banner" },
+                  ].map((banner, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/30 border border-border rounded-lg p-4">
+                      <div>
+                        <p className="text-xs font-semibold text-foreground">{banner.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{banner.desc} — {banner.size}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">Coming Soon</Badge>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="emails" className="space-y-3">
+                  {[
+                    { title: "Welcome Email Template", subject: "The future of client acquisition is here", body: "Hi [Name],\n\nI wanted to share something that's completely changed how I get clients.\n\nIt's an AI-powered system that handles prospecting, outreach, follow-ups, and even cold calls — all on autopilot.\n\nNo more:\n❌ Cold calling for hours\n❌ Writing outreach emails manually\n❌ Paying for leads that go nowhere\n\nInstead, you get a team of AI agents working around the clock.\n\n→ Check it out here: [Your Referral Link]\n\nLet me know if you have questions!" },
+                    { title: "Follow-Up Email", subject: "Quick follow-up — did you see this?", body: "Hey [Name],\n\nJust checking in — did you get a chance to look at the AI client acquisition system I mentioned?\n\nPeople are already using it to book 10-20 calls per week without lifting a finger.\n\nHere's the link again: [Your Referral Link]\n\nHappy to walk you through it if you want!" },
+                  ].map((email, i) => (
+                    <div key={i} className="bg-muted/30 border border-border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-xs font-semibold text-foreground">{email.title}</p>
+                          <p className="text-[10px] text-muted-foreground">Subject: {email.subject}</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="h-6 text-xs gap-1" onClick={() => { navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.body}`.replace(/\[Your Referral Link\]/g, referralLink)); toast({ title: "Copied!" }); }}>
+                          <Copy className="h-3 w-3" /> Copy
+                        </Button>
+                      </div>
+                      <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap font-sans">{email.body}</pre>
+                    </div>
+                  ))}
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
