@@ -123,7 +123,7 @@ Rules:
 - Tone: ${tone || "professional but conversational"}. Direct, disciplined, operator mindset.
 - Brand voice: "People Fail. Systems Work." — no hustle clichés, no fake guru energy
 - Include relevant emojis sparingly
-- IMPORTANT: The CTA must tell people to comment the keyword "${kw}" below the post to get more info. Example: "Drop '${kw}' in the comments and I'll send you the details." Do NOT include any group URLs or direct links.${quizNote}
+- IMPORTANT: The CTA must tell people to comment "SEND ME THE LINK" below the post. The goal is to get them to request access to the free group. Example: "Comment 'SEND ME THE LINK' below and I'll DM you the details." Do NOT include any group URLs or direct links in the post.${quizNote}
 - Keep it under 280 chars for Twitter, under 2200 for Instagram, optimal length for others
 - Return ONLY a JSON object with: { "text": "the post text", "hashtags": ["tag1", "tag2"] }`,
         },
