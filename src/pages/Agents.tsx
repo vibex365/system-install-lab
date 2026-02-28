@@ -93,6 +93,47 @@ const AGENT_INPUTS: Record<string, { label: string; key: string; type: "text" | 
     { label: "Platform", key: "platform", type: "select", options: ["YouTube", "TikTok", "Instagram Reels", "All Platforms"] },
     { label: "Tone", key: "tone", type: "select", options: ["Educational", "Hype / Energy", "Professional", "Behind-the-scenes"] },
   ],
+  "deep-researcher": [
+    { label: "Research Topic", key: "topic", type: "textarea", placeholder: "Market analysis for AI-powered dental scheduling tools in Florida..." },
+    { label: "Depth", key: "depth", type: "select", options: ["Quick scan", "Standard", "Deep dive"] },
+  ],
+  "content-writer": [
+    { label: "What to Write", key: "topic", type: "textarea", placeholder: "Blog post about benefits of AI for small business owners..." },
+    { label: "Format", key: "format", type: "select", options: ["Blog post", "Landing page copy", "Email sequence", "Social media posts", "Case study"] },
+    { label: "Tone", key: "tone", type: "select", options: ["Professional", "Casual", "Persuasive", "Educational"] },
+  ],
+  "website-auditor": [
+    { label: "Website URL", key: "url", type: "text", placeholder: "https://example.com" },
+    { label: "Focus Area", key: "focus", type: "select", options: ["Full audit", "SEO only", "UX/Design", "Performance", "Mobile"] },
+  ],
+  "slide-generator": [
+    { label: "Presentation Topic", key: "topic", type: "textarea", placeholder: "Sales pitch deck for our AI lead gen platform..." },
+    { label: "Slide Count", key: "slide_count", type: "select", options: ["5", "10", "15", "20"] },
+    { label: "Style", key: "style", type: "select", options: ["Corporate", "Startup", "Creative", "Minimal"] },
+  ],
+  "code-interpreter": [
+    { label: "Task Description", key: "task", type: "textarea", placeholder: "Write a Python script that scrapes Google Maps listings for dentists in Miami..." },
+    { label: "Language", key: "language", type: "select", options: ["Python", "JavaScript", "TypeScript", "SQL", "Bash"] },
+    { label: "Context (optional)", key: "context", type: "textarea", placeholder: "Any additional context or constraints..." },
+  ],
+  "carousel-generator": [
+    { label: "Product / Service", key: "product", type: "text", placeholder: "AI-powered website builder for dentists" },
+    { label: "Slide Count", key: "slideCount", type: "select", options: ["3", "5", "7", "10"] },
+    { label: "Platform", key: "platform", type: "select", options: ["Facebook", "Instagram", "LinkedIn", "All platforms"] },
+    { label: "Offer / CTA", key: "offer", type: "text", placeholder: "Free website audit + 30-day trial" },
+    { label: "Target Audience", key: "targetAudience", type: "text", placeholder: "Dental practice owners aged 35-55" },
+  ],
+  "browser-operator": [
+    { label: "Instruction", key: "instruction", type: "textarea", placeholder: "Go to competitor websites and extract their pricing, features, and testimonials..." },
+    { label: "URLs (comma-separated)", key: "urls", type: "textarea", placeholder: "https://competitor1.com, https://competitor2.com" },
+    { label: "Max Pages", key: "maxPages", type: "select", options: ["3", "5", "10", "20"] },
+  ],
+  "image-generator": [
+    { label: "Image Prompt", key: "prompt", type: "textarea", placeholder: "Modern dental office hero image with happy patient, clean white background, professional lighting..." },
+    { label: "Style", key: "style", type: "select", options: ["Photorealistic", "Illustration", "Flat design", "3D render", "Watercolor"] },
+    { label: "Dimensions", key: "dimensions", type: "select", options: ["1080x1080 (Square)", "1200x628 (Facebook)", "1080x1920 (Story)", "1920x1080 (Banner)"] },
+    { label: "Number of Images", key: "count", type: "select", options: ["1", "2", "3", "4"] },
+  ],
 };
 
 interface Agent {
