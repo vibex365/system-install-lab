@@ -46,6 +46,7 @@ import DemoFunnel from "./pages/DemoFunnel";
 import Partner from "./pages/Partner";
 import ElytSystemFunnel from "./pages/ElytSystemFunnel";
 import NicheMagazine from "./pages/NicheMagazine";
+import GroupFunnel from "./pages/GroupFunnel";
 
 // Lead routes
 import LeadDashboard from "./pages/lead/LeadDashboard";
@@ -121,6 +122,7 @@ const App = () => (
             <Route path="/partner" element={<Partner />} />
             <Route path="/partner/apply" element={<PartnerApply />} />
             <Route path="/elyt-demo" element={<ElytSystemFunnel />} />
+            <Route path="/systems-quiz" element={<GroupFunnel />} />
 
             {/* Lead routes */}
             <Route path="/lead/dashboard" element={<LeadDashboard />} />
