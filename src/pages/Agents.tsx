@@ -1149,7 +1149,63 @@ function AgentsContent() {
           </div>
         )}
 
-        {/* Individual agents removed — bundles only */}
+        {/* ── Included Agents ── */}
+        {includedAgents.length > 0 && (
+          <div className="mb-12">
+            <p className="text-xs tracking-[0.15em] text-primary uppercase font-semibold mb-2">Included With Membership</p>
+            <p className="text-xs text-muted-foreground mb-5">These agents are free to activate and run with your membership.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {includedAgents.map((agent) => (
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  lease={getLease(agent.id)}
+                  lastRun={getLastRun(agent.id)}
+                  onLease={handleLease}
+                  onRun={(a) => setRunModalAgent(a)}
+                  onActivateIncluded={handleActivateIncluded}
+                  leasing={leasingId === agent.id}
+                  activating={activatingId === agent.id}
+                  isAdmin={isChiefArchitect}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Add-On Agents ── */}
+        {filteredAddOns.length > 0 && (
+          <div className="mb-12">
+            <p className="text-xs tracking-[0.15em] text-primary uppercase font-semibold mb-2">Add-On Agents</p>
+            <div className="flex flex-wrap gap-2 mb-5">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${selectedCategory === cat ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/30"}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredAddOns.map((agent) => (
+                <AgentCard
+                  key={agent.id}
+                  agent={agent}
+                  lease={getLease(agent.id)}
+                  lastRun={getLastRun(agent.id)}
+                  onLease={handleLease}
+                  onRun={(a) => setRunModalAgent(a)}
+                  onActivateIncluded={handleActivateIncluded}
+                  leasing={leasingId === agent.id}
+                  activating={activatingId === agent.id}
+                  isAdmin={isChiefArchitect}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Run History */}
         <RunHistory runs={runs} agents={agents} />
