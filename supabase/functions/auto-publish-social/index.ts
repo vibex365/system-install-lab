@@ -93,11 +93,35 @@ Deno.serve(async (req) => {
           throw new Error(`No Late.dev accounts found for: ${requestedPlatforms.join(", ")}. Available: ${accounts.map((a: any) => a.platform).join(", ") || "none"}`);
         }
 
+        // If post has image_variant but no media_urls, try to find a gallery image
+        let mediaUrls = post.media_urls || [];
+        if (!mediaUrls.length && post.image_variant) {
+          // Look for a pre-uploaded brand image in storage
+          const { data: brandFiles } = await supabaseAdmin.storage
+            .from("social-images")
+            .list("brand", { limit: 100 });
+          const match = (brandFiles || []).find((f: any) => f.name.startsWith(post.image_variant));
+          if (match) {
+            const { data: urlData } = supabaseAdmin.storage.from("social-images").getPublicUrl(`brand/${match.name}`);
+            mediaUrls = [urlData.publicUrl];
+          } else if ((brandFiles || []).length === 0) {
+            // Fallback: grab a random image from the gallery folder
+            const { data: galleryFiles } = await supabaseAdmin.storage
+              .from("social-images")
+              .list("gallery", { limit: 50 });
+            if (galleryFiles?.length) {
+              const randomFile = galleryFiles[Math.floor(Math.random() * galleryFiles.length)];
+              const { data: urlData } = supabaseAdmin.storage.from("social-images").getPublicUrl(`gallery/${randomFile.name}`);
+              mediaUrls = [urlData.publicUrl];
+            }
+          }
+        }
+
         const payload: any = {
           content: post.content,
           platforms: platformEntries,
         };
-        if (post.media_urls?.length) payload.mediaUrls = post.media_urls;
+        if (mediaUrls.length) payload.mediaUrls = mediaUrls;
 
         const resp = await fetch(`${LATE_API_BASE}/posts`, {
           method: "POST",
@@ -111,6 +135,12 @@ Deno.serve(async (req) => {
         const data = await resp.json();
 
         if (!resp.ok) {
+          if (resp.status === 409) {
+            console.log(`Post ${post.id} already published (409 duplicate), marking as published`);
+            await supabaseAdmin.from("social_posts").update({ status: "published" }).eq("id", post.id);
+            published++;
+            continue;
+          }
           throw new Error(`Late.dev error [${resp.status}]: ${JSON.stringify(data)}`);
         }
 

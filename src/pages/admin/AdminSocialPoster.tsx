@@ -333,10 +333,38 @@ export default function AdminSocialPoster() {
     setGenerating(false);
   };
 
+  // Helper: upload a brand image_variant to storage and return its public URL
+  const uploadBrandImageToStorage = async (variantId: string): Promise<string | null> => {
+    const variant = IMAGE_VARIANTS.find((v) => v.id === variantId);
+    if (!variant) return null;
+    try {
+      const resp = await fetch(variant.src);
+      const blob = await resp.blob();
+      const ext = blob.type.split("/")[1] || "png";
+      const fileName = `brand/${variantId}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("social-images")
+        .upload(fileName, blob, { contentType: blob.type, upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("social-images").getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (e: any) {
+      console.error("Brand image upload failed:", e);
+      return null;
+    }
+  };
+
   const handleSaveDraft = async () => {
     if (!content.trim() || !selectedDate) return;
     setSaving(true);
     try {
+      // If brand image selected and no other media, upload it to storage
+      let finalMediaUrls = [...composerMediaUrls];
+      if (imageVariant && finalMediaUrls.length === 0) {
+        const brandUrl = await uploadBrandImageToStorage(imageVariant);
+        if (brandUrl) finalMediaUrls = [brandUrl];
+      }
+
       const { error } = await supabase.from("social_posts").insert({
         content,
         platforms: selectedPlatforms,
@@ -347,7 +375,7 @@ export default function AdminSocialPoster() {
         image_variant: imageVariant,
         include_quiz_url: includeQuizUrl,
         keyword,
-        media_urls: composerMediaUrls,
+        media_urls: finalMediaUrls,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       } as any);
       if (error) throw error;
@@ -406,8 +434,19 @@ export default function AdminSocialPoster() {
 
   const handlePublishNow = async (post: any) => {
     try {
+      // If post has image_variant but no media_urls, upload brand image first
+      let mediaUrls = post.media_urls || [];
+      if ((!mediaUrls.length) && post.image_variant) {
+        const brandUrl = await uploadBrandImageToStorage(post.image_variant);
+        if (brandUrl) {
+          mediaUrls = [brandUrl];
+          // Also persist the URL to the post record
+          await supabase.from("social_posts").update({ media_urls: mediaUrls } as any).eq("id", post.id);
+        }
+      }
+
       const { error } = await supabase.functions.invoke("social-post", {
-        body: { action: "post", text: post.content, platforms: post.platforms, mediaUrls: post.media_urls },
+        body: { action: "post", text: post.content, platforms: post.platforms, mediaUrls },
       });
       if (error) throw error;
       await supabase
