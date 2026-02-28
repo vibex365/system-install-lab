@@ -237,6 +237,7 @@ export default function AdminSocialPoster() {
     const pending = posts.filter((p: any) => (p as any).approval_status === "pending");
     if (!pending.length) return;
     const user = (await supabase.auth.getUser()).data.user;
+    const postIds = pending.map((p: any) => p.id);
     const { error } = await supabase
       .from("social_posts")
       .update({
@@ -245,20 +246,22 @@ export default function AdminSocialPoster() {
         approved_by: user?.id,
         status: "scheduled",
       } as any)
-      .in("id", pending.map((p: any) => p.id));
+      .in("id", postIds);
     if (!error) {
       toast({ title: `${pending.length} posts approved` });
       refetch();
-      // Immediately trigger auto-publish for today's approved posts
+      // Send all to Late.dev
       try {
-        const { data, error: pubErr } = await supabase.functions.invoke("auto-publish-social");
-        if (pubErr) console.error("Auto-publish trigger failed:", pubErr);
-        else if (data?.published > 0) {
-          toast({ title: `${data.published} post(s) published now` });
+        const { data, error: schedErr } = await supabase.functions.invoke("schedule-to-late", {
+          body: { post_ids: postIds },
+        });
+        if (schedErr) console.error("Schedule to Late failed:", schedErr);
+        else if (data?.scheduled > 0) {
+          toast({ title: `${data.scheduled} post(s) scheduled on Late.dev` });
           refetch();
         }
       } catch (e) {
-        console.error("Auto-publish trigger error:", e);
+        console.error("Schedule to Late error:", e);
       }
     }
   };
@@ -421,7 +424,6 @@ export default function AdminSocialPoster() {
 
   const handleApprove = async (postId: string) => {
     const user = (await supabase.auth.getUser()).data.user;
-    const post = posts.find((p: any) => p.id === postId);
     const { error } = await supabase
       .from("social_posts")
       .update({
@@ -433,22 +435,25 @@ export default function AdminSocialPoster() {
       .eq("id", postId);
     if (error) {
       toast({ title: "Approval failed", variant: "destructive" });
-    } else {
-      toast({ title: "Post approved" });
-      refetch();
-      // If this post is scheduled for today, publish immediately
-      const today = format(new Date(), "yyyy-MM-dd");
-      if (post?.scheduled_date === today) {
-        try {
-          const { data, error: pubErr } = await supabase.functions.invoke("auto-publish-social");
-          if (!pubErr && data?.published > 0) {
-            toast({ title: `Published now!` });
-            refetch();
-          }
-        } catch (e) {
-          console.error("Auto-publish trigger error:", e);
-        }
+      return;
+    }
+    toast({ title: "Post approved" });
+    refetch();
+    // Send to Late.dev
+    try {
+      const { data, error: schedErr } = await supabase.functions.invoke("schedule-to-late", {
+        body: { post_ids: [postId] },
+      });
+      if (schedErr) throw schedErr;
+      if (data?.scheduled > 0) {
+        toast({ title: "Scheduled on Late.dev" });
+        refetch();
+      } else if (data?.errors?.length) {
+        toast({ title: "Late.dev error", description: data.errors[0], variant: "destructive" });
       }
+    } catch (e: any) {
+      console.error("Schedule to Late error:", e);
+      toast({ title: "Late.dev scheduling failed", description: e.message, variant: "destructive" });
     }
   };
 
