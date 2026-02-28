@@ -8,6 +8,31 @@ const corsHeaders = {
 
 const LATE_API_BASE = "https://getlate.dev/api/v1";
 
+// Helper: fetch connected accounts from Late.dev
+async function fetchLateAccounts(apiKey: string) {
+  const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const profilesData = await profilesResp.json();
+  const profiles = profilesData.profiles || [];
+  if (!profiles.length) return [];
+
+  const defaultProfile = profiles.find((p: any) => p.isDefault) || profiles[0];
+  const profileId = defaultProfile._id || defaultProfile.id;
+
+  const accountsResp = await fetch(`${LATE_API_BASE}/accounts?profileId=${profileId}`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const accountsData = await accountsResp.json();
+  const accounts = accountsData.accounts || accountsData.data || (Array.isArray(accountsData) ? accountsData : []);
+  return accounts.map((a: any) => ({
+    id: a._id || a.id,
+    platform: (a.platform || a.type || "").toLowerCase(),
+    username: a.username || a.name || "",
+    profileId,
+  }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -44,12 +69,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch connected profiles once
-    const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
-      headers: { Authorization: `Bearer ${LATE_API_KEY}` },
-    });
-    const profilesData = await profilesResp.json();
-    const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
+    // Fetch connected accounts once
+    const accounts = await fetchLateAccounts(LATE_API_KEY);
+    console.log("Late.dev connected accounts:", JSON.stringify(accounts));
 
     let published = 0;
     const errors: string[] = [];
@@ -57,20 +79,25 @@ Deno.serve(async (req) => {
     for (const post of postsToPublish) {
       try {
         const requestedPlatforms = post.platforms || ["facebook"];
-        const profileIds: string[] = [];
+        
+        // Build platforms array for Late.dev
+        const platformEntries: { platform: string; accountId: string }[] = [];
         for (const p of requestedPlatforms) {
-          const match = profiles.find((pr: any) =>
-            (pr.platform || pr.type || "").toLowerCase() === p.toLowerCase()
-          );
-          if (match) profileIds.push(match.id);
+          const match = accounts.find((a: any) => a.platform === p.toLowerCase());
+          if (match) {
+            platformEntries.push({ platform: match.platform, accountId: match.id });
+          }
         }
 
-        if (!profileIds.length) {
-          throw new Error(`No Late.dev profiles found for: ${requestedPlatforms.join(", ")}`);
+        if (!platformEntries.length) {
+          throw new Error(`No Late.dev accounts found for: ${requestedPlatforms.join(", ")}. Available: ${accounts.map((a: any) => a.platform).join(", ") || "none"}`);
         }
 
-        const payload: any = { post: post.content, profile_ids: profileIds };
-        if (post.media_urls?.length) payload.media_urls = post.media_urls;
+        const payload: any = {
+          content: post.content,
+          platforms: platformEntries,
+        };
+        if (post.media_urls?.length) payload.mediaUrls = post.media_urls;
 
         const resp = await fetch(`${LATE_API_BASE}/posts`, {
           method: "POST",
@@ -91,7 +118,7 @@ Deno.serve(async (req) => {
           .from("social_posts")
           .update({
             status: "published",
-            late_post_id: data.id || null,
+            late_post_id: data._id || data.id || null,
           })
           .eq("id", post.id);
 
