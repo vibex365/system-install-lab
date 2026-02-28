@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot,
-  Upload, Trash2, Image as ImageIcon
+  Upload, Trash2, Image as ImageIcon, GalleryHorizontalEnd
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,8 +28,12 @@ import fakeGuruYellow from "@/assets/social/fake-guru-yellow.png";
 import replaceYourselfYellow from "@/assets/social/replace-yourself-yellow.png";
 import bottleneckYellow from "@/assets/social/bottleneck-yellow.png";
 
-const FB_GROUP_URL = "https://www.facebook.com/share/g/18ewsZUu7t/?mibextid=wwXIfr";
 const QUIZ_FUNNEL_URL = "/systems-quiz";
+
+const KEYWORD_OPTIONS = [
+  "SYSTEMS", "AUTOMATE", "REPLACE", "BUILD", "SCALE", "INSTALL",
+  "FREEDOM", "LEVERAGE", "OPERATOR", "READY", "UPGRADE", "BLUEPRINT",
+];
 
 const IMAGE_VARIANTS = [
   { id: "learn_ai_dark", label: "Learn AI (Dark)", src: learnAiDark },
@@ -67,14 +72,62 @@ export default function AdminSocialPoster() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["facebook"]);
   const [imageVariant, setImageVariant] = useState("bottleneck_dark");
   const [includeQuizUrl, setIncludeQuizUrl] = useState(false);
+  const [keyword, setKeyword] = useState("SYSTEMS");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [composerMediaUrls, setComposerMediaUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const postFileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+  // Gallery images query
+  const { data: galleryImages = [], refetch: refetchGallery } = useQuery({
+    queryKey: ["social-gallery-images"],
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("social-images").list("gallery", {
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) return [];
+      return (data || []).filter(f => !f.name.startsWith(".")).map(f => ({
+        name: f.name,
+        url: `${SUPABASE_URL}/storage/v1/object/public/social-images/gallery/${f.name}`,
+        created_at: f.created_at,
+      }));
+    },
+  });
+
+  const handleGalleryUpload = async (files: FileList) => {
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop();
+        const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("social-images")
+          .upload(`gallery/${safeName}`, file, { upsert: true });
+        if (error) throw error;
+      }
+      toast({ title: `${files.length} image(s) uploaded to gallery` });
+      refetchGallery();
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
+
+  const handleGalleryDelete = async (name: string) => {
+    try {
+      const { error } = await supabase.storage.from("social-images").remove([`gallery/${name}`]);
+      if (error) throw error;
+      toast({ title: "Image deleted" });
+      refetchGallery();
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message, variant: "destructive" });
+    }
+  };
 
   const handleUploadImages = async (files: FileList, postId?: string) => {
     setUploading(true);
@@ -92,7 +145,6 @@ export default function AdminSocialPoster() {
       }
 
       if (postId) {
-        // Update existing post's media_urls
         const existing = posts.find((p: any) => p.id === postId);
         const merged = [...(existing?.media_urls || []), ...urls];
         await supabase
@@ -113,7 +165,6 @@ export default function AdminSocialPoster() {
 
   const handleDeleteImage = async (postId: string, imageUrl: string) => {
     try {
-      // Extract path from URL
       const pathMatch = imageUrl.match(/social-images\/(.+)$/);
       if (pathMatch) {
         await supabase.storage.from("social-images").remove([pathMatch[1]]);
@@ -129,6 +180,18 @@ export default function AdminSocialPoster() {
       if (previewPost?.id === postId) {
         setPreviewPost({ ...previewPost, media_urls: updated });
       }
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const { error } = await supabase.from("social_posts").delete().eq("id", postId);
+      if (error) throw error;
+      toast({ title: "Post deleted" });
+      if (previewPost?.id === postId) setPreviewPost(null);
+      refetch();
     } catch (e: any) {
       toast({ title: "Delete failed", description: e.message, variant: "destructive" });
     }
@@ -202,6 +265,7 @@ export default function AdminSocialPoster() {
     setTopic("");
     setImageVariant("bottleneck_dark");
     setIncludeQuizUrl(false);
+    setKeyword("SYSTEMS");
     setSelectedPlatforms(["facebook"]);
     setComposerMediaUrls([]);
     setComposerOpen(true);
@@ -220,9 +284,8 @@ export default function AdminSocialPoster() {
           topic,
           tone,
           platforms: selectedPlatforms,
-          includeGroupUrl: true,
+          keyword,
           includeQuizUrl,
-          fbGroupUrl: FB_GROUP_URL,
           quizFunnelUrl: `${window.location.origin}${QUIZ_FUNNEL_URL}`,
         },
       });
@@ -231,10 +294,6 @@ export default function AdminSocialPoster() {
       const hashtags = data?.generated?.hashtags || [];
       let full = text;
       if (hashtags.length) full += "\n\n" + hashtags.map((h: string) => `#${h}`).join(" ");
-      if (!full.includes(FB_GROUP_URL)) full += `\n\n${FB_GROUP_URL}`;
-      if (includeQuizUrl && !full.includes(QUIZ_FUNNEL_URL)) {
-        full += `\n\nTake the free quiz: ${window.location.origin}${QUIZ_FUNNEL_URL}`;
-      }
       setContent(full);
       toast({ title: "Content generated" });
     } catch (e: any) {
@@ -247,13 +306,8 @@ export default function AdminSocialPoster() {
     if (!content.trim() || !selectedDate) return;
     setSaving(true);
     try {
-      let finalContent = content;
-      if (!finalContent.includes(FB_GROUP_URL)) {
-        finalContent += `\n\n${FB_GROUP_URL}`;
-      }
-
       const { error } = await supabase.from("social_posts").insert({
-        content: finalContent,
+        content,
         platforms: selectedPlatforms,
         scheduled_date: format(selectedDate, "yyyy-MM-dd"),
         scheduled_for: null,
@@ -261,6 +315,7 @@ export default function AdminSocialPoster() {
         status: "draft",
         image_variant: imageVariant,
         include_quiz_url: includeQuizUrl,
+        keyword,
         media_urls: composerMediaUrls,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       } as any);
@@ -307,7 +362,7 @@ export default function AdminSocialPoster() {
   const handlePublishNow = async (post: any) => {
     try {
       const { error } = await supabase.functions.invoke("social-post", {
-        body: { action: "post", text: post.content, platforms: post.platforms },
+        body: { action: "post", text: post.content, platforms: post.platforms, mediaUrls: post.media_urls },
       });
       if (error) throw error;
       await supabase
@@ -321,7 +376,11 @@ export default function AdminSocialPoster() {
     }
   };
 
-  const selectedVariantImg = IMAGE_VARIANTS.find((v) => v.id === imageVariant)?.src;
+  const addGalleryImageToComposer = (url: string) => {
+    setComposerMediaUrls(prev => [...prev, url]);
+    toast({ title: "Image added to post" });
+  };
+
   const pendingCount = posts.filter((p: any) => (p as any).approval_status === "pending").length;
 
   return (
@@ -338,7 +397,7 @@ export default function AdminSocialPoster() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Social Agent Workflow</p>
                   <p className="text-xs text-muted-foreground">
-                    Auto-generates posts weekly (Sun midnight) · You just approve
+                    Auto-generates posts weekly · CTA: "Comment KEYWORD below" → DM manually
                   </p>
                 </div>
               </div>
@@ -370,7 +429,7 @@ export default function AdminSocialPoster() {
           <div>
             <h1 className="text-xl font-bold text-foreground">Social Calendar</h1>
             <p className="text-sm text-muted-foreground">
-              AI-generated posts with approval workflow
+              AI-generated posts with keyword CTA &amp; approval workflow
             </p>
           </div>
           <div className="flex gap-2">
@@ -390,6 +449,9 @@ export default function AdminSocialPoster() {
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="pending">
               Pending {pendingCount > 0 && `(${pendingCount})`}
+            </TabsTrigger>
+            <TabsTrigger value="gallery">
+              <GalleryHorizontalEnd className="h-3 w-3 mr-1" /> Gallery ({galleryImages.length})
             </TabsTrigger>
             <TabsTrigger value="all">All Posts</TabsTrigger>
           </TabsList>
@@ -477,9 +539,69 @@ export default function AdminSocialPoster() {
                     onApprove={() => handleApprove(post.id)}
                     onReject={() => handleReject(post.id)}
                     onPreview={() => setPreviewPost(post)}
+                    onDelete={() => handleDeletePost(post.id)}
                   />
                 ))}
             </div>
+          </TabsContent>
+
+          {/* Gallery */}
+          <TabsContent value="gallery">
+            <Card className="bg-card border-border">
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm">Image Gallery ({galleryImages.length})</CardTitle>
+                <div>
+                  <input
+                    ref={galleryFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => e.target.files && handleGalleryUpload(e.target.files)}
+                  />
+                  <Button
+                    onClick={() => galleryFileInputRef.current?.click()}
+                    size="sm"
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Upload className="h-3 w-3 mr-1" />}
+                    Upload Images
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {galleryImages.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground text-sm">
+                    <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No images yet. Upload your 30 days of post images.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                    {galleryImages.map((img) => (
+                      <div key={img.name} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+                          <button
+                            onClick={() => addGalleryImageToComposer(img.url)}
+                            className="bg-primary/80 hover:bg-primary rounded-full p-1.5"
+                            title="Use in post"
+                          >
+                            <Plus className="h-3 w-3 text-primary-foreground" />
+                          </button>
+                          <button
+                            onClick={() => handleGalleryDelete(img.name)}
+                            className="bg-destructive/80 hover:bg-destructive rounded-full p-1.5"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive-foreground" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* All Posts */}
@@ -499,6 +621,9 @@ export default function AdminSocialPoster() {
                             <Send className="h-3 w-3" />
                           </Button>
                         )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePost(post.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -506,6 +631,9 @@ export default function AdminSocialPoster() {
                         <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
                       ))}
                       <ApprovalBadge status={(post as any).approval_status} />
+                      {(post as any).keyword && (
+                        <Badge variant="outline" className="text-[10px]">🔑 {(post as any).keyword}</Badge>
+                      )}
                       {post.scheduled_date && (
                         <span className="text-[10px] text-muted-foreground ml-auto">
                           <CalendarDays className="h-3 w-3 inline mr-0.5" />
@@ -559,6 +687,27 @@ export default function AdminSocialPoster() {
                 </div>
               </div>
 
+              {/* Keyword CTA */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Comment Keyword CTA</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {KEYWORD_OPTIONS.map((kw) => (
+                    <button
+                      key={kw}
+                      onClick={() => setKeyword(kw)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                        keyword === kw
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      }`}
+                    >
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">Post will end with: "Comment '{keyword}' below and I'll send you the details"</p>
+              </div>
+
               {/* Content */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">Post Content</label>
@@ -590,7 +739,7 @@ export default function AdminSocialPoster() {
                 </div>
               </div>
 
-              {/* Upload Images */}
+              {/* Post Images (upload + gallery pick) */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-muted-foreground">Post Images</label>
                 <input
@@ -625,7 +774,25 @@ export default function AdminSocialPoster() {
                     )}
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Upload images to attach to this post</p>
+                {/* Quick gallery picker */}
+                {galleryImages.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground">Or pick from gallery:</p>
+                    <ScrollArea className="w-full">
+                      <div className="flex gap-1.5 pb-2">
+                        {galleryImages.slice(0, 20).map((img) => (
+                          <button
+                            key={img.name}
+                            onClick={() => addGalleryImageToComposer(img.url)}
+                            className="w-12 h-12 rounded border border-border hover:border-primary/50 overflow-hidden flex-shrink-0 transition-colors"
+                          >
+                            <img src={img.url} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
               </div>
 
               {/* Options Row */}
@@ -740,6 +907,9 @@ export default function AdminSocialPoster() {
                     <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
                   ))}
                   <ApprovalBadge status={(previewPost as any).approval_status} />
+                  {(previewPost as any).keyword && (
+                    <Badge variant="outline" className="text-[10px]">🔑 {(previewPost as any).keyword}</Badge>
+                  )}
                 </div>
                 {(previewPost as any).approval_status === "pending" && (
                   <div className="flex gap-2">
@@ -769,6 +939,14 @@ export default function AdminSocialPoster() {
                     <Send className="h-4 w-4 mr-1" /> Publish Now
                   </Button>
                 )}
+                <Button
+                  onClick={() => { handleDeletePost(previewPost.id); }}
+                  variant="outline"
+                  className="w-full text-destructive"
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Delete Post
+                </Button>
               </div>
             )}
           </DialogContent>
@@ -778,8 +956,8 @@ export default function AdminSocialPoster() {
   );
 }
 
-function PostApprovalCard({ post, onApprove, onReject, onPreview }: {
-  post: any; onApprove: () => void; onReject: () => void; onPreview: () => void;
+function PostApprovalCard({ post, onApprove, onReject, onPreview, onDelete }: {
+  post: any; onApprove: () => void; onReject: () => void; onPreview: () => void; onDelete: () => void;
 }) {
   const variant = IMAGE_VARIANTS.find((v) => v.id === (post as any).image_variant);
   return (
@@ -800,6 +978,9 @@ function PostApprovalCard({ post, onApprove, onReject, onPreview }: {
               {(post.platforms || []).map((p: string) => (
                 <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
               ))}
+              {(post as any).keyword && (
+                <Badge variant="outline" className="text-[10px]">🔑 {(post as any).keyword}</Badge>
+              )}
               {post.scheduled_date && (
                 <span className="text-[10px] text-muted-foreground">
                   <CalendarDays className="h-3 w-3 inline mr-0.5" />
@@ -813,6 +994,9 @@ function PostApprovalCard({ post, onApprove, onReject, onPreview }: {
               </Button>
               <Button onClick={onReject} size="sm" variant="destructive" className="h-7 text-xs">
                 <X className="h-3 w-3 mr-1" /> Reject
+              </Button>
+              <Button onClick={onDelete} size="sm" variant="ghost" className="h-7 text-xs text-destructive">
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           </div>
