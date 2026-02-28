@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LATE_API_BASE = "https://api.getlate.dev/v1";
+const LATE_API_BASE = "https://getlate.dev/api/v1";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
