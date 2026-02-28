@@ -79,6 +79,9 @@ Available agents:
 - content_writer: Generate marketing content (params: brief, contentType ["blog"|"ad_copy"|"email_sequence"|"social"], tone, targetAudience)
 - website_auditor: Audit a website for SEO/UX/conversion (params: url, leadId)
 - slide_generator: Create presentation slide decks (params: topic, slideCount, audience, purpose)
+- code_interpreter: Generate, debug, and simulate code execution (params: task, language, context)
+- carousel_generator: Create multi-slide ad carousels (params: product, slideCount, platform, offer, targetAudience)
+- browser_operator: Autonomous web navigation and data extraction (params: instruction, urls, maxPages, extractSchema)
 
 Given a user's goal, return a JSON array of steps. Each step has: agent (string), params (object).
 Return ONLY valid JSON array, no explanation.${nicheContext}`,
