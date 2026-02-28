@@ -59,6 +59,7 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminMarketing from "./pages/admin/AdminMarketing";
+import AdminSocialPoster from "./pages/admin/AdminSocialPoster";
 import AdminCallLog from "./pages/admin/AdminCallLog";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import AdminPartnerApps from "./pages/admin/AdminPartnerApps";
@@ -133,6 +134,7 @@ const App = () => (
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/agents" element={<AdminAgents />} />
             <Route path="/admin/marketing" element={<AdminMarketing />} />
+            <Route path="/admin/social" element={<AdminSocialPoster />} />
             <Route path="/admin/calls" element={<AdminCallLog />} />
             <Route path="/admin/affiliates" element={<AdminAffiliates />} />
             <Route path="/admin/partners" element={<AdminPartnerApps />} />

@@ -1845,6 +1845,42 @@ export type Database = {
           },
         ]
       }
+      social_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          late_post_id: string | null
+          media_urls: string[]
+          platforms: string[]
+          scheduled_for: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          late_post_id?: string | null
+          media_urls?: string[]
+          platforms?: string[]
+          scheduled_for?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          late_post_id?: string | null
+          media_urls?: string[]
+          platforms?: string[]
+          scheduled_for?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_meta: {
         Row: {
           base_price: number
