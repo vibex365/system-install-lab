@@ -248,6 +248,17 @@ export default function AdminSocialPoster() {
     if (!error) {
       toast({ title: `${pending.length} posts approved` });
       refetch();
+      // Immediately trigger auto-publish for today's approved posts
+      try {
+        const { data, error: pubErr } = await supabase.functions.invoke("auto-publish-social");
+        if (pubErr) console.error("Auto-publish trigger failed:", pubErr);
+        else if (data?.published > 0) {
+          toast({ title: `${data.published} post(s) published now` });
+          refetch();
+        }
+      } catch (e) {
+        console.error("Auto-publish trigger error:", e);
+      }
     }
   };
 
@@ -351,6 +362,7 @@ export default function AdminSocialPoster() {
 
   const handleApprove = async (postId: string) => {
     const user = (await supabase.auth.getUser()).data.user;
+    const post = posts.find((p: any) => p.id === postId);
     const { error } = await supabase
       .from("social_posts")
       .update({
@@ -365,6 +377,19 @@ export default function AdminSocialPoster() {
     } else {
       toast({ title: "Post approved" });
       refetch();
+      // If this post is scheduled for today, publish immediately
+      const today = format(new Date(), "yyyy-MM-dd");
+      if (post?.scheduled_date === today) {
+        try {
+          const { data, error: pubErr } = await supabase.functions.invoke("auto-publish-social");
+          if (!pubErr && data?.published > 0) {
+            toast({ title: `Published now!` });
+            refetch();
+          }
+        } catch (e) {
+          console.error("Auto-publish trigger error:", e);
+        }
+      }
     }
   };
 
