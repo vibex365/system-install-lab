@@ -1847,36 +1847,66 @@ export type Database = {
       }
       social_posts: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           content: string
           created_at: string
+          cta_text: string | null
+          headline: string | null
           id: string
+          image_variant: string
+          include_quiz_url: boolean
           late_post_id: string | null
           media_urls: string[]
           platforms: string[]
+          post_type: string
+          scheduled_date: string | null
           scheduled_for: string | null
           status: string
+          subtext: string | null
           user_id: string
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           content: string
           created_at?: string
+          cta_text?: string | null
+          headline?: string | null
           id?: string
+          image_variant?: string
+          include_quiz_url?: boolean
           late_post_id?: string | null
           media_urls?: string[]
           platforms?: string[]
+          post_type?: string
+          scheduled_date?: string | null
           scheduled_for?: string | null
           status?: string
+          subtext?: string | null
           user_id: string
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           content?: string
           created_at?: string
+          cta_text?: string | null
+          headline?: string | null
           id?: string
+          image_variant?: string
+          include_quiz_url?: boolean
           late_post_id?: string | null
           media_urls?: string[]
           platforms?: string[]
+          post_type?: string
+          scheduled_date?: string | null
           scheduled_for?: string | null
           status?: string
+          subtext?: string | null
           user_id?: string
         }
         Relationships: []

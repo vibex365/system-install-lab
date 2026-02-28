@@ -103,7 +103,14 @@ async function handleGenerate(
     });
   }
 
-  const { topic, tone, platforms } = body;
+  const { topic, tone, platforms, includeGroupUrl, includeQuizUrl, fbGroupUrl, quizFunnelUrl } = body;
+
+  const groupUrlNote = includeGroupUrl && fbGroupUrl
+    ? `\n- MUST include this FB group link in the post: ${fbGroupUrl}`
+    : "";
+  const quizUrlNote = includeQuizUrl && quizFunnelUrl
+    ? `\n- MUST include this quiz funnel link: ${quizFunnelUrl}`
+    : "";
 
   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -116,18 +123,19 @@ async function handleGenerate(
       messages: [
         {
           role: "system",
-          content: `You are an expert social media copywriter. Generate a post for the following platforms: ${(platforms || ["facebook"]).join(", ")}.
+          content: `You are a social media copywriter for Dale Payne-Sizer, who teaches AI automation and systems building. Generate a post for: ${(platforms || ["facebook"]).join(", ")}.
 
 Rules:
-- Tone: ${tone || "professional but conversational"}
-- Include relevant emojis
-- Include a clear CTA
+- Tone: ${tone || "professional but conversational"}. Direct, disciplined, operator mindset.
+- Brand voice: "People Fail. Systems Work." — no hustle clichés, no fake guru energy
+- Include relevant emojis sparingly
+- Include a clear CTA driving people to the free community${groupUrlNote}${quizUrlNote}
 - Keep it under 280 chars for Twitter, under 2200 for Instagram, optimal length for others
 - Return ONLY a JSON object with: { "text": "the post text", "hashtags": ["tag1", "tag2"] }`,
         },
         {
           role: "user",
-          content: `Write a social media post about: ${topic || "our AI automation platform"}`,
+          content: `Write a social media post about: ${topic || "building AI automation systems"}`,
         },
       ],
     }),
