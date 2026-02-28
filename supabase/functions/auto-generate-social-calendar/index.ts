@@ -94,24 +94,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch connected Late.dev profiles to only use platforms we can actually post to
+    // Fetch connected Late.dev accounts to only use platforms we can actually post to
     const LATE_API_KEY = Deno.env.get("LATE_API_KEY");
     let connectedPlatforms: string[] = ["facebook"]; // fallback
     if (LATE_API_KEY) {
       try {
+        // Step 1: get profiles
         const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
           headers: { Authorization: `Bearer ${LATE_API_KEY}` },
         });
         if (profilesResp.ok) {
           const profilesData = await profilesResp.json();
-          const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
-          connectedPlatforms = profiles
-            .map((p: any) => (p.platform || p.type || "").toLowerCase())
-            .filter((p: string) => p);
-          if (!connectedPlatforms.length) connectedPlatforms = ["facebook"];
+          const profiles = profilesData.profiles || [];
+          if (profiles.length) {
+            const defaultProfile = profiles.find((p: any) => p.isDefault) || profiles[0];
+            const profileId = defaultProfile._id || defaultProfile.id;
+            // Step 2: get accounts for this profile
+            const accountsResp = await fetch(`${LATE_API_BASE}/accounts?profileId=${profileId}`, {
+              headers: { Authorization: `Bearer ${LATE_API_KEY}` },
+            });
+            if (accountsResp.ok) {
+              const accountsData = await accountsResp.json();
+              const accounts = accountsData.accounts || accountsData.data || (Array.isArray(accountsData) ? accountsData : []);
+              connectedPlatforms = accounts
+                .map((a: any) => (a.platform || a.type || "").toLowerCase())
+                .filter((p: string) => p);
+              if (!connectedPlatforms.length) connectedPlatforms = ["facebook"];
+            }
+          }
         }
       } catch (e) {
-        console.error("Failed to fetch Late.dev profiles for platform selection:", e);
+        console.error("Failed to fetch Late.dev accounts for platform selection:", e);
       }
     }
 

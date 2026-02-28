@@ -8,6 +8,33 @@ const corsHeaders = {
 
 const LATE_API_BASE = "https://getlate.dev/api/v1";
 
+// Helper: fetch connected accounts from Late.dev
+async function fetchLateAccounts(apiKey: string) {
+  // Step 1: get profiles
+  const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const profilesData = await profilesResp.json();
+  const profiles = profilesData.profiles || [];
+  if (!profiles.length) return [];
+
+  // Step 2: get accounts for the default/first profile
+  const defaultProfile = profiles.find((p: any) => p.isDefault) || profiles[0];
+  const profileId = defaultProfile._id || defaultProfile.id;
+
+  const accountsResp = await fetch(`${LATE_API_BASE}/accounts?profileId=${profileId}`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const accountsData = await accountsResp.json();
+  const accounts = accountsData.accounts || accountsData.data || (Array.isArray(accountsData) ? accountsData : []);
+  return accounts.map((a: any) => ({
+    id: a._id || a.id,
+    platform: (a.platform || a.type || "").toLowerCase(),
+    username: a.username || a.name || "",
+    profileId,
+  }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -174,31 +201,34 @@ async function handlePost(
     });
   }
 
-  // Fetch connected profiles to map platform names to profile IDs
-  const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-  const profilesData = await profilesResp.json();
-  if (!profilesResp.ok) {
-    throw new Error(`Failed to fetch Late.dev profiles: ${JSON.stringify(profilesData)}`);
-  }
+  // Fetch connected accounts
+  const accounts = await fetchLateAccounts(apiKey);
+  console.log("Late.dev connected accounts:", JSON.stringify(accounts));
 
-  const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
-  const profileIds: string[] = [];
+  // Build platforms array for the Late.dev post payload
+  const platformEntries: { platform: string; accountId: string }[] = [];
   for (const p of platforms) {
-    const match = profiles.find((pr: any) =>
-      (pr.platform || pr.type || "").toLowerCase() === p.toLowerCase()
-    );
-    if (match) profileIds.push(match.id);
+    const match = accounts.find((a: any) => a.platform === p.toLowerCase());
+    if (match) {
+      platformEntries.push({ platform: match.platform, accountId: match.id });
+    }
   }
 
-  if (!profileIds.length) {
-    throw new Error(`No connected Late.dev profiles found for platforms: ${platforms.join(", ")}. Available: ${profiles.map((p: any) => p.platform || p.type).join(", ")}`);
+  if (!platformEntries.length) {
+    throw new Error(`No connected Late.dev accounts found for: ${platforms.join(", ")}. Available accounts: ${accounts.map((a: any) => `${a.platform} (${a.username})`).join(", ") || "none"}`);
   }
 
-  const payload: any = { post: text, profile_ids: profileIds };
-  if (mediaUrls?.length) payload.media_urls = mediaUrls;
-  if (scheduledFor) payload.schedule_at = scheduledFor;
+  const payload: any = {
+    content: text,
+    platforms: platformEntries,
+  };
+  if (mediaUrls?.length) payload.mediaUrls = mediaUrls;
+  if (scheduledFor) {
+    payload.scheduledFor = scheduledFor;
+    payload.timezone = "America/New_York";
+  }
+
+  console.log("Late.dev post payload:", JSON.stringify(payload));
 
   const resp = await fetch(`${LATE_API_BASE}/posts`, {
     method: "POST",
@@ -221,7 +251,7 @@ async function handlePost(
     platforms,
     media_urls: mediaUrls || [],
     scheduled_for: scheduledFor || null,
-    late_post_id: data.id || null,
+    late_post_id: data._id || data.id || null,
     status: scheduledFor ? "scheduled" : "published",
   });
 
@@ -231,17 +261,8 @@ async function handlePost(
 }
 
 async function handleAccounts(apiKey: string, corsHeaders: Record<string, string>) {
-  const resp = await fetch(`${LATE_API_BASE}/profiles`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-
-  const data = await resp.json();
-
-  if (!resp.ok) {
-    throw new Error(`Late.dev API error [${resp.status}]: ${JSON.stringify(data)}`);
-  }
-
-  return new Response(JSON.stringify({ accounts: data }), {
+  const accounts = await fetchLateAccounts(apiKey);
+  return new Response(JSON.stringify({ accounts }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
