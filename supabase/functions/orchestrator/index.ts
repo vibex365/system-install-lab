@@ -75,6 +75,10 @@ Available agents:
 - funnel_builder: Generate a quiz funnel (params: niche, goal)
 - competitor_intel: Research competitors (params: niche, location)
 - send_link: Send an affiliate/signup link via SMS to a lead (params: lead_id, affiliate_url, message)
+- researcher: Deep web research on any topic (params: topic, depth ["quick"|"deep"], niche)
+- content_writer: Generate marketing content (params: brief, contentType ["blog"|"ad_copy"|"email_sequence"|"social"], tone, targetAudience)
+- website_auditor: Audit a website for SEO/UX/conversion (params: url, leadId)
+- slide_generator: Create presentation slide decks (params: topic, slideCount, audience, purpose)
 
 Given a user's goal, return a JSON array of steps. Each step has: agent (string), params (object).
 Return ONLY valid JSON array, no explanation.${nicheContext}`,
