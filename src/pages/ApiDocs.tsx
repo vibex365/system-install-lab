@@ -54,7 +54,7 @@ export default function ApiDocs() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg" className="tracking-wide gap-2">
-              <Link to="/login">
+              <Link to="/developer-login">
                 Get API Key <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -278,7 +278,7 @@ print(response.json())` },
           </p>
           <div className="flex justify-center gap-4">
             <Button asChild size="lg" className="tracking-wide gap-2">
-              <Link to="/login">Get Started <ArrowRight className="h-4 w-4" /></Link>
+              <Link to="/developer-login">Get Started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="tracking-wide">
               <Link to="/contact">Talk to Us</Link>
