@@ -242,6 +242,17 @@ async function handlePost(
   const data = await resp.json();
 
   if (!resp.ok) {
+    // Handle duplicate content gracefully (409 Conflict)
+    if (resp.status === 409) {
+      return new Response(JSON.stringify({ 
+        success: true, 
+        duplicate: true,
+        message: "This content was already posted or scheduled within the last 24 hours.",
+        post: data 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     throw new Error(`Late.dev API error [${resp.status}]: ${JSON.stringify(data)}`);
   }
 
