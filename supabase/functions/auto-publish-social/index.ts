@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LATE_API_BASE = "https://getlate.dev/api/v1";
+const LATE_API_BASE = "https://api.getlate.dev/v1";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,7 +29,6 @@ Deno.serve(async (req) => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Find approved posts scheduled for today that haven't been published
     const { data: postsToPublish, error: fetchErr } = await supabaseAdmin
       .from("social_posts")
       .select("*")
@@ -45,20 +44,33 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fetch connected profiles once
+    const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
+      headers: { Authorization: `Bearer ${LATE_API_KEY}` },
+    });
+    const profilesData = await profilesResp.json();
+    const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
+
     let published = 0;
     const errors: string[] = [];
 
     for (const post of postsToPublish) {
       try {
-        const payload: any = {
-          text: post.content,
-          platforms: post.platforms || ["facebook"],
-        };
-
-        // Include uploaded media if available
-        if (post.media_urls?.length) {
-          payload.mediaUrls = post.media_urls;
+        const requestedPlatforms = post.platforms || ["facebook"];
+        const profileIds: string[] = [];
+        for (const p of requestedPlatforms) {
+          const match = profiles.find((pr: any) =>
+            (pr.platform || pr.type || "").toLowerCase() === p.toLowerCase()
+          );
+          if (match) profileIds.push(match.id);
         }
+
+        if (!profileIds.length) {
+          throw new Error(`No Late.dev profiles found for: ${requestedPlatforms.join(", ")}`);
+        }
+
+        const payload: any = { text: post.content, profile_ids: profileIds };
+        if (post.media_urls?.length) payload.media_urls = post.media_urls;
 
         const resp = await fetch(`${LATE_API_BASE}/posts`, {
           method: "POST",
@@ -75,7 +87,6 @@ Deno.serve(async (req) => {
           throw new Error(`Late.dev error [${resp.status}]: ${JSON.stringify(data)}`);
         }
 
-        // Update post status
         await supabaseAdmin
           .from("social_posts")
           .update({
@@ -90,13 +101,11 @@ Deno.serve(async (req) => {
         errors.push(`${post.id}: ${e.message}`);
       }
 
-      // Small delay between posts
       if (postsToPublish.indexOf(post) < postsToPublish.length - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }
     }
 
-    // Send notification about published posts
     if (published > 0) {
       const { data: adminRoles } = await supabaseAdmin
         .from("user_roles")
