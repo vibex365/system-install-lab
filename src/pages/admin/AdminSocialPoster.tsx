@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot,
-  Upload, Trash2, Image as ImageIcon, GalleryHorizontalEnd
+  Upload, Trash2, Image as ImageIcon, GalleryHorizontalEnd, Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -495,6 +495,76 @@ export default function AdminSocialPoster() {
     toast({ title: "Image added to post" });
   };
 
+  const handleExportCsv = useCallback(() => {
+    // Filter posts that are approved/scheduled and not yet published
+    const exportable = posts.filter((p: any) => 
+      p.approval_status === "approved" && p.status !== "published"
+    );
+    if (!exportable.length) {
+      toast({ title: "No approved posts to export", variant: "destructive" });
+      return;
+    }
+
+    const headers = [
+      "post_content","platforms","profiles","schedule_time","schedule_time_twitter",
+      "schedule_time_instagram","schedule_time_facebook","schedule_time_youtube",
+      "schedule_time_linkedin","schedule_time_tiktok","schedule_time_threads",
+      "schedule_time_pinterest","schedule_time_reddit","schedule_time_bluesky",
+      "schedule_time_googlebusiness","schedule_time_telegram","tz","media_urls",
+      "is_draft","publish_now","use_queue","title","tags","hashtags","visibility",
+      "mentions","crossposting_enabled","metadata"
+    ];
+
+    const csvEscape = (val: string) => `"${val.replace(/"/g, '""')}"`;
+    
+    // Build profile ID map from connected profiles
+    const profileMap: Record<string, string> = {};
+    connectedProfiles.forEach((p: any) => {
+      profileMap[p.platform] = p.id;
+    });
+
+    const rows = exportable.map((post: any) => {
+      const platforms = (post.platforms || []).join(",");
+      const profileIds = (post.platforms || [])
+        .map((p: string) => profileMap[p] || "")
+        .filter(Boolean)
+        .join(",");
+      const scheduleTime = post.scheduled_date ? `${post.scheduled_date} 10:00` : "";
+      const mediaUrls = (post.media_urls || []).join(",");
+      const hashtags = (post.content.match(/#\w+/g) || []).join(",");
+
+      return [
+        csvEscape(post.content || ""),       // post_content
+        csvEscape(platforms),                 // platforms
+        csvEscape(profileIds),               // profiles
+        csvEscape(scheduleTime),             // schedule_time
+        "","","","","","","","","","","","",  // platform-specific schedule times
+        csvEscape("America/New_York"),       // tz
+        csvEscape(mediaUrls),                // media_urls
+        '"false"',                           // is_draft
+        '"false"',                           // publish_now
+        '"false"',                           // use_queue
+        csvEscape(post.headline || ""),      // title
+        '""',                                // tags
+        csvEscape(hashtags),                 // hashtags
+        '"public"',                          // visibility
+        '""',                                // mentions
+        '"true"',                            // crossposting_enabled
+        '""',                                // metadata
+      ].join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `late-bulk-schedule-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `Exported ${exportable.length} post(s) to CSV` });
+  }, [posts, connectedProfiles, toast]);
+
   const pendingCount = posts.filter((p: any) => (p as any).approval_status === "pending").length;
 
   return (
@@ -566,6 +636,9 @@ export default function AdminSocialPoster() {
                 {pendingCount} pending approval
               </Badge>
             )}
+            <Button onClick={handleExportCsv} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-1" /> Export CSV
+            </Button>
             <Button onClick={() => openComposer()} size="sm">
               <Plus className="h-4 w-4 mr-1" /> New Post
             </Button>
