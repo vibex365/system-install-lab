@@ -46,21 +46,10 @@ serve(async (req) => {
       socialPost = data;
     }
 
-    // Extract keywords from original post content
-    const keywords: string[] = [];
-    if (socialPost) {
-      // Use the keyword field if set
-      if (socialPost.keyword) {
-        keywords.push(...socialPost.keyword.split(",").map((k: string) => k.trim().toLowerCase()).filter(Boolean));
-      }
-      // Also extract hashtags and significant words (3+ chars) from the content
-      const hashtags = (socialPost.content.match(/#\w+/g) || []).map((h: string) => h.replace("#", "").toLowerCase());
-      keywords.push(...hashtags);
-    }
-
-    // Check if comment contains any keywords
-    const commentLower = commentText.toLowerCase();
-    const matchedKeywords = keywords.filter((kw) => commentLower.includes(kw));
+    // Match against the universal CTA keyword: "SEND ME THE LINK"
+    const TRIGGER_PHRASE = "send me the link";
+    const commentLower = commentText.toLowerCase().replace(/['']/g, "'");
+    const matchedKeywords: string[] = commentLower.includes(TRIGGER_PHRASE) ? [TRIGGER_PHRASE] : [];
 
     // Log the comment
     await supabase.from("social_comments").insert({
