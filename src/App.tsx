@@ -34,6 +34,7 @@ import Dream100 from "./pages/Dream100";
 import FunnelMarketplace from "./pages/FunnelMarketplace";
 import DeveloperPortal from "./pages/DeveloperPortal";
 import MediaBuyer from "./pages/MediaBuyer";
+import ApiDocs from "./pages/ApiDocs";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
 
             {/* Plan selection (accessible to all logged-in users) */}
             <Route path="/upgrade" element={<Upgrade />} />
