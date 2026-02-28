@@ -33,7 +33,7 @@ const IMAGE_VARIANTS = [
   "fake_guru_yellow", "replace_yourself_yellow", "bottleneck_yellow",
 ];
 
-const LATE_API_BASE = "https://api.getlate.dev/v1";
+const LATE_API_BASE = "https://getlate.dev/api/v1";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
