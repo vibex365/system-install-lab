@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
-  ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye
+  ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,7 @@ export default function AdminSocialPoster() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [previewPost, setPreviewPost] = useState<any>(null);
+  const [autoGenerating, setAutoGenerating] = useState(false);
 
   // Composer state
   const [content, setContent] = useState("");
@@ -67,6 +68,40 @@ export default function AdminSocialPoster() {
   const [includeQuizUrl, setIncludeQuizUrl] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const handleAutoGenerate = async (days = 7) => {
+    setAutoGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-generate-social-calendar", {
+        body: { days },
+      });
+      if (error) throw error;
+      toast({ title: `Agent complete: ${data?.message || "Posts generated"}` });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Auto-generate failed", description: e.message, variant: "destructive" });
+    }
+    setAutoGenerating(false);
+  };
+
+  const handleApproveAll = async () => {
+    const pending = posts.filter((p: any) => (p as any).approval_status === "pending");
+    if (!pending.length) return;
+    const user = (await supabase.auth.getUser()).data.user;
+    const { error } = await supabase
+      .from("social_posts")
+      .update({
+        approval_status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by: user?.id,
+        status: "scheduled",
+      } as any)
+      .in("id", pending.map((p: any) => p.id));
+    if (!error) {
+      toast({ title: `${pending.length} posts approved` });
+      refetch();
+    }
+  };
 
   const { data: posts = [], refetch } = useQuery({
     queryKey: ["social-calendar-posts"],
@@ -225,6 +260,45 @@ export default function AdminSocialPoster() {
   return (
     <AdminShell>
       <div className="space-y-6">
+        {/* Agent Automation Card */}
+        <Card className="bg-card border-primary/20">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Social Agent Workflow</p>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-generates posts weekly (Sun midnight) · You just approve
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 items-center">
+                {pendingCount > 0 && (
+                  <Button onClick={handleApproveAll} variant="outline" size="sm" className="text-xs">
+                    <Check className="h-3 w-3 mr-1" /> Approve All ({pendingCount})
+                  </Button>
+                )}
+                <Button
+                  onClick={() => handleAutoGenerate(7)}
+                  disabled={autoGenerating}
+                  size="sm"
+                  className="text-xs"
+                >
+                  {autoGenerating ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Zap className="h-3 w-3 mr-1" />
+                  )}
+                  {autoGenerating ? "Generating..." : "Generate Next 7 Days"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">Social Calendar</h1>
