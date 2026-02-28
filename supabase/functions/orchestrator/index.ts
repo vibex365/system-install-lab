@@ -82,6 +82,7 @@ Available agents:
 - code_interpreter: Generate, debug, and simulate code execution (params: task, language, context)
 - carousel_generator: Create multi-slide ad carousels (params: product, slideCount, platform, offer, targetAudience)
 - browser_operator: Autonomous web navigation and data extraction (params: instruction, urls, maxPages, extractSchema)
+- image_generator: Generate AI images for ads, social, and branding (params: prompt, style, dimensions, count)
 
 Given a user's goal, return a JSON array of steps. Each step has: agent (string), params (object).
 Return ONLY valid JSON array, no explanation.${nicheContext}`,
