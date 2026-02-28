@@ -174,7 +174,7 @@ async function handlePost(
     });
   }
 
-  const payload: any = { text, platforms };
+  const payload: any = { content: text, platforms };
   if (mediaUrls?.length) payload.mediaUrls = mediaUrls;
   if (scheduledFor) payload.scheduledFor = scheduledFor;
 
