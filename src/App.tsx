@@ -36,6 +36,7 @@ import DeveloperPortal from "./pages/DeveloperPortal";
 import MediaBuyer from "./pages/MediaBuyer";
 import ApiDocs from "./pages/ApiDocs";
 import DeveloperLogin from "./pages/DeveloperLogin";
+import AgentPlayground from "./pages/AgentPlayground";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -99,6 +100,7 @@ const App = () => (
             <Route path="/funnel-templates" element={<PlanGate><FunnelMarketplace /></PlanGate>} />
             <Route path="/calendar" element={<PlanGate><CalendarPage /></PlanGate>} />
             <Route path="/agents" element={<PlanGate><Agents /></PlanGate>} />
+            <Route path="/playground" element={<PlanGate><AgentPlayground /></PlanGate>} />
             <Route path="/developers" element={<PlanGate><DeveloperPortal /></PlanGate>} />
             <Route path="/library" element={<PlanGate><Library /></PlanGate>} />
             <Route path="/submit" element={<PlanGate><Submit /></PlanGate>} />
