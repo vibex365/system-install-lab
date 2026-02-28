@@ -33,6 +33,7 @@ import ChooseCohort from "./pages/ChooseCohort";
 import Dream100 from "./pages/Dream100";
 import FunnelMarketplace from "./pages/FunnelMarketplace";
 import DeveloperPortal from "./pages/DeveloperPortal";
+import MediaBuyer from "./pages/MediaBuyer";
 
 // Public routes
 import BookingPage from "./pages/BookingPage";
@@ -99,6 +100,7 @@ const App = () => (
             <Route path="/magazine/system" element={<SystemMagazine />} />
             <Route path="/choose-cohort" element={<PlanGate><ChooseCohort /></PlanGate>} />
             <Route path="/dream-100" element={<PlanGate><Dream100 /></PlanGate>} />
+            <Route path="/campaigns" element={<PlanGate><MediaBuyer /></PlanGate>} />
             <Route path="/board" element={<Navigate to="/board/main" replace />} />
             <Route path="/board/:slug" element={<PlanGate><BoardFeed /></PlanGate>} />
             <Route path="/post/:id" element={<PlanGate><PostDetail /></PlanGate>} />

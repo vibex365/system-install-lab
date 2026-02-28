@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_campaigns: {
+        Row: {
+          ad_copy: Json
+          campaign_name: string
+          created_at: string
+          creative_urls: string[]
+          daily_budget_cents: number
+          error_message: string | null
+          id: string
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
+          objective: string
+          performance: Json
+          status: string
+          target_audience: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_copy?: Json
+          campaign_name: string
+          created_at?: string
+          creative_urls?: string[]
+          daily_budget_cents?: number
+          error_message?: string | null
+          id?: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          objective?: string
+          performance?: Json
+          status?: string
+          target_audience?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_copy?: Json
+          campaign_name?: string
+          created_at?: string
+          creative_urls?: string[]
+          daily_budget_cents?: number
+          error_message?: string | null
+          id?: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+          objective?: string
+          performance?: Json
+          status?: string
+          target_audience?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       affiliate_program: {
         Row: {
           commission_percent: number
@@ -1861,6 +1918,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_integrations: {
+        Row: {
+          created_at: string
+          credentials: Json
+          id: string
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          provider?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_notifications: {
         Row: {
