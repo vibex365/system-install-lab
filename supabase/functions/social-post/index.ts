@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LATE_API_BASE = "https://getlate.dev/api/v1";
+const LATE_API_BASE = "https://api.getlate.dev/v1";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -174,9 +174,31 @@ async function handlePost(
     });
   }
 
-  const payload: any = { content: text, platforms };
-  if (mediaUrls?.length) payload.mediaUrls = mediaUrls;
-  if (scheduledFor) payload.scheduledFor = scheduledFor;
+  // Fetch connected profiles to map platform names to profile IDs
+  const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const profilesData = await profilesResp.json();
+  if (!profilesResp.ok) {
+    throw new Error(`Failed to fetch Late.dev profiles: ${JSON.stringify(profilesData)}`);
+  }
+
+  const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
+  const profileIds: string[] = [];
+  for (const p of platforms) {
+    const match = profiles.find((pr: any) =>
+      (pr.platform || pr.type || "").toLowerCase() === p.toLowerCase()
+    );
+    if (match) profileIds.push(match.id);
+  }
+
+  if (!profileIds.length) {
+    throw new Error(`No connected Late.dev profiles found for platforms: ${platforms.join(", ")}. Available: ${profiles.map((p: any) => p.platform || p.type).join(", ")}`);
+  }
+
+  const payload: any = { text, profile_ids: profileIds };
+  if (mediaUrls?.length) payload.media_urls = mediaUrls;
+  if (scheduledFor) payload.schedule_at = scheduledFor;
 
   const resp = await fetch(`${LATE_API_BASE}/posts`, {
     method: "POST",
