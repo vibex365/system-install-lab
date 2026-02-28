@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
           throw new Error(`No Late.dev accounts found for: ${requestedPlatforms.join(", ")}. Available: ${accounts.map((a: any) => a.platform).join(", ") || "none"}`);
         }
 
-        // If post has image_variant but no media_urls, try to find a gallery image
+        // If post has image_variant but no media_urls, try to find a matching image in storage
         let mediaUrls = post.media_urls || [];
         if (!mediaUrls.length && post.image_variant) {
           // Look for a pre-uploaded brand image in storage
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
           if (match) {
             const { data: urlData } = supabaseAdmin.storage.from("social-images").getPublicUrl(`brand/${match.name}`);
             mediaUrls = [urlData.publicUrl];
-          } else if ((brandFiles || []).length === 0) {
+          } else {
             // Fallback: grab a random image from the gallery folder
             const { data: galleryFiles } = await supabaseAdmin.storage
               .from("social-images")
