@@ -21,6 +21,7 @@ export function Footer() {
               <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
               <a href="#agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AI Agents</a>
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+              <Link to="/api-docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Documentation</Link>
               <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
             </nav>
           </div>
