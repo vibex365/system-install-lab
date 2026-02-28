@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
           throw new Error(`No Late.dev profiles found for: ${requestedPlatforms.join(", ")}`);
         }
 
-        const payload: any = { text: post.content, profile_ids: profileIds };
+        const payload: any = { post: post.content, profile_ids: profileIds };
         if (post.media_urls?.length) payload.media_urls = post.media_urls;
 
         const resp = await fetch(`${LATE_API_BASE}/posts`, {
