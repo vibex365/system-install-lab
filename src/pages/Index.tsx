@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import {
   Zap, Bot, Search, Mail, Phone, Target,
   BarChart3, MessageSquare, Check, ArrowRight,
-  Users, TrendingUp, Calendar,
+  Users, TrendingUp, Calendar, Megaphone,
 } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import heroPortrait from "@/assets/hero-portrait.png";
@@ -22,6 +22,7 @@ const agents = [
   { icon: Mail, name: "Email Outreach", desc: "Sends personalized multi-step email sequences that drive prospects into your quiz funnels." },
   { icon: MessageSquare, name: "SMS Agent", desc: "Automated text follow-ups that re-engage cold prospects and push them toward your funnel." },
   { icon: Phone, name: "Voice Booker", desc: "AI voice agent calls qualified leads, pitches your offer, and books meetings on your calendar." },
+  { icon: Megaphone, name: "Media Buyer", desc: "Launches and optimizes Meta ad campaigns autonomously — generates copy, uploads creatives, and manages spend." },
   { icon: BarChart3, name: "Intel Agent", desc: "Scans competitor positioning, pricing, and strategies so you dominate your market." },
 ];
 
@@ -30,7 +31,7 @@ const tiers = [
     name: "Growth",
     price: "$97",
     period: "/mo",
-    features: ["Unlimited funnels", "500 leads/month", "SMS + email agents", "5 active workflows", "Booking agent", "Full CRM"],
+    features: ["Unlimited funnels", "500 leads/month", "SMS + email agents", "5 active workflows", "Booking agent", "Full CRM", "API access"],
     cta: "Start Growing",
     highlighted: true,
   },
@@ -38,7 +39,7 @@ const tiers = [
     name: "Scale",
     price: "$197",
     period: "/mo",
-    features: ["Everything in Growth", "2,000 leads/month", "Voice agent", "Unlimited workflows", "Competitor intel", "White-label funnels"],
+    features: ["Everything in Growth", "2,000 leads/month", "Voice agent", "Media Buyer agent", "Unlimited workflows", "Competitor intel", "White-label funnels"],
     cta: "Scale Now",
     highlighted: false,
   },
@@ -359,11 +360,11 @@ export default function Index() {
       </section>
 
       {/* ─── Agent Grid ─── */}
-      <section className="py-24 md:py-32 border-t border-border relative overflow-hidden">
+      <section className="py-24 md:py-32 border-t border-border relative overflow-hidden" id="agents">
         <div className="absolute inset-0 bg-gradient-to-b from-card/50 via-background to-card/30" />
         <div className="container relative z-10">
-          <SectionHeader title="The Agent Stack" subtitle="Six AI agents that prospect, outreach, and fill your funnels on autopilot." />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <SectionHeader title="The Agent Stack" subtitle="Seven AI agents that prospect, outreach, run ads, and fill your funnels on autopilot." />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {agents.map((a, i) => (
               <motion.div
                 key={a.name}

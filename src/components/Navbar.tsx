@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, ChevronDown } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useAuth } from "@/hooks/use-auth";
 
 const publicLinks = [
-  { label: "Doctrine", href: "#doctrine" },
+  { label: "How It Works", href: "#how-it-works" },
+  { label: "Agents", href: "#agents" },
+  { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -41,11 +43,11 @@ export function Navbar() {
       <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
       <Link to="/dashboard/workflows" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
       <Link to="/crm" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
+      <Link to="/campaigns" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Campaigns</Link>
       <Link to="/dream-100" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dream 100</Link>
-      
       <Link to="/analytics" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
       <Link to="/calendar" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
-      <Link to="/developers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Developers</Link>
+      <Link to="/developers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API</Link>
     </>
   ) : null;
 
@@ -66,7 +68,7 @@ export function Navbar() {
         <Link to="/" className="text-lg font-bold tracking-[0.2em] text-foreground">PFSW</Link>
 
         {/* Desktop */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {!user && publicLinks.map((link) => (
             <button key={link.href} onClick={() => handleAnchor(link.href)} className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide">
               {link.label}
@@ -119,11 +121,11 @@ export function Navbar() {
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
                 <Link to="/dashboard/workflows" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Workflows</Link>
                 <Link to="/crm" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Leads</Link>
+                <Link to="/campaigns" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Campaigns</Link>
                 <Link to="/dream-100" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Dream 100</Link>
-                
                 <Link to="/analytics" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
                 <Link to="/calendar" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Calendar</Link>
-                <Link to="/developers" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Developers</Link>
+                <Link to="/developers" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">API</Link>
               </>
             )}
             {user && !hasAccess && (
