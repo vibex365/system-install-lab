@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Sparkles, Loader2, Calendar, Image, CheckCircle2, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
+  ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, getDay } from "date-fns";
+
+import learnAiDark from "@/assets/social/learn-ai-dark.png";
+import bottleneckDark from "@/assets/social/bottleneck-dark.png";
+import replaceYourselfDark from "@/assets/social/replace-yourself-dark.png";
+import fakeGuruDark from "@/assets/social/fake-guru-dark.png";
+import fakeGuruYellow from "@/assets/social/fake-guru-yellow.png";
+import replaceYourselfYellow from "@/assets/social/replace-yourself-yellow.png";
+import bottleneckYellow from "@/assets/social/bottleneck-yellow.png";
+
+const FB_GROUP_URL = "https://www.facebook.com/share/g/18ewsZUu7t/?mibextid=wwXIfr";
+const QUIZ_FUNNEL_URL = "/systems-quiz";
+
+const IMAGE_VARIANTS = [
+  { id: "learn_ai_dark", label: "Learn AI (Dark)", src: learnAiDark },
+  { id: "bottleneck_dark", label: "Bottleneck (Dark)", src: bottleneckDark },
+  { id: "replace_yourself_dark", label: "Replace Yourself (Dark)", src: replaceYourselfDark },
+  { id: "fake_guru_dark", label: "Fake Guru (Dark)", src: fakeGuruDark },
+  { id: "fake_guru_yellow", label: "Fake Guru (Yellow)", src: fakeGuruYellow },
+  { id: "replace_yourself_yellow", label: "Replace Yourself (Yellow)", src: replaceYourselfYellow },
+  { id: "bottleneck_yellow", label: "Bottleneck (Yellow)", src: bottleneckYellow },
+];
 
 const PLATFORMS = [
   { id: "facebook", label: "Facebook", color: "bg-blue-600" },
@@ -25,30 +52,58 @@ const PLATFORMS = [
 
 export default function AdminSocialPoster() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [previewPost, setPreviewPost] = useState<any>(null);
+
+  // Composer state
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["facebook"]);
+  const [imageVariant, setImageVariant] = useState("bottleneck_dark");
+  const [includeQuizUrl, setIncludeQuizUrl] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [posting, setPosting] = useState(false);
-  const [lastResult, setLastResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const { data: recentPosts, refetch } = useQuery({
-    queryKey: ["social-posts"],
+  const { data: posts = [], refetch } = useQuery({
+    queryKey: ["social-calendar-posts"],
     queryFn: async () => {
       const { data } = await supabase
         .from("social_posts")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .order("scheduled_date", { ascending: true });
       return data || [];
     },
   });
+
+  const days = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
+
+  const startDayOffset = getDay(startOfMonth(currentMonth));
+
+  const getPostsForDay = (day: Date) =>
+    posts.filter((p: any) => p.scheduled_date && isSameDay(new Date(p.scheduled_date + "T00:00:00"), day));
 
   const togglePlatform = (id: string) => {
     setSelectedPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+  };
+
+  const openComposer = (date?: Date) => {
+    setSelectedDate(date || new Date());
+    setContent("");
+    setTopic("");
+    setImageVariant("bottleneck_dark");
+    setIncludeQuizUrl(false);
+    setSelectedPlatforms(["facebook"]);
+    setComposerOpen(true);
   };
 
   const handleGenerate = async () => {
@@ -59,198 +114,488 @@ export default function AdminSocialPoster() {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("social-post", {
-        body: { action: "generate", topic, tone, platforms: selectedPlatforms },
+        body: {
+          action: "generate",
+          topic,
+          tone,
+          platforms: selectedPlatforms,
+          includeGroupUrl: true,
+          includeQuizUrl,
+          fbGroupUrl: FB_GROUP_URL,
+          quizFunnelUrl: `${window.location.origin}${QUIZ_FUNNEL_URL}`,
+        },
       });
       if (error) throw error;
       const text = data?.generated?.text || "";
       const hashtags = data?.generated?.hashtags || [];
-      setContent(text + (hashtags.length ? "\n\n" + hashtags.map((h: string) => `#${h}`).join(" ") : ""));
-      toast({ title: "Content generated!" });
+      let full = text;
+      if (hashtags.length) full += "\n\n" + hashtags.map((h: string) => `#${h}`).join(" ");
+      if (!full.includes(FB_GROUP_URL)) full += `\n\n${FB_GROUP_URL}`;
+      if (includeQuizUrl && !full.includes(QUIZ_FUNNEL_URL)) {
+        full += `\n\nTake the free quiz: ${window.location.origin}${QUIZ_FUNNEL_URL}`;
+      }
+      setContent(full);
+      toast({ title: "Content generated" });
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     }
     setGenerating(false);
   };
 
-  const handlePost = async () => {
-    if (!content.trim()) {
-      toast({ title: "Write some content first", variant: "destructive" });
-      return;
-    }
-    if (!selectedPlatforms.length) {
-      toast({ title: "Select at least one platform", variant: "destructive" });
-      return;
-    }
-    setPosting(true);
-    setLastResult(null);
+  const handleSaveDraft = async () => {
+    if (!content.trim() || !selectedDate) return;
+    setSaving(true);
     try {
-      const { data, error } = await supabase.functions.invoke("social-post", {
-        body: { action: "post", text: content, platforms: selectedPlatforms },
+      let finalContent = content;
+      if (!finalContent.includes(FB_GROUP_URL)) {
+        finalContent += `\n\n${FB_GROUP_URL}`;
+      }
+
+      const { error } = await supabase.from("social_posts").insert({
+        content: finalContent,
+        platforms: selectedPlatforms,
+        scheduled_date: format(selectedDate, "yyyy-MM-dd"),
+        scheduled_for: null,
+        approval_status: "pending",
+        status: "draft",
+        image_variant: imageVariant,
+        include_quiz_url: includeQuizUrl,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+      } as any);
+      if (error) throw error;
+      toast({ title: "Post saved to calendar" });
+      setComposerOpen(false);
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    }
+    setSaving(false);
+  };
+
+  const handleApprove = async (postId: string) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    const { error } = await supabase
+      .from("social_posts")
+      .update({
+        approval_status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by: user?.id,
+        status: "scheduled",
+      } as any)
+      .eq("id", postId);
+    if (error) {
+      toast({ title: "Approval failed", variant: "destructive" });
+    } else {
+      toast({ title: "Post approved" });
+      refetch();
+    }
+  };
+
+  const handleReject = async (postId: string) => {
+    const { error } = await supabase
+      .from("social_posts")
+      .update({ approval_status: "rejected", status: "draft" } as any)
+      .eq("id", postId);
+    if (!error) {
+      toast({ title: "Post rejected" });
+      refetch();
+    }
+  };
+
+  const handlePublishNow = async (post: any) => {
+    try {
+      const { error } = await supabase.functions.invoke("social-post", {
+        body: { action: "post", text: post.content, platforms: post.platforms },
       });
       if (error) throw error;
-      setLastResult({ success: true, message: "Posted successfully!" });
-      setContent("");
-      setTopic("");
+      await supabase
+        .from("social_posts")
+        .update({ status: "published", approval_status: "approved" } as any)
+        .eq("id", post.id);
+      toast({ title: "Published" });
       refetch();
-      toast({ title: "Posted to " + selectedPlatforms.join(", ") + "!" });
     } catch (e: any) {
-      setLastResult({ success: false, message: e.message });
-      toast({ title: "Post failed", description: e.message, variant: "destructive" });
+      toast({ title: "Publish failed", description: e.message, variant: "destructive" });
     }
-    setPosting(false);
   };
+
+  const selectedVariantImg = IMAGE_VARIANTS.find((v) => v.id === imageVariant)?.src;
+  const pendingCount = posts.filter((p: any) => (p as any).approval_status === "pending").length;
 
   return (
     <AdminShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Social Media Poster</h1>
-          <p className="text-sm text-muted-foreground">AI-powered posting to 13+ platforms via Late.dev</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Social Calendar</h1>
+            <p className="text-sm text-muted-foreground">
+              AI-generated posts with approval workflow
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {pendingCount > 0 && (
+              <Badge variant="destructive" className="text-xs">
+                {pendingCount} pending approval
+              </Badge>
+            )}
+            <Button onClick={() => openComposer()} size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New Post
+            </Button>
+          </div>
         </div>
 
-        {/* Compose Card */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Send className="h-4 w-4 text-primary" />
-              Compose Post
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* AI Generation */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">AI Topic (optional)</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g. New feature launch, Client success story..."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="flex-1"
+        <Tabs defaultValue="calendar">
+          <TabsList>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="pending">
+              Pending {pendingCount > 0 && `(${pendingCount})`}
+            </TabsTrigger>
+            <TabsTrigger value="all">All Posts</TabsTrigger>
+          </TabsList>
+
+          {/* Calendar View */}
+          <TabsContent value="calendar">
+            <Card className="bg-card border-border">
+              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-base">{format(currentMonth, "MMMM yyyy")}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-px">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                    <div key={d} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+                      {d}
+                    </div>
+                  ))}
+                  {Array.from({ length: startDayOffset }).map((_, i) => (
+                    <div key={`empty-${i}`} className="min-h-[80px]" />
+                  ))}
+                  {days.map((day) => {
+                    const dayPosts = getPostsForDay(day);
+                    const isToday = isSameDay(day, new Date());
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        onClick={() => openComposer(day)}
+                        className={`min-h-[80px] border border-border/50 rounded p-1 cursor-pointer hover:bg-secondary/50 transition-colors ${
+                          isToday ? "bg-primary/5 border-primary/30" : ""
+                        }`}
+                      >
+                        <span className={`text-[10px] font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                          {format(day, "d")}
+                        </span>
+                        <div className="space-y-0.5 mt-0.5">
+                          {dayPosts.slice(0, 3).map((p: any) => (
+                            <div
+                              key={p.id}
+                              onClick={(e) => { e.stopPropagation(); setPreviewPost(p); }}
+                              className={`text-[8px] px-1 py-0.5 rounded truncate cursor-pointer ${
+                                (p as any).approval_status === "approved"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : (p as any).approval_status === "rejected"
+                                  ? "bg-destructive/20 text-destructive"
+                                  : "bg-yellow-500/20 text-yellow-400"
+                              }`}
+                            >
+                              {p.content?.slice(0, 20)}...
+                            </div>
+                          ))}
+                          {dayPosts.length > 3 && (
+                            <span className="text-[8px] text-muted-foreground">+{dayPosts.length - 3} more</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Pending Approval */}
+          <TabsContent value="pending">
+            <div className="space-y-3">
+              {posts.filter((p: any) => (p as any).approval_status === "pending").length === 0 && (
+                <Card className="bg-card border-border">
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    No posts pending approval.
+                  </CardContent>
+                </Card>
+              )}
+              {posts
+                .filter((p: any) => (p as any).approval_status === "pending")
+                .map((post: any) => (
+                  <PostApprovalCard
+                    key={post.id}
+                    post={post}
+                    onApprove={() => handleApprove(post.id)}
+                    onReject={() => handleReject(post.id)}
+                    onPreview={() => setPreviewPost(post)}
+                  />
+                ))}
+            </div>
+          </TabsContent>
+
+          {/* All Posts */}
+          <TabsContent value="all">
+            <div className="space-y-3">
+              {posts.map((post: any) => (
+                <Card key={post.id} className="bg-card border-border">
+                  <CardContent className="py-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm text-foreground line-clamp-2 flex-1">{post.content}</p>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPost(post)}>
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        {(post as any).approval_status === "approved" && post.status !== "published" && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePublishNow(post)}>
+                            <Send className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(post.platforms || []).map((p: string) => (
+                        <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
+                      ))}
+                      <ApprovalBadge status={(post as any).approval_status} />
+                      {post.scheduled_date && (
+                        <span className="text-[10px] text-muted-foreground ml-auto">
+                          <CalendarDays className="h-3 w-3 inline mr-0.5" />
+                          {post.scheduled_date}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Composer Dialog */}
+        <Dialog open={composerOpen} onOpenChange={setComposerOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                Schedule Post — {selectedDate && format(selectedDate, "MMM d, yyyy")}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* AI Generation */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">AI Topic</label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g. Why systems beat hustle, Client success story..."
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Select value={tone} onValueChange={setTone}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                      <SelectItem value="hype">Hype / Bold</SelectItem>
+                      <SelectItem value="educational">Educational</SelectItem>
+                      <SelectItem value="storytelling">Storytelling</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleGenerate} disabled={generating} variant="secondary" size="sm">
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Post Content</label>
+                <Textarea
+                  placeholder="Write your post or generate with AI..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={5}
+                  className="resize-none"
                 />
-                <Select value={tone} onValueChange={setTone}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="casual">Casual</SelectItem>
-                    <SelectItem value="hype">Hype / Bold</SelectItem>
-                    <SelectItem value="educational">Educational</SelectItem>
-                    <SelectItem value="storytelling">Storytelling</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleGenerate} disabled={generating} variant="secondary">
-                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  <span className="ml-1 hidden sm:inline">Generate</span>
+                <p className="text-[10px] text-muted-foreground text-right">{content.length} chars</p>
+              </div>
+
+              {/* Image Variant */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Brand Image</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {IMAGE_VARIANTS.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setImageVariant(v.id)}
+                      className={`rounded-lg overflow-hidden border-2 transition-all ${
+                        imageVariant === v.id ? "border-primary" : "border-border/50 hover:border-border"
+                      }`}
+                    >
+                      <img src={v.src} alt={v.label} className="w-full aspect-square object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Options Row */}
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <Checkbox
+                    checked={includeQuizUrl}
+                    onCheckedChange={(v) => setIncludeQuizUrl(!!v)}
+                  />
+                  Include quiz funnel link
+                </label>
+              </div>
+
+              {/* Platforms */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Platforms</label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => togglePlatform(p.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        selectedPlatforms.includes(p.id)
+                          ? `${p.color} text-white`
+                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleSaveDraft} disabled={saving || !content.trim()} className="flex-1">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Clock className="h-4 w-4 mr-2" />}
+                  Save to Calendar (Pending Approval)
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
 
-            {/* Content */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Post Content</label>
-              <Textarea
-                placeholder="Write your post or generate with AI above..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={5}
-                className="resize-none"
-              />
-              <p className="text-[10px] text-muted-foreground text-right">{content.length} chars</p>
-            </div>
-
-            {/* Platform Selection */}
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Platforms</label>
-              <div className="flex flex-wrap gap-2">
-                {PLATFORMS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => togglePlatform(p.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      selectedPlatforms.includes(p.id)
-                        ? `${p.color} text-white`
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    }`}
-                  >
-                    <Checkbox
-                      checked={selectedPlatforms.includes(p.id)}
-                      className="h-3 w-3 border-current"
-                      onCheckedChange={() => togglePlatform(p.id)}
-                    />
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Result Banner */}
-            {lastResult && (
-              <div
-                className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
-                  lastResult.success
-                    ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                    : "bg-destructive/10 text-destructive border border-destructive/20"
-                }`}
-              >
-                {lastResult.success ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                {lastResult.message}
-              </div>
-            )}
-
-            {/* Post Button */}
-            <Button onClick={handlePost} disabled={posting || !content.trim()} className="w-full">
-              {posting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Posting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Post to {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? "s" : ""}
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Recent Posts */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base">Recent Posts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!recentPosts?.length ? (
-              <p className="text-sm text-muted-foreground">No posts yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentPosts.map((post: any) => (
-                  <div key={post.id} className="p-3 rounded-lg border border-border bg-secondary/30 space-y-2">
-                    <p className="text-sm text-foreground line-clamp-2">{post.content}</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {(post.platforms || []).map((p: string) => (
-                        <Badge key={p} variant="secondary" className="text-[10px]">
-                          {p}
-                        </Badge>
-                      ))}
-                      <Badge
-                        variant={post.status === "published" ? "default" : "secondary"}
-                        className="text-[10px]"
-                      >
-                        {post.status}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground ml-auto">
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+        {/* Preview Dialog */}
+        <Dialog open={!!previewPost} onOpenChange={() => setPreviewPost(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Post Preview</DialogTitle>
+            </DialogHeader>
+            {previewPost && (
+              <div className="space-y-4">
+                {(previewPost as any).image_variant && (
+                  <img
+                    src={IMAGE_VARIANTS.find((v) => v.id === (previewPost as any).image_variant)?.src}
+                    alt="Post image"
+                    className="w-full rounded-lg"
+                  />
+                )}
+                <p className="text-sm text-foreground whitespace-pre-wrap">{previewPost.content}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(previewPost.platforms || []).map((p: string) => (
+                    <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
+                  ))}
+                  <ApprovalBadge status={(previewPost as any).approval_status} />
+                </div>
+                {(previewPost as any).approval_status === "pending" && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => { handleApprove(previewPost.id); setPreviewPost(null); }}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Approve
+                    </Button>
+                    <Button
+                      onClick={() => { handleReject(previewPost.id); setPreviewPost(null); }}
+                      variant="destructive"
+                      className="flex-1"
+                      size="sm"
+                    >
+                      <X className="h-4 w-4 mr-1" /> Reject
+                    </Button>
                   </div>
-                ))}
+                )}
+                {(previewPost as any).approval_status === "approved" && previewPost.status !== "published" && (
+                  <Button
+                    onClick={() => { handlePublishNow(previewPost); setPreviewPost(null); }}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Send className="h-4 w-4 mr-1" /> Publish Now
+                  </Button>
+                )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminShell>
   );
+}
+
+function PostApprovalCard({ post, onApprove, onReject, onPreview }: {
+  post: any; onApprove: () => void; onReject: () => void; onPreview: () => void;
+}) {
+  const variant = IMAGE_VARIANTS.find((v) => v.id === (post as any).image_variant);
+  return (
+    <Card className="bg-card border-border">
+      <CardContent className="py-3">
+        <div className="flex gap-3">
+          {variant && (
+            <img
+              src={variant.src}
+              alt={variant.label}
+              className="w-16 h-16 rounded object-cover cursor-pointer"
+              onClick={onPreview}
+            />
+          )}
+          <div className="flex-1 min-w-0 space-y-2">
+            <p className="text-sm text-foreground line-clamp-2">{post.content}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {(post.platforms || []).map((p: string) => (
+                <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
+              ))}
+              {post.scheduled_date && (
+                <span className="text-[10px] text-muted-foreground">
+                  <CalendarDays className="h-3 w-3 inline mr-0.5" />
+                  {post.scheduled_date}
+                </span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={onApprove} size="sm" className="h-7 text-xs">
+                <Check className="h-3 w-3 mr-1" /> Approve
+              </Button>
+              <Button onClick={onReject} size="sm" variant="destructive" className="h-7 text-xs">
+                <X className="h-3 w-3 mr-1" /> Reject
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ApprovalBadge({ status }: { status: string }) {
+  if (status === "approved") return <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30">Approved</Badge>;
+  if (status === "rejected") return <Badge className="text-[10px] bg-destructive/20 text-destructive border-destructive/30">Rejected</Badge>;
+  return <Badge className="text-[10px] bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Pending</Badge>;
 }
