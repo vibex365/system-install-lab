@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.api-gateway]
 verify_jwt = false
+
+[functions.agent-media-buyer]
+verify_jwt = false

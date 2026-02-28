@@ -21,6 +21,7 @@ const CREDIT_COSTS: Record<string, { type: string; amount: number }> = {
   "prompt-packager": { type: "leads", amount: 1 },
   "weekly-recap": { type: "leads", amount: 1 },
   "video-content": { type: "leads", amount: 1 },
+  "media-buyer": { type: "leads", amount: 5 },
 };
 
 async function hashKey(key: string): Promise<string> {
