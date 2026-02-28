@@ -3,7 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles, Cpu, Scale, Dumbbell, Home, Stethoscope } from "lucide-react";
+import { ExternalLink, Copy, BarChart3, Users, MousePointerClick, BookOpen, Loader2, Sparkles, Cpu, Scale, Dumbbell, Home, Stethoscope, Facebook } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +11,8 @@ const FUNNEL_URL = "https://peoplefailsystemswork.com/intake-funnel";
 const MAGAZINE_URL = "https://peoplefailsystemswork.com/magazine/inside";
 const ELYT_DEMO_URL = "https://peoplefailsystemswork.com/elyt-demo";
 const SYSTEM_MAG_URL = "https://peoplefailsystemswork.com/magazine/system";
+const GROUP_QUIZ_URL = "https://peoplefailsystemswork.com/systems-quiz";
+const FB_GROUP_URL = "https://www.facebook.com/share/g/18ewsZUu7t/?mibextid=wwXIfr";
 const DOMAIN = "https://peoplefailsystemswork.com";
 
 const NICHE_MAGS = [
@@ -112,6 +114,51 @@ export default function AdminMarketing() {
                 <p>🎯 <strong>Hook:</strong> "Most agencies spend 10+ hours building a single funnel. We do it in minutes."</p>
                 <p>📊 <strong>Body:</strong> "Take the 2-minute Funnel Efficiency Quiz and find out if your process is costing you clients."</p>
                 <p>🔗 <strong>CTA:</strong> "Take the Quiz → {FUNNEL_URL}"</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* FB Group Quiz Funnel Card */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Facebook className="h-4 w-4 text-primary" />
+              FB Group Funnel — "Your Fake Guru Mentor Lied"
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              5-question Systems Readiness Quiz promoting Dale Payne-Sizer. Drives completions into the free Facebook group. Use as the primary top-of-funnel for social ads and organic posts.
+            </p>
+
+            <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
+              <code className="text-xs text-foreground flex-1 truncate">{GROUP_QUIZ_URL}</code>
+              <Button size="sm" variant="ghost" onClick={() => copyUrl(GROUP_QUIZ_URL)} className="shrink-0">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => window.open("/systems-quiz", "_blank")} className="shrink-0">
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-secondary rounded-lg px-3 py-2">
+              <code className="text-xs text-foreground flex-1 truncate">{FB_GROUP_URL}</code>
+              <Button size="sm" variant="ghost" onClick={() => copyUrl(FB_GROUP_URL)} className="shrink-0">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => window.open(FB_GROUP_URL, "_blank")} className="shrink-0">
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <h4 className="text-xs font-semibold text-foreground mb-2">Distribution Playbook</h4>
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>🎯 <strong>FB Ad Hook:</strong> "Your fake guru mentor lied. People fail. Systems work. Take the 60-second quiz →"</p>
+                <p>📲 <strong>Organic post:</strong> Share the quiz link in comments, DMs, and stories — the hero image is designed to stop the scroll</p>
+                <p>💬 <strong>Group welcome:</strong> Pin the quiz in the FB group as the first thing new members see</p>
+                <p>🔁 <strong>Retarget:</strong> Anyone who completes the quiz but doesn't join → retarget with the "Inside the Machine" magazine</p>
               </div>
             </div>
           </CardContent>
