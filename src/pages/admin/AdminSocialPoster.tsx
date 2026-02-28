@@ -69,7 +69,7 @@ export default function AdminSocialPoster() {
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("professional");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["facebook"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["facebook", "instagram", "threads", "twitter"]);
   const [imageVariant, setImageVariant] = useState("bottleneck_dark");
   const [includeQuizUrl, setIncludeQuizUrl] = useState(false);
   const [keyword, setKeyword] = useState("SYSTEMS");
