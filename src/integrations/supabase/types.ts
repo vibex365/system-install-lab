@@ -1400,6 +1400,57 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          admin_notes: string | null
+          audience_size: string | null
+          business_name: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          niche: string | null
+          phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_url: string | null
+          status: string
+          why_partner: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          audience_size?: string | null
+          business_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          niche?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_url?: string | null
+          status?: string
+          why_partner?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          audience_size?: string | null
+          business_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          niche?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_url?: string | null
+          status?: string
+          why_partner?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

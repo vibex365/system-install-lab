@@ -16,12 +16,13 @@ export function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Product</h4>
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">Platform</h4>
             <nav className="flex flex-col gap-2.5">
               <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
               <a href="#agents" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AI Agents</a>
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
               <Link to="/api-docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Documentation</Link>
+              <Link to="/partner/apply" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Partner Program</Link>
               <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
             </nav>
           </div>
