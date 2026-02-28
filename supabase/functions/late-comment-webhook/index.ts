@@ -84,33 +84,7 @@ serve(async (req) => {
         const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
         const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
         const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
-        
-        // Get the admin phone — fetch chief_architect's profile
-        const { data: chiefRoles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "chief_architect")
-          .limit(1);
-
-        let adminPhone: string | null = null;
-        if (chiefRoles?.[0]) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("email")
-            .eq("id", chiefRoles[0].user_id)
-            .single();
-          
-          // Look up phone from applications table
-          if (profile?.email) {
-            const { data: app } = await supabase
-              .from("applications")
-              .select("phone_number")
-              .eq("email", profile.email)
-              .limit(1)
-              .single();
-            adminPhone = app?.phone_number || null;
-          }
-        }
+        const adminPhone = Deno.env.get("ADMIN_PHONE_NUMBER") || null;
 
         if (twilioSid && twilioToken && fromNumber && adminPhone) {
           const keywordsStr = matchedKeywords.join(", ");
