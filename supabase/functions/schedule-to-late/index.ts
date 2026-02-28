@@ -163,7 +163,9 @@ Deno.serve(async (req) => {
           payload.scheduledAt = `${post.scheduled_date}T10:00:00-05:00`;
         }
 
-        if (mediaUrls.length) payload.mediaUrls = mediaUrls;
+        if (mediaUrls.length) {
+          payload.mediaItems = mediaUrls.map((url: string) => ({ type: "image", url }));
+        }
 
         console.log("Sending to Late.dev:", JSON.stringify(payload));
 
