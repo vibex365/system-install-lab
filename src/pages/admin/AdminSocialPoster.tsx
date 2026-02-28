@@ -95,6 +95,7 @@ export default function AdminSocialPoster() {
       const list = Array.isArray(accounts) ? accounts : accounts?.profiles || accounts?.data || [];
       return list.map((p: any) => ({
         id: p.id,
+        profileId: p.profileId || "",
         platform: (p.platform || p.type || "unknown").toLowerCase(),
         name: p.name || p.username || p.display_name || p.platform || "Unknown",
       }));
@@ -517,18 +518,16 @@ export default function AdminSocialPoster() {
 
     const csvEscape = (val: string) => `"${val.replace(/"/g, '""')}"`;
     
-    // Build profile ID map from connected profiles
-    const profileMap: Record<string, string> = {};
+    // Build profile ID map from connected profiles — use Late.dev Profile ID, NOT account ID
+    const profileIdSet = new Set<string>();
     connectedProfiles.forEach((p: any) => {
-      profileMap[p.platform] = p.id;
+      if (p.profileId) profileIdSet.add(p.profileId);
     });
+    const lateProfileId = [...profileIdSet][0] || "";
 
     const rows = exportable.map((post: any) => {
       const platforms = (post.platforms || []).join(",");
-      const profileIds = (post.platforms || [])
-        .map((p: string) => profileMap[p] || "")
-        .filter(Boolean)
-        .join(",");
+      const profileIds = lateProfileId;
       const scheduleTime = post.scheduled_date ? `${post.scheduled_date} 10:00` : "";
       const mediaUrls = (post.media_urls || []).join(",");
       const hashtags = (post.content.match(/#\w+/g) || []).join(",");
