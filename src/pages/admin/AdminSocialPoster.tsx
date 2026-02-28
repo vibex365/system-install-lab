@@ -45,7 +45,7 @@ const IMAGE_VARIANTS = [
   { id: "bottleneck_yellow", label: "Bottleneck (Yellow)", src: bottleneckYellow },
 ];
 
-const PLATFORMS = [
+const ALL_PLATFORMS = [
   { id: "facebook", label: "Facebook", color: "bg-blue-600" },
   { id: "instagram", label: "Instagram", color: "bg-pink-600" },
   { id: "twitter", label: "Twitter / X", color: "bg-zinc-700" },
@@ -82,6 +82,26 @@ export default function AdminSocialPoster() {
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+  // Fetch connected Late.dev profiles
+  const { data: connectedProfiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ["late-connected-profiles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("social-post", {
+        body: { action: "accounts" },
+      });
+      if (error) throw error;
+      const accounts = data?.accounts;
+      const list = Array.isArray(accounts) ? accounts : accounts?.profiles || accounts?.data || [];
+      return list.map((p: any) => ({
+        id: p.id,
+        platform: (p.platform || p.type || "unknown").toLowerCase(),
+        name: p.name || p.username || p.display_name || p.platform || "Unknown",
+      }));
+    },
+  });
+
+  const connectedPlatformIds = connectedProfiles.map((p: any) => p.platform);
 
   // Gallery images query
   const { data: galleryImages = [], refetch: refetchGallery } = useQuery({
@@ -266,7 +286,7 @@ export default function AdminSocialPoster() {
     setImageVariant("bottleneck_dark");
     setIncludeQuizUrl(false);
     setKeyword("SYSTEMS");
-    setSelectedPlatforms(["facebook"]);
+    setSelectedPlatforms(connectedPlatformIds.length > 0 ? [...connectedPlatformIds] : ["facebook"]);
     setComposerMediaUrls([]);
     setComposerOpen(true);
   };
@@ -397,8 +417,22 @@ export default function AdminSocialPoster() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Social Agent Workflow</p>
                   <p className="text-xs text-muted-foreground">
-                    Auto-generates posts weekly · CTA: "Comment KEYWORD below" → DM manually
+                    Auto-generates posts weekly · CTA: "Comment 'SEND ME THE LINK' below" → DM manually
                   </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-muted-foreground">Connected:</span>
+                    {profilesLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                    ) : connectedProfiles.length > 0 ? (
+                      connectedProfiles.map((p: any) => (
+                        <Badge key={p.id} variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                          {p.platform} {p.name !== p.platform ? `(${p.name})` : ""}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-destructive">No profiles connected</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2 items-center">
@@ -808,21 +842,30 @@ export default function AdminSocialPoster() {
 
               {/* Platforms */}
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Platforms</label>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Platforms {connectedProfiles.length > 0 && <span className="text-[10px] text-muted-foreground">(● = connected)</span>}
+                </label>
                 <div className="flex flex-wrap gap-2">
-                  {PLATFORMS.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => togglePlatform(p.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                        selectedPlatforms.includes(p.id)
-                          ? `${p.color} text-white`
-                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                  {ALL_PLATFORMS.map((p) => {
+                    const isConnected = connectedPlatformIds.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => togglePlatform(p.id)}
+                        disabled={!isConnected}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          !isConnected
+                            ? "bg-muted text-muted-foreground/40 cursor-not-allowed line-through"
+                            : selectedPlatforms.includes(p.id)
+                              ? `${p.color} text-white`
+                              : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                        }`}
+                      >
+                        {isConnected && <span className="text-green-400 text-[8px]">●</span>}
+                        {p.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -196,7 +196,7 @@ async function handlePost(
     throw new Error(`No connected Late.dev profiles found for platforms: ${platforms.join(", ")}. Available: ${profiles.map((p: any) => p.platform || p.type).join(", ")}`);
   }
 
-  const payload: any = { text, profile_ids: profileIds };
+  const payload: any = { post: text, profile_ids: profileIds };
   if (mediaUrls?.length) payload.media_urls = mediaUrls;
   if (scheduledFor) payload.schedule_at = scheduledFor;
 
