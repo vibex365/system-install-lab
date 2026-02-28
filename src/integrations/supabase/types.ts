@@ -1845,6 +1845,56 @@ export type Database = {
           },
         ]
       }
+      social_comments: {
+        Row: {
+          comment_text: string
+          comment_url: string | null
+          commenter_name: string | null
+          created_at: string
+          id: string
+          late_comment_id: string | null
+          late_post_id: string | null
+          matched_keywords: string[] | null
+          platform: string | null
+          sms_sent: boolean | null
+          social_post_id: string | null
+        }
+        Insert: {
+          comment_text: string
+          comment_url?: string | null
+          commenter_name?: string | null
+          created_at?: string
+          id?: string
+          late_comment_id?: string | null
+          late_post_id?: string | null
+          matched_keywords?: string[] | null
+          platform?: string | null
+          sms_sent?: boolean | null
+          social_post_id?: string | null
+        }
+        Update: {
+          comment_text?: string
+          comment_url?: string | null
+          commenter_name?: string | null
+          created_at?: string
+          id?: string
+          late_comment_id?: string | null
+          late_post_id?: string | null
+          matched_keywords?: string[] | null
+          platform?: string | null
+          sms_sent?: boolean | null
+          social_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_comments_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_posts: {
         Row: {
           approval_status: string

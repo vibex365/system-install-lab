@@ -1,0 +1,164 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const body = await req.json();
+    console.log("Late.dev webhook payload:", JSON.stringify(body));
+
+    // Late.dev webhook payload — adapt field names based on actual webhook shape
+    const commentText = body.comment_text || body.text || body.message || body.content || "";
+    const commenterName = body.commenter_name || body.author || body.user || body.username || "Unknown";
+    const platform = body.platform || body.network || "";
+    const latePostId = body.post_id || body.late_post_id || "";
+    const lateCommentId = body.comment_id || body.id || "";
+    const commentUrl = body.comment_url || body.url || body.permalink || "";
+
+    if (!commentText) {
+      return new Response(JSON.stringify({ ok: true, skipped: "no comment text" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Find matching social_post by late_post_id
+    let socialPost: any = null;
+    if (latePostId) {
+      const { data } = await supabase
+        .from("social_posts")
+        .select("id, content, keyword, user_id")
+        .eq("late_post_id", latePostId)
+        .single();
+      socialPost = data;
+    }
+
+    // Extract keywords from original post content
+    const keywords: string[] = [];
+    if (socialPost) {
+      // Use the keyword field if set
+      if (socialPost.keyword) {
+        keywords.push(...socialPost.keyword.split(",").map((k: string) => k.trim().toLowerCase()).filter(Boolean));
+      }
+      // Also extract hashtags and significant words (3+ chars) from the content
+      const hashtags = (socialPost.content.match(/#\w+/g) || []).map((h: string) => h.replace("#", "").toLowerCase());
+      keywords.push(...hashtags);
+    }
+
+    // Check if comment contains any keywords
+    const commentLower = commentText.toLowerCase();
+    const matchedKeywords = keywords.filter((kw) => commentLower.includes(kw));
+
+    // Log the comment
+    await supabase.from("social_comments").insert({
+      late_comment_id: lateCommentId,
+      late_post_id: latePostId,
+      social_post_id: socialPost?.id || null,
+      platform,
+      commenter_name: commenterName,
+      comment_text: commentText,
+      comment_url: commentUrl,
+      matched_keywords: matchedKeywords,
+      sms_sent: false,
+    });
+
+    // If keywords matched, send SMS alert
+    if (matchedKeywords.length > 0 || !socialPost) {
+      // Always alert if we can't find the post (safety net) or if keywords matched
+      const shouldAlert = matchedKeywords.length > 0;
+      
+      if (shouldAlert) {
+        const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+        const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+        const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+        
+        // Get the admin phone — fetch chief_architect's profile
+        const { data: chiefRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "chief_architect")
+          .limit(1);
+
+        let adminPhone: string | null = null;
+        if (chiefRoles?.[0]) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("id", chiefRoles[0].user_id)
+            .single();
+          
+          // Look up phone from applications table
+          if (profile?.email) {
+            const { data: app } = await supabase
+              .from("applications")
+              .select("phone_number")
+              .eq("email", profile.email)
+              .limit(1)
+              .single();
+            adminPhone = app?.phone_number || null;
+          }
+        }
+
+        if (twilioSid && twilioToken && fromNumber && adminPhone) {
+          const keywordsStr = matchedKeywords.join(", ");
+          const platformLabel = platform || "social media";
+          const linkStr = commentUrl ? `\nReply: ${commentUrl}` : "";
+          
+          const smsBody = `🔔 ${commenterName} commented on ${platformLabel}:\n"${commentText.slice(0, 100)}"\nKeywords: ${keywordsStr}${linkStr}`;
+
+          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+          const twilioAuth = btoa(`${twilioSid}:${twilioToken}`);
+
+          const smsRes = await fetch(twilioUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${twilioAuth}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              To: adminPhone,
+              From: fromNumber,
+              Body: smsBody,
+            }),
+          });
+
+          const smsData = await smsRes.json();
+          console.log("SMS result:", JSON.stringify(smsData));
+
+          if (smsRes.ok) {
+            // Mark as sms_sent
+            await supabase
+              .from("social_comments")
+              .update({ sms_sent: true })
+              .eq("late_comment_id", lateCommentId);
+          }
+        } else {
+          console.warn("Missing Twilio config or admin phone for SMS alert");
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ ok: true, matched: matchedKeywords }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
