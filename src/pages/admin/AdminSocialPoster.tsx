@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
-  ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot
+  ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot,
+  Upload, Trash2, Image as ImageIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,70 @@ export default function AdminSocialPoster() {
   const [includeQuizUrl, setIncludeQuizUrl] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [composerMediaUrls, setComposerMediaUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const postFileInputRef = useRef<HTMLInputElement>(null);
+
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+  const handleUploadImages = async (files: FileList, postId?: string) => {
+    setUploading(true);
+    const urls: string[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop();
+        const path = `${postId || "draft"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("social-images")
+          .upload(path, file, { upsert: true });
+        if (error) throw error;
+        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/social-images/${path}`;
+        urls.push(publicUrl);
+      }
+
+      if (postId) {
+        // Update existing post's media_urls
+        const existing = posts.find((p: any) => p.id === postId);
+        const merged = [...(existing?.media_urls || []), ...urls];
+        await supabase
+          .from("social_posts")
+          .update({ media_urls: merged } as any)
+          .eq("id", postId);
+        toast({ title: `${urls.length} image(s) uploaded` });
+        refetch();
+      } else {
+        setComposerMediaUrls((prev) => [...prev, ...urls]);
+        toast({ title: `${urls.length} image(s) added` });
+      }
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
+
+  const handleDeleteImage = async (postId: string, imageUrl: string) => {
+    try {
+      // Extract path from URL
+      const pathMatch = imageUrl.match(/social-images\/(.+)$/);
+      if (pathMatch) {
+        await supabase.storage.from("social-images").remove([pathMatch[1]]);
+      }
+      const post = posts.find((p: any) => p.id === postId);
+      const updated = (post?.media_urls || []).filter((u: string) => u !== imageUrl);
+      await supabase
+        .from("social_posts")
+        .update({ media_urls: updated } as any)
+        .eq("id", postId);
+      toast({ title: "Image removed" });
+      refetch();
+      if (previewPost?.id === postId) {
+        setPreviewPost({ ...previewPost, media_urls: updated });
+      }
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message, variant: "destructive" });
+    }
+  };
 
   const handleAutoGenerate = async (days = 7) => {
     setAutoGenerating(true);
@@ -138,6 +203,7 @@ export default function AdminSocialPoster() {
     setImageVariant("bottleneck_dark");
     setIncludeQuizUrl(false);
     setSelectedPlatforms(["facebook"]);
+    setComposerMediaUrls([]);
     setComposerOpen(true);
   };
 
@@ -195,6 +261,7 @@ export default function AdminSocialPoster() {
         status: "draft",
         image_variant: imageVariant,
         include_quiz_url: includeQuizUrl,
+        media_urls: composerMediaUrls,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       } as any);
       if (error) throw error;
@@ -523,6 +590,44 @@ export default function AdminSocialPoster() {
                 </div>
               </div>
 
+              {/* Upload Images */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Post Images</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleUploadImages(e.target.files)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  {composerMediaUrls.map((url, i) => (
+                    <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border group">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => setComposerMediaUrls((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                      >
+                        <Trash2 className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center transition-colors"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Upload images to attach to this post</p>
+              </div>
+
               {/* Options Row */}
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
@@ -580,6 +685,55 @@ export default function AdminSocialPoster() {
                     className="w-full rounded-lg"
                   />
                 )}
+
+                {/* Uploaded images with delete */}
+                {(previewPost.media_urls || []).length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Attached Images</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(previewPost.media_urls || []).map((url: string, i: number) => (
+                        <div key={i} className="relative rounded-lg overflow-hidden border border-border group aspect-square">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => handleDeleteImage(previewPost.id, url)}
+                            className="absolute top-1 right-1 bg-destructive/80 hover:bg-destructive rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add images to existing post */}
+                <div>
+                  <input
+                    ref={postFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) handleUploadImages(e.target.files, previewPost.id);
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => postFileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="h-3 w-3 mr-1" />
+                    )}
+                    Add Images
+                  </Button>
+                </div>
+
                 <p className="text-sm text-foreground whitespace-pre-wrap">{previewPost.content}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   {(previewPost.platforms || []).map((p: string) => (

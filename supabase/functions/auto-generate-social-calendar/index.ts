@@ -211,6 +211,23 @@ Rules:
       }
     }
 
+    // Send notification about generated posts
+    if (generated.length > 0) {
+      const { data: adminRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "chief_architect");
+
+      for (const admin of adminRoles || []) {
+        await supabaseAdmin.from("user_notifications").insert({
+          user_id: admin.user_id,
+          title: `${generated.length} new social posts ready for approval`,
+          body: `The Social Agent generated ${generated.length} posts for the next ${daysToGenerate} days. Head to the Social Calendar to review and approve them.`,
+          type: "social_generate",
+        });
+      }
+    }
+
     return new Response(JSON.stringify({
       message: `Generated ${generated.length} posts`,
       generated,
