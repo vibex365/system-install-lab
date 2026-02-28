@@ -33,15 +33,7 @@ const IMAGE_VARIANTS = [
   "fake_guru_yellow", "replace_yourself_yellow", "bottleneck_yellow",
 ];
 
-const PLATFORMS_ROTATION = [
-  ["facebook", "instagram", "linkedin"],
-  ["facebook", "twitter", "threads"],
-  ["facebook", "instagram", "tiktok"],
-  ["facebook", "linkedin", "youtube"],
-  ["facebook", "instagram", "twitter", "linkedin"],
-  ["facebook", "reddit", "threads"],
-  ["facebook", "instagram"],
-];
+const LATE_API_BASE = "https://api.getlate.dev/v1";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -102,9 +94,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fetch connected Late.dev profiles to only use platforms we can actually post to
+    const LATE_API_KEY = Deno.env.get("LATE_API_KEY");
+    let connectedPlatforms: string[] = ["facebook"]; // fallback
+    if (LATE_API_KEY) {
+      try {
+        const profilesResp = await fetch(`${LATE_API_BASE}/profiles`, {
+          headers: { Authorization: `Bearer ${LATE_API_KEY}` },
+        });
+        if (profilesResp.ok) {
+          const profilesData = await profilesResp.json();
+          const profiles = Array.isArray(profilesData) ? profilesData : profilesData.profiles || profilesData.data || [];
+          connectedPlatforms = profiles
+            .map((p: any) => (p.platform || p.type || "").toLowerCase())
+            .filter((p: string) => p);
+          if (!connectedPlatforms.length) connectedPlatforms = ["facebook"];
+        }
+      } catch (e) {
+        console.error("Failed to fetch Late.dev profiles for platform selection:", e);
+      }
+    }
+
+    // Start from today (i=0), not tomorrow
     const today = new Date();
     const scheduledDates: string[] = [];
-    for (let i = 1; i <= daysToGenerate; i++) {
+    for (let i = 0; i < daysToGenerate; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       scheduledDates.push(d.toISOString().split("T")[0]);
@@ -129,7 +143,8 @@ Deno.serve(async (req) => {
     for (let i = 0; i < datesToFill.length; i++) {
       const date = datesToFill[i];
       const theme = CONTENT_THEMES[Math.floor(Math.random() * CONTENT_THEMES.length)];
-      const platforms = PLATFORMS_ROTATION[Math.floor(Math.random() * PLATFORMS_ROTATION.length)];
+      // Only use connected platforms
+      const platforms = [...connectedPlatforms];
       const imageVariant = IMAGE_VARIANTS[Math.floor(Math.random() * IMAGE_VARIANTS.length)];
       const keyword = KEYWORD_OPTIONS[Math.floor(Math.random() * KEYWORD_OPTIONS.length)];
 
