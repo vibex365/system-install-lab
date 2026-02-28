@@ -338,8 +338,25 @@ export default function AdminSocialPoster() {
     const variant = IMAGE_VARIANTS.find((v) => v.id === variantId);
     if (!variant) return null;
     try {
+      // First check if already uploaded
+      const { data: existing } = await supabase.storage
+        .from("social-images")
+        .list("brand", { limit: 100 });
+      const existingMatch = (existing || []).find((f: any) => f.name.startsWith(variantId));
+      if (existingMatch) {
+        const { data: urlData } = supabase.storage.from("social-images").getPublicUrl(`brand/${existingMatch.name}`);
+        return urlData.publicUrl;
+      }
+
+      // Fetch the local asset and convert to blob
       const resp = await fetch(variant.src);
       const blob = await resp.blob();
+      // Validate we got an actual image, not HTML
+      if (!blob.type.startsWith("image/")) {
+        console.error("Brand image fetch returned non-image type:", blob.type);
+        // Fallback: use gallery image
+        return await getRandomGalleryImage();
+      }
       const ext = blob.type.split("/")[1] || "png";
       const fileName = `brand/${variantId}-${Date.now()}.${ext}`;
       const { error: uploadErr } = await supabase.storage
@@ -350,8 +367,21 @@ export default function AdminSocialPoster() {
       return urlData.publicUrl;
     } catch (e: any) {
       console.error("Brand image upload failed:", e);
-      return null;
+      // Fallback: use gallery image
+      return await getRandomGalleryImage();
     }
+  };
+
+  const getRandomGalleryImage = async (): Promise<string | null> => {
+    const { data: galleryFiles } = await supabase.storage
+      .from("social-images")
+      .list("gallery", { limit: 50 });
+    if (galleryFiles?.length) {
+      const randomFile = galleryFiles[Math.floor(Math.random() * galleryFiles.length)];
+      const { data: urlData } = supabase.storage.from("social-images").getPublicUrl(`gallery/${randomFile.name}`);
+      return urlData.publicUrl;
+    }
+    return null;
   };
 
   const handleSaveDraft = async () => {
