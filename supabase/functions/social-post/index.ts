@@ -19,7 +19,6 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Auth check — admin only
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -34,18 +33,16 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsErr } = await supabaseUser.auth.getClaims(token);
-    if (claimsErr || !claims?.claims) {
+    const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claims.claims.sub as string;
+    const userId = user.id;
 
-    // Check chief_architect role
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: userId,
       _role: "chief_architect",
@@ -69,7 +66,6 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // Route actions
     if (action === "generate") {
       return await handleGenerate(body, corsHeaders);
     } else if (action === "post") {
@@ -92,7 +88,7 @@ Deno.serve(async (req) => {
 });
 
 async function handleGenerate(
-  body: { topic?: string; tone?: string; platforms?: string[] },
+  body: { topic?: string; tone?: string; platforms?: string[]; keyword?: string; includeQuizUrl?: boolean; quizFunnelUrl?: string },
   corsHeaders: Record<string, string>
 ) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -103,13 +99,11 @@ async function handleGenerate(
     });
   }
 
-  const { topic, tone, platforms, includeGroupUrl, includeQuizUrl, fbGroupUrl, quizFunnelUrl } = body;
+  const { topic, tone, platforms, keyword, includeQuizUrl, quizFunnelUrl } = body;
 
-  const groupUrlNote = includeGroupUrl && fbGroupUrl
-    ? `\n- MUST include this FB group link in the post: ${fbGroupUrl}`
-    : "";
-  const quizUrlNote = includeQuizUrl && quizFunnelUrl
-    ? `\n- MUST include this quiz funnel link: ${quizFunnelUrl}`
+  const kw = keyword || "SYSTEMS";
+  const quizNote = includeQuizUrl && quizFunnelUrl
+    ? `\n- You may ALSO include this quiz funnel link: ${quizFunnelUrl}`
     : "";
 
   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -129,7 +123,7 @@ Rules:
 - Tone: ${tone || "professional but conversational"}. Direct, disciplined, operator mindset.
 - Brand voice: "People Fail. Systems Work." — no hustle clichés, no fake guru energy
 - Include relevant emojis sparingly
-- Include a clear CTA driving people to the free community${groupUrlNote}${quizUrlNote}
+- IMPORTANT: The CTA must tell people to comment the keyword "${kw}" below the post to get more info. Example: "Drop '${kw}' in the comments and I'll send you the details." Do NOT include any group URLs or direct links.${quizNote}
 - Keep it under 280 chars for Twitter, under 2200 for Instagram, optimal length for others
 - Return ONLY a JSON object with: { "text": "the post text", "hashtags": ["tag1", "tag2"] }`,
         },
@@ -180,18 +174,9 @@ async function handlePost(
     });
   }
 
-  const payload: any = {
-    text,
-    platforms,
-  };
-
-  if (mediaUrls?.length) {
-    payload.mediaUrls = mediaUrls;
-  }
-
-  if (scheduledFor) {
-    payload.scheduledFor = scheduledFor;
-  }
+  const payload: any = { text, platforms };
+  if (mediaUrls?.length) payload.mediaUrls = mediaUrls;
+  if (scheduledFor) payload.scheduledFor = scheduledFor;
 
   const resp = await fetch(`${LATE_API_BASE}/posts`, {
     method: "POST",
@@ -208,7 +193,6 @@ async function handlePost(
     throw new Error(`Late.dev API error [${resp.status}]: ${JSON.stringify(data)}`);
   }
 
-  // Log the post
   await supabaseAdmin.from("social_posts").insert({
     user_id: userId,
     content: text,
@@ -226,9 +210,7 @@ async function handlePost(
 
 async function handleAccounts(apiKey: string, corsHeaders: Record<string, string>) {
   const resp = await fetch(`${LATE_API_BASE}/profiles`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { Authorization: `Bearer ${apiKey}` },
   });
 
   const data = await resp.json();

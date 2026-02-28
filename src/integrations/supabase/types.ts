@@ -1857,6 +1857,7 @@ export type Database = {
           id: string
           image_variant: string
           include_quiz_url: boolean
+          keyword: string | null
           late_post_id: string | null
           media_urls: string[]
           platforms: string[]
@@ -1878,6 +1879,7 @@ export type Database = {
           id?: string
           image_variant?: string
           include_quiz_url?: boolean
+          keyword?: string | null
           late_post_id?: string | null
           media_urls?: string[]
           platforms?: string[]
@@ -1899,6 +1901,7 @@ export type Database = {
           id?: string
           image_variant?: string
           include_quiz_url?: boolean
+          keyword?: string | null
           late_post_id?: string | null
           media_urls?: string[]
           platforms?: string[]

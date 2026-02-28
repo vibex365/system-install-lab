@@ -6,24 +6,26 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const FB_GROUP_URL = "https://www.facebook.com/share/g/18ewsZUu7t/?mibextid=wwXIfr";
-const QUIZ_FUNNEL_URL = "https://system-install-lab.lovable.app/systems-quiz";
+const KEYWORD_OPTIONS = [
+  "SYSTEMS", "AUTOMATE", "REPLACE", "BUILD", "SCALE", "INSTALL",
+  "FREEDOM", "LEVERAGE", "OPERATOR", "READY", "UPGRADE", "BLUEPRINT",
+];
 
 const CONTENT_THEMES = [
-  { topic: "Why most business owners are the bottleneck in their own company", tone: "professional", includeQuiz: true },
-  { topic: "How AI automation replaces 40+ hours of manual work per week", tone: "educational", includeQuiz: false },
-  { topic: "The difference between a fake guru and a real systems operator", tone: "hype", includeQuiz: true },
-  { topic: "Client success story: from doing everything manually to fully automated pipeline", tone: "storytelling", includeQuiz: false },
-  { topic: "3 signs you need to replace yourself in your business before it breaks", tone: "casual", includeQuiz: true },
-  { topic: "Stop hustling. Start building systems that work without you.", tone: "professional", includeQuiz: false },
-  { topic: "The real cost of not automating: lost leads, missed calls, burned out founders", tone: "hype", includeQuiz: true },
-  { topic: "What happens when you let AI handle your lead gen, follow-up, and booking", tone: "educational", includeQuiz: false },
-  { topic: "Free community for business owners ready to install real systems", tone: "casual", includeQuiz: false },
-  { topic: "People fail. Systems work. Which one are you betting on?", tone: "professional", includeQuiz: true },
-  { topic: "How to build a client acquisition engine that runs 24/7", tone: "educational", includeQuiz: true },
-  { topic: "Why your competition is automating while you're still sending DMs manually", tone: "hype", includeQuiz: false },
-  { topic: "The 5-minute AI audit that shows exactly where you're leaking revenue", tone: "storytelling", includeQuiz: true },
-  { topic: "Your mentor told you to grind harder. I'm telling you to build smarter.", tone: "casual", includeQuiz: true },
+  { topic: "Why most business owners are the bottleneck in their own company", tone: "professional" },
+  { topic: "How AI automation replaces 40+ hours of manual work per week", tone: "educational" },
+  { topic: "The difference between a fake guru and a real systems operator", tone: "hype" },
+  { topic: "Client success story: from doing everything manually to fully automated pipeline", tone: "storytelling" },
+  { topic: "3 signs you need to replace yourself in your business before it breaks", tone: "casual" },
+  { topic: "Stop hustling. Start building systems that work without you.", tone: "professional" },
+  { topic: "The real cost of not automating: lost leads, missed calls, burned out founders", tone: "hype" },
+  { topic: "What happens when you let AI handle your lead gen, follow-up, and booking", tone: "educational" },
+  { topic: "People fail. Systems work. Which one are you betting on?", tone: "professional" },
+  { topic: "How to build a client acquisition engine that runs 24/7", tone: "educational" },
+  { topic: "Why your competition is automating while you're still sending DMs manually", tone: "hype" },
+  { topic: "The 5-minute AI audit that shows exactly where you're leaking revenue", tone: "storytelling" },
+  { topic: "Your mentor told you to grind harder. I'm telling you to build smarter.", tone: "casual" },
+  { topic: "Most businesses don't have a lead problem — they have a follow-up problem", tone: "professional" },
 ];
 
 const IMAGE_VARIANTS = [
@@ -52,7 +54,6 @@ Deno.serve(async (req) => {
   );
 
   try {
-    // Allow both cron (no auth) and manual trigger (with auth)
     let userId: string | null = null;
 
     const authHeader = req.headers.get("Authorization");
@@ -77,7 +78,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If no user from auth, find chief_architect for attribution
     if (!userId) {
       const { data: adminRoles } = await supabaseAdmin
         .from("user_roles")
@@ -102,7 +102,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check which dates already have posts in the next N days
     const today = new Date();
     const scheduledDates: string[] = [];
     for (let i = 1; i <= daysToGenerate; i++) {
@@ -132,11 +131,7 @@ Deno.serve(async (req) => {
       const theme = CONTENT_THEMES[Math.floor(Math.random() * CONTENT_THEMES.length)];
       const platforms = PLATFORMS_ROTATION[Math.floor(Math.random() * PLATFORMS_ROTATION.length)];
       const imageVariant = IMAGE_VARIANTS[Math.floor(Math.random() * IMAGE_VARIANTS.length)];
-
-      const groupNote = `\n- MUST include this FB group link in the post: ${FB_GROUP_URL}`;
-      const quizNote = theme.includeQuiz
-        ? `\n- MUST include this quiz funnel link: ${QUIZ_FUNNEL_URL}`
-        : "";
+      const keyword = KEYWORD_OPTIONS[Math.floor(Math.random() * KEYWORD_OPTIONS.length)];
 
       try {
         const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -156,7 +151,7 @@ Rules:
 - Tone: ${theme.tone}. Direct, disciplined, operator mindset.
 - Brand voice: "People Fail. Systems Work." — no hustle clichés, no fake guru energy
 - Include relevant emojis sparingly
-- Include a clear CTA driving people to the free community${groupNote}${quizNote}
+- IMPORTANT: The CTA must tell people to comment the keyword "${keyword}" below the post to get more info. Example: "Drop '${keyword}' in the comments and I'll send you the details." Do NOT include any group URLs or direct links.
 - Keep it under 280 chars for Twitter, under 2200 for Instagram, optimal length for others
 - Return ONLY a JSON object with: { "text": "the post text", "hashtags": ["tag1", "tag2"] }`,
               },
@@ -181,10 +176,6 @@ Rules:
 
         let fullText = parsed.text;
         if (parsed.hashtags?.length) fullText += "\n\n" + parsed.hashtags.map((h: string) => `#${h}`).join(" ");
-        if (!fullText.includes(FB_GROUP_URL)) fullText += `\n\n${FB_GROUP_URL}`;
-        if (theme.includeQuiz && !fullText.includes(QUIZ_FUNNEL_URL)) {
-          fullText += `\n\nTake the free quiz: ${QUIZ_FUNNEL_URL}`;
-        }
 
         const { error } = await supabaseAdmin.from("social_posts").insert({
           content: fullText,
@@ -194,24 +185,23 @@ Rules:
           approval_status: "pending",
           status: "draft",
           image_variant: imageVariant,
-          include_quiz_url: theme.includeQuiz,
+          include_quiz_url: false,
+          keyword,
           user_id: userId,
         });
 
         if (!error) {
-          generated.push({ date, topic: theme.topic, platforms });
+          generated.push({ date, topic: theme.topic, platforms, keyword });
         }
       } catch (e) {
         console.error(`Failed to generate for ${date}:`, e);
       }
 
-      // Small delay to avoid rate limiting
       if (i < datesToFill.length - 1) {
         await new Promise((r) => setTimeout(r, 1000));
       }
     }
 
-    // Send notification about generated posts
     if (generated.length > 0) {
       const { data: adminRoles } = await supabaseAdmin
         .from("user_roles")
@@ -222,7 +212,7 @@ Rules:
         await supabaseAdmin.from("user_notifications").insert({
           user_id: admin.user_id,
           title: `${generated.length} new social posts ready for approval`,
-          body: `The Social Agent generated ${generated.length} posts for the next ${daysToGenerate} days. Head to the Social Calendar to review and approve them.`,
+          body: `The Social Agent generated ${generated.length} posts for the next ${daysToGenerate} days. Each post uses a keyword CTA — review and approve them in the Social Calendar.`,
           type: "social_generate",
         });
       }
