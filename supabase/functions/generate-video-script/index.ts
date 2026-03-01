@@ -263,7 +263,7 @@ Style: Modern, clean, professional. Suitable for TikTok/YouTube Shorts. Vertical
   });
 }
 
-/* ─── Generate Video from Reference Image (Replicate Kling v2.6 - Async) ─── */
+/* ─── Generate Video via OmniHuman 1.5 (ElevenLabs TTS + Replicate - Async) ─── */
 async function handleGenerateVideo(
   body: { image_url: string; visual_prompt: string; narration: string; scene_index: number },
   apiKey: string,
@@ -276,38 +276,102 @@ async function handleGenerateVideo(
     throw new Error("REPLICATE_API_TOKEN is not configured. Add it in Cloud secrets.");
   }
 
-  // Truncate prompt to Kling's limit
-  const safePrompt = body.visual_prompt.length > 600
-    ? body.visual_prompt.substring(0, 597) + "..."
-    : body.visual_prompt;
-
-  const input: Record<string, unknown> = {
-    prompt: `${safePrompt}. Subtle cinematic motion, slight camera movement, professional quality vertical video.`,
-    duration: 5,
-    aspect_ratio: "9:16",
-    negative_prompt: "blurry, low quality, distorted faces, extra limbs, watermark, text overlay",
-  };
-
-  // Use the reference image as start_image
-  if (body.image_url && !body.image_url.startsWith("data:")) {
-    input.start_image = body.image_url;
+  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+  if (!ELEVENLABS_API_KEY) {
+    throw new Error("ELEVENLABS_API_KEY is not configured. Connect ElevenLabs in Cloud.");
   }
 
-  console.log("=== KLING 2.6 VIDEO GENERATION ===");
-  console.log("Scene index:", body.scene_index);
-  console.log("Start image:", body.image_url?.substring(0, 80));
-  console.log("Prompt:", safePrompt.substring(0, 100));
+  if (!body.narration?.trim()) {
+    throw new Error("Narration text is required for video generation.");
+  }
 
-  // Create prediction via Replicate API (async)
-  const response = await fetch("https://api.replicate.com/v1/models/kwaivgi/kling-v2.6/predictions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
-      "Content-Type": "application/json",
-      "Prefer": "respond-async",
-    },
-    body: JSON.stringify({ input }),
-  });
+  console.log("=== OMNIHUMAN 1.5 VIDEO PIPELINE ===");
+  console.log("Scene index:", body.scene_index);
+  console.log("Image:", body.image_url?.substring(0, 80));
+  console.log("Narration length:", body.narration.length, "chars");
+
+  // ── Step 1: Generate TTS audio via ElevenLabs ──
+  console.log("Step 1: Generating ElevenLabs TTS audio...");
+  const voiceId = "EXAVITQu4vr4xnSDxMaL"; // Sarah default
+  const ttsResponse = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+    {
+      method: "POST",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: body.narration,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: {
+          stability: 0.6,
+          similarity_boost: 0.8,
+          style: 0.4,
+          use_speaker_boost: true,
+        },
+      }),
+    }
+  );
+
+  if (!ttsResponse.ok) {
+    const errText = await ttsResponse.text();
+    console.error("ElevenLabs TTS error:", ttsResponse.status, errText);
+    if (ttsResponse.status === 429) {
+      throw new Error("TTS is congested. Please try again in a moment.");
+    }
+    throw new Error(`ElevenLabs TTS failed: ${ttsResponse.status}`);
+  }
+
+  const audioBuffer = await ttsResponse.arrayBuffer();
+  console.log("TTS audio generated:", audioBuffer.byteLength, "bytes");
+
+  // ── Step 2: Upload audio to Supabase Storage ──
+  console.log("Step 2: Uploading audio to storage...");
+  const audioFileName = `video-studio/${userId}/${Date.now()}-scene-${body.scene_index}.mp3`;
+
+  await supabaseAdmin.storage.createBucket("ad-creatives", { public: true }).catch(() => {});
+
+  const { error: uploadErr } = await supabaseAdmin.storage
+    .from("ad-creatives")
+    .upload(audioFileName, new Uint8Array(audioBuffer), {
+      contentType: "audio/mpeg",
+      upsert: true,
+    });
+
+  if (uploadErr) {
+    console.error("Audio upload error:", uploadErr);
+    throw new Error(`Failed to upload TTS audio: ${uploadErr.message}`);
+  }
+
+  const { data: publicUrlData } = supabaseAdmin.storage
+    .from("ad-creatives")
+    .getPublicUrl(audioFileName);
+
+  const audioUrl = publicUrlData.publicUrl;
+  console.log("Audio uploaded to:", audioUrl);
+
+  // ── Step 3: Start OmniHuman 1.5 prediction on Replicate ──
+  console.log("Step 3: Starting OmniHuman 1.5 prediction...");
+
+  const omniInput: Record<string, unknown> = {
+    image: body.image_url,
+    audio: audioUrl,
+    aspect_ratio: "9:16",
+  };
+
+  const response = await fetch(
+    "https://api.replicate.com/v1/models/bytedance/omni-human-1.5/predictions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
+        "Content-Type": "application/json",
+        Prefer: "respond-async",
+      },
+      body: JSON.stringify({ input: omniInput }),
+    }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -323,7 +387,8 @@ async function handleGenerateVideo(
   }
 
   const prediction = await response.json();
-  console.log("Kling 2.6 prediction started:", prediction.id);
+  console.log("OmniHuman 1.5 prediction started:", prediction.id);
+  console.log("====================================");
 
   // Return immediately with prediction ID — client will poll check-video-status
   return new Response(
@@ -331,6 +396,7 @@ async function handleGenerateVideo(
       predictionId: prediction.id,
       status: "processing",
       sceneIndex: body.scene_index,
+      audioUrl,
     }),
     {
       status: 200,
