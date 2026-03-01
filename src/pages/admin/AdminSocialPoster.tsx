@@ -54,7 +54,6 @@ const ALL_PLATFORMS = [
   { id: "tiktok", label: "TikTok", color: "bg-zinc-900" },
   { id: "threads", label: "Threads", color: "bg-zinc-600" },
   { id: "reddit", label: "Reddit", color: "bg-orange-600" },
-  { id: "youtube", label: "YouTube", color: "bg-red-600" },
 ];
 
 export default function AdminSocialPoster() {
@@ -527,7 +526,7 @@ export default function AdminSocialPoster() {
 
     const headers = [
       "post_content","platforms","profiles","schedule_time","schedule_time_twitter",
-      "schedule_time_instagram","schedule_time_facebook","schedule_time_youtube",
+      "schedule_time_instagram","schedule_time_facebook",
       "schedule_time_linkedin","schedule_time_tiktok","schedule_time_threads",
       "schedule_time_pinterest","schedule_time_reddit","schedule_time_bluesky",
       "schedule_time_googlebusiness","schedule_time_telegram","tz","media_urls",
