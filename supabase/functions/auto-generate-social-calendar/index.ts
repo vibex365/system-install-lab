@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
               const accounts = accountsData.accounts || accountsData.data || (Array.isArray(accountsData) ? accountsData : []);
               connectedPlatforms = accounts
                 .map((a: any) => (a.platform || a.type || "").toLowerCase())
-                .filter((p: string) => p);
+                .filter((p: string) => p && p !== "youtube");
               if (!connectedPlatforms.length) connectedPlatforms = ["facebook"];
             }
           }
