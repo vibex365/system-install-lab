@@ -16,6 +16,14 @@ serve(async (req) => {
     const body = await req.json();
     console.log("Late.dev webhook payload:", JSON.stringify(body));
 
+    // Handle test webhooks
+    if (body.event === "webhook.test") {
+      console.log("Test webhook received — OK");
+      return new Response(JSON.stringify({ ok: true, test: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Late.dev webhook payload — adapt field names based on actual webhook shape
     const commentText = body.comment_text || body.text || body.message || body.content || "";
     const commenterName = body.commenter_name || body.author || body.user || body.username || "Unknown";
@@ -64,54 +72,47 @@ serve(async (req) => {
       sms_sent: false,
     });
 
-    // If keywords matched, send SMS alert
-    if (matchedKeywords.length > 0 || !socialPost) {
-      // Always alert if we can't find the post (safety net) or if keywords matched
-      const shouldAlert = matchedKeywords.length > 0;
+    // ── Send SMS for EVERY comment ──
+    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const adminPhone = Deno.env.get("ADMIN_PHONE_NUMBER") || null;
+
+    if (twilioSid && twilioToken && fromNumber && adminPhone) {
+      const platformLabel = platform || "social media";
+      const linkStr = commentUrl ? `\nReply: ${commentUrl}` : "";
+      const keywordTag = matchedKeywords.length > 0 ? `\n🔑 KEYWORD MATCH: ${matchedKeywords.join(", ")}` : "";
       
-      if (shouldAlert) {
-        const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-        const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-        const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
-        const adminPhone = Deno.env.get("ADMIN_PHONE_NUMBER") || null;
+      const smsBody = `💬 ${commenterName} on ${platformLabel}:\n"${commentText.slice(0, 120)}"${keywordTag}${linkStr}`;
 
-        if (twilioSid && twilioToken && fromNumber && adminPhone) {
-          const keywordsStr = matchedKeywords.join(", ");
-          const platformLabel = platform || "social media";
-          const linkStr = commentUrl ? `\nReply: ${commentUrl}` : "";
-          
-          const smsBody = `🔔 ${commenterName} commented on ${platformLabel}:\n"${commentText.slice(0, 100)}"\nKeywords: ${keywordsStr}${linkStr}`;
+      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+      const twilioAuth = btoa(`${twilioSid}:${twilioToken}`);
 
-          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
-          const twilioAuth = btoa(`${twilioSid}:${twilioToken}`);
+      const smsRes = await fetch(twilioUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${twilioAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          To: adminPhone,
+          From: fromNumber,
+          Body: smsBody,
+        }),
+      });
 
-          const smsRes = await fetch(twilioUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Basic ${twilioAuth}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              To: adminPhone,
-              From: fromNumber,
-              Body: smsBody,
-            }),
-          });
+      const smsData = await smsRes.json();
+      console.log("SMS result:", JSON.stringify(smsData));
 
-          const smsData = await smsRes.json();
-          console.log("SMS result:", JSON.stringify(smsData));
-
-          if (smsRes.ok) {
-            // Mark as sms_sent
-            await supabase
-              .from("social_comments")
-              .update({ sms_sent: true })
-              .eq("late_comment_id", lateCommentId);
-          }
-        } else {
-          console.warn("Missing Twilio config or admin phone for SMS alert");
-        }
+      if (smsRes.ok) {
+        // Mark as sms_sent
+        await supabase
+          .from("social_comments")
+          .update({ sms_sent: true })
+          .eq("late_comment_id", lateCommentId);
       }
+    } else {
+      console.warn("Missing Twilio config or admin phone for SMS alert");
     }
 
     return new Response(JSON.stringify({ ok: true, matched: matchedKeywords }), {

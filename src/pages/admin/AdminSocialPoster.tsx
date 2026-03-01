@@ -13,7 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Send, Sparkles, Loader2, CalendarDays, CheckCircle2, AlertCircle,
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, Eye, Zap, Bot,
-  Upload, Trash2, Image as ImageIcon, GalleryHorizontalEnd, Download
+  Upload, Trash2, Image as ImageIcon, GalleryHorizontalEnd, Download,
+  MessageCircle, Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -273,6 +274,19 @@ export default function AdminSocialPoster() {
         .from("social_posts")
         .select("*")
         .order("scheduled_date", { ascending: true });
+      return data || [];
+    },
+  });
+
+  // Fetch social comments
+  const { data: socialComments = [], refetch: refetchComments } = useQuery({
+    queryKey: ["social-comments"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("social_comments")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
       return data || [];
     },
   });
@@ -670,6 +684,9 @@ export default function AdminSocialPoster() {
             <TabsTrigger value="gallery">
               <GalleryHorizontalEnd className="h-3 w-3 mr-1" /> Gallery ({galleryImages.length})
             </TabsTrigger>
+            <TabsTrigger value="comments">
+              <MessageCircle className="h-3 w-3 mr-1" /> Comments ({socialComments.length})
+            </TabsTrigger>
             <TabsTrigger value="all">All Posts</TabsTrigger>
           </TabsList>
 
@@ -821,48 +838,75 @@ export default function AdminSocialPoster() {
             </Card>
           </TabsContent>
 
-          {/* All Posts */}
-          <TabsContent value="all">
-            <div className="space-y-3">
-              {posts.map((post: any) => (
-                <Card key={post.id} className="bg-card border-border">
-                  <CardContent className="py-3 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm text-foreground line-clamp-2 flex-1">{post.content}</p>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewPost(post)}>
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        {(post as any).approval_status === "approved" && post.status !== "published" && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePublishNow(post)}>
-                            <Send className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeletePost(post.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {(post.platforms || []).map((p: string) => (
-                        <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
+          {/* Comments & Messages */}
+          <TabsContent value="comments">
+            <Card className="bg-card border-border">
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-primary" />
+                  Incoming Comments ({socialComments.length})
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => refetchComments()}>
+                  Refresh
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {socialComments.length === 0 ? (
+                  <div className="py-12 text-center text-muted-foreground text-sm">
+                    <MessageCircle className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>No comments received yet.</p>
+                    <p className="text-xs mt-1">Comments from Late.dev webhook will appear here.</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="max-h-[600px]">
+                    <div className="space-y-2">
+                      {socialComments.map((c: any) => (
+                        <div key={c.id} className="border border-border rounded-lg p-3 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-foreground">{c.commenter_name || "Unknown"}</span>
+                              {c.platform && (
+                                <Badge variant="secondary" className="text-[10px] capitalize">{c.platform}</Badge>
+                              )}
+                              {c.matched_keywords?.length > 0 && (
+                                <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30">
+                                  🔑 Keyword Match
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {c.sms_sent ? (
+                                <Badge variant="outline" className="text-[10px] text-green-400">
+                                  <Phone className="h-2.5 w-2.5 mr-0.5" /> SMS Sent
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] text-muted-foreground">No SMS</Badge>
+                              )}
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(c.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-foreground/80">"{c.comment_text}"</p>
+                          {c.comment_url && (
+                            <a
+                              href={c.comment_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:underline"
+                            >
+                              View on platform →
+                            </a>
+                          )}
+                        </div>
                       ))}
-                      <ApprovalBadge status={(post as any).approval_status} />
-                      {(post as any).keyword && (
-                        <Badge variant="outline" className="text-[10px]">🔑 {(post as any).keyword}</Badge>
-                      )}
-                      {post.scheduled_date && (
-                        <span className="text-[10px] text-muted-foreground ml-auto">
-                          <CalendarDays className="h-3 w-3 inline mr-0.5" />
-                          {post.scheduled_date}
-                        </span>
-                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
+
         </Tabs>
 
         {/* Composer Dialog */}
