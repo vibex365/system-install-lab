@@ -24,13 +24,17 @@ serve(async (req) => {
       });
     }
 
-    // Late.dev webhook payload — adapt field names based on actual webhook shape
-    const commentText = body.comment_text || body.text || body.message || body.content || "";
-    const commenterName = body.commenter_name || body.author || body.user || body.username || "Unknown";
-    const platform = body.platform || body.network || "";
-    const latePostId = body.post_id || body.late_post_id || "";
-    const lateCommentId = body.comment_id || body.id || "";
-    const commentUrl = body.comment_url || body.url || body.permalink || "";
+    // Late.dev nests data under body.comment, body.post, body.account
+    const c = body.comment || {};
+    const p = body.post || {};
+    const a = body.account || {};
+
+    const commentText = c.text || body.comment_text || body.text || body.message || body.content || "";
+    const commenterName = c.author?.name || body.commenter_name || body.author || body.username || "Unknown";
+    const platform = c.platform || a.platform || body.platform || body.network || "";
+    const latePostId = p.id || body.post_id || body.late_post_id || "";
+    const lateCommentId = c.id || body.comment_id || body.id || "";
+    const commentUrl = c.comment_url || body.comment_url || body.url || body.permalink || "";
 
     if (!commentText) {
       return new Response(JSON.stringify({ ok: true, skipped: "no comment text" }), {
