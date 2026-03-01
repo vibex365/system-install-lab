@@ -285,14 +285,56 @@ async function handleGenerateVideo(
 
   if (!aiResp.ok) {
     const errText = await aiResp.text();
-    console.error("Video generation failed:", errText);
+    console.error("Video generation API error:", errText);
     throw new Error(`Video generation failed: ${errText}`);
   }
 
   const videoData = await aiResp.json();
-  const videoUrl = videoData?.url || videoData?.video_url;
+  console.log("Video generation response keys:", JSON.stringify(Object.keys(videoData)));
+  console.log("Video generation full response:", JSON.stringify(videoData).substring(0, 500));
 
-  if (!videoUrl) throw new Error("No video URL returned");
+  // Try multiple possible response structures
+  let videoUrl = videoData?.url
+    || videoData?.video_url
+    || videoData?.data?.[0]?.url
+    || videoData?.data?.[0]?.video_url
+    || videoData?.output?.url
+    || videoData?.result?.url;
+
+  // If response contains a generation ID, poll for completion
+  const generationId = videoData?.id || videoData?.generation_id || videoData?.data?.[0]?.id;
+  if (!videoUrl && generationId) {
+    console.log("Video generation async, polling for ID:", generationId);
+    // Poll up to 60 times (5 min) with 5s intervals
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const pollResp = await fetch(`https://ai.gateway.lovable.dev/v1/video/generations/${generationId}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!pollResp.ok) {
+        console.error("Poll error:", await pollResp.text());
+        continue;
+      }
+      const pollData = await pollResp.json();
+      console.log(`Poll ${i + 1} status:`, JSON.stringify(pollData).substring(0, 300));
+      
+      const status = pollData?.status || pollData?.state;
+      videoUrl = pollData?.url
+        || pollData?.video_url
+        || pollData?.data?.[0]?.url
+        || pollData?.output?.url
+        || pollData?.result?.url;
+      
+      if (videoUrl) break;
+      if (status === "failed" || status === "error") {
+        throw new Error(`Video generation failed: ${JSON.stringify(pollData)}`);
+      }
+    }
+  }
+
+  if (!videoUrl) {
+    throw new Error(`No video URL in response: ${JSON.stringify(videoData).substring(0, 300)}`);
+  }
 
   return new Response(JSON.stringify({ video_url: videoUrl }), {
     headers: { ...cors, "Content-Type": "application/json" },
