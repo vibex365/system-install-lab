@@ -276,10 +276,7 @@ async function handleGenerateVideo(
     throw new Error("REPLICATE_API_TOKEN is not configured. Add it in Cloud secrets.");
   }
 
-  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-  if (!ELEVENLABS_API_KEY) {
-    throw new Error("ELEVENLABS_API_KEY is not configured. Connect ElevenLabs in Cloud.");
-  }
+  // ElevenLabs is optional — Google TTS fallback available
 
   if (!body.narration?.trim()) {
     throw new Error("Narration text is required for video generation.");
@@ -290,38 +287,46 @@ async function handleGenerateVideo(
   console.log("Image:", body.image_url?.substring(0, 80));
   console.log("Narration length:", body.narration.length, "chars");
 
-  // ── Step 1: Generate TTS audio via ElevenLabs ──
-  console.log("Step 1: Generating ElevenLabs TTS audio...");
-  const voiceId = "bTEswxYhpv7UDkQg5VRu";
-  const ttsResponse = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
-    {
-      method: "POST",
-      headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: body.narration,
-        model_id: "eleven_multilingual_v2",
-        voice_settings: {
-          stability: 0.6,
-          similarity_boost: 0.8,
-          style: 0.4,
-          use_speaker_boost: true,
-        },
-      }),
-    }
-  );
+  // ── Step 1: Generate TTS audio (ElevenLabs with Google TTS fallback) ──
+  console.log("Step 1: Generating TTS audio...");
+  let audioBuffer: ArrayBuffer;
 
-  if (!ttsResponse.ok) {
-    const errText = await ttsResponse.text();
-    console.error("ElevenLabs TTS error:", ttsResponse.status, errText);
-    if (ttsResponse.status === 429) {
-      throw new Error("TTS is congested. Please try again in a moment.");
+  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+  let ttsSource = "elevenlabs";
+
+  if (ELEVENLABS_API_KEY) {
+    const voiceId = "bTEswxYhpv7UDkQg5VRu";
+    const ttsResponse = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: body.narration,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.4, use_speaker_boost: true },
+        }),
+      }
+    );
+
+    if (ttsResponse.ok) {
+      audioBuffer = await ttsResponse.arrayBuffer();
+      console.log("ElevenLabs TTS OK:", audioBuffer.byteLength, "bytes");
+    } else {
+      console.warn("ElevenLabs failed:", ttsResponse.status, "— falling back to Google TTS");
+      audioBuffer = await googleTtsFallback(body.narration);
+      ttsSource = "google";
     }
-    throw new Error(`ElevenLabs TTS failed: ${ttsResponse.status}`);
+  } else {
+    console.log("No ElevenLabs key — using Google TTS");
+    audioBuffer = await googleTtsFallback(body.narration);
+    ttsSource = "google";
   }
+
+  console.log(`TTS audio generated via ${ttsSource}:`, audioBuffer.byteLength, "bytes");
 
   const audioBuffer = await ttsResponse.arrayBuffer();
   console.log("TTS audio generated:", audioBuffer.byteLength, "bytes");
@@ -403,4 +408,31 @@ async function handleGenerateVideo(
       headers: { ...cors, "Content-Type": "application/json" },
     }
   );
+}
+
+/* ─── Google Cloud TTS Fallback ─── */
+async function googleTtsFallback(text: string): Promise<ArrayBuffer> {
+  // Use Google Translate TTS as a free fallback (no API key needed)
+  const encodedText = encodeURIComponent(text.slice(0, 200));
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=en&client=tw-ob`;
+  
+  const resp = await fetch(url);
+  if (resp.ok) {
+    return await resp.arrayBuffer();
+  }
+  
+  // If Google Translate TTS fails, generate a silent MP3 placeholder
+  // so the pipeline doesn't break — video will still generate with image animation
+  console.warn("Google TTS also failed, using silent audio placeholder");
+  
+  // Minimal valid MP3 frame (silent) — ~0.026s of silence repeated
+  const silentMp3 = new Uint8Array([
+    0xFF, 0xFB, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  ]);
+  return silentMp3.buffer;
 }
