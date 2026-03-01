@@ -263,7 +263,7 @@ Style: Modern, clean, professional. Suitable for TikTok/YouTube Shorts. Vertical
   });
 }
 
-/* ─── Generate Video from Reference Image ─── */
+/* ─── Generate Video from Reference Image (Replicate Kling v2.6 - Async) ─── */
 async function handleGenerateVideo(
   body: { image_url: string; visual_prompt: string; narration: string; scene_index: number },
   apiKey: string,
@@ -271,72 +271,70 @@ async function handleGenerateVideo(
   userId: string,
   cors: Record<string, string>
 ) {
-  // Use Lovable video generation API with image as starting frame
-  const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/video/generations", {
+  const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
+  if (!REPLICATE_API_TOKEN) {
+    throw new Error("REPLICATE_API_TOKEN is not configured. Add it in Cloud secrets.");
+  }
+
+  // Truncate prompt to Kling's limit
+  const safePrompt = body.visual_prompt.length > 600
+    ? body.visual_prompt.substring(0, 597) + "..."
+    : body.visual_prompt;
+
+  const input: Record<string, unknown> = {
+    prompt: `${safePrompt}. Subtle cinematic motion, slight camera movement, professional quality vertical video.`,
+    duration: 5,
+    aspect_ratio: "9:16",
+    negative_prompt: "blurry, low quality, distorted faces, extra limbs, watermark, text overlay",
+  };
+
+  // Use the reference image as start_image
+  if (body.image_url && !body.image_url.startsWith("data:")) {
+    input.start_image = body.image_url;
+  }
+
+  console.log("=== KLING 2.6 VIDEO GENERATION ===");
+  console.log("Scene index:", body.scene_index);
+  console.log("Start image:", body.image_url?.substring(0, 80));
+  console.log("Prompt:", safePrompt.substring(0, 100));
+
+  // Create prediction via Replicate API (async)
+  const response = await fetch("https://api.replicate.com/v1/models/kwaivgi/kling-v2.6/predictions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt: `Animate this scene for a short-form vertical video. ${body.visual_prompt}. Motion should be subtle and cinematic — slight camera movement, gentle subject motion. Professional quality.`,
-      starting_frame: body.image_url,
-      aspect_ratio: "9:16",
-      duration: 5,
-    }),
+    headers: {
+      Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
+      "Content-Type": "application/json",
+      "Prefer": "respond-async",
+    },
+    body: JSON.stringify({ input }),
   });
 
-  if (!aiResp.ok) {
-    const errText = await aiResp.text();
-    console.error("Video generation API error:", errText);
-    throw new Error(`Video generation failed: ${errText}`);
-  }
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Replicate API error:", response.status, errorText);
 
-  const videoData = await aiResp.json();
-  console.log("Video generation response keys:", JSON.stringify(Object.keys(videoData)));
-  console.log("Video generation full response:", JSON.stringify(videoData).substring(0, 500));
-
-  // Try multiple possible response structures
-  let videoUrl = videoData?.url
-    || videoData?.video_url
-    || videoData?.data?.[0]?.url
-    || videoData?.data?.[0]?.video_url
-    || videoData?.output?.url
-    || videoData?.result?.url;
-
-  // If response contains a generation ID, poll for completion
-  const generationId = videoData?.id || videoData?.generation_id || videoData?.data?.[0]?.id;
-  if (!videoUrl && generationId) {
-    console.log("Video generation async, polling for ID:", generationId);
-    // Poll up to 60 times (5 min) with 5s intervals
-    for (let i = 0; i < 60; i++) {
-      await new Promise(r => setTimeout(r, 5000));
-      const pollResp = await fetch(`https://ai.gateway.lovable.dev/v1/video/generations/${generationId}`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
-      if (!pollResp.ok) {
-        console.error("Poll error:", await pollResp.text());
-        continue;
-      }
-      const pollData = await pollResp.json();
-      console.log(`Poll ${i + 1} status:`, JSON.stringify(pollData).substring(0, 300));
-      
-      const status = pollData?.status || pollData?.state;
-      videoUrl = pollData?.url
-        || pollData?.video_url
-        || pollData?.data?.[0]?.url
-        || pollData?.output?.url
-        || pollData?.result?.url;
-      
-      if (videoUrl) break;
-      if (status === "failed" || status === "error") {
-        throw new Error(`Video generation failed: ${JSON.stringify(pollData)}`);
-      }
+    if (response.status === 429) {
+      throw new Error("Video generation is congested. Please try again in a moment.");
     }
+    if (response.status === 402) {
+      throw new Error("Replicate billing issue. Check your Replicate account.");
+    }
+    throw new Error(`Replicate API error: ${response.status} - ${errorText}`);
   }
 
-  if (!videoUrl) {
-    throw new Error(`No video URL in response: ${JSON.stringify(videoData).substring(0, 300)}`);
-  }
+  const prediction = await response.json();
+  console.log("Kling 2.6 prediction started:", prediction.id);
 
-  return new Response(JSON.stringify({ video_url: videoUrl }), {
-    headers: { ...cors, "Content-Type": "application/json" },
-  });
+  // Return immediately with prediction ID — client will poll check-video-status
+  return new Response(
+    JSON.stringify({
+      predictionId: prediction.id,
+      status: "processing",
+      sceneIndex: body.scene_index,
+    }),
+    {
+      status: 200,
+      headers: { ...cors, "Content-Type": "application/json" },
+    }
+  );
 }
