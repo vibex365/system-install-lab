@@ -140,6 +140,7 @@ export default function AdminVideoStudio() {
     }
     setGeneratingVideoIndex(index);
     try {
+      // Step 1: Start async video generation (returns predictionId immediately)
       const { data, error } = await supabase.functions.invoke("generate-video-script", {
         body: {
           action: "generate_video",
@@ -151,10 +152,40 @@ export default function AdminVideoStudio() {
       });
       if (error) throw error;
 
-      const videoUrl = data?.video_url;
-      if (!videoUrl) throw new Error("No video returned");
+      const predictionId = data?.predictionId;
+      if (!predictionId) throw new Error("No prediction ID returned");
 
-      setScenes(prev => prev.map((s, i) => i === index ? { ...s, video_url: videoUrl } : s));
+      toast({ title: "Video generation started", description: "This takes 2-5 minutes. Polling for status..." });
+
+      // Step 2: Poll check-video-status until done
+      let videoUrl: string | null = null;
+      for (let attempt = 0; attempt < 90; attempt++) {
+        await new Promise(r => setTimeout(r, 5000)); // Poll every 5s
+
+        const { data: statusData, error: statusErr } = await supabase.functions.invoke("check-video-status", {
+          body: { predictionId },
+        });
+
+        if (statusErr) {
+          console.error("Poll error:", statusErr);
+          continue;
+        }
+
+        const status = statusData?.status;
+        console.log(`Poll ${attempt + 1}: status=${status}`);
+
+        if (status === "succeeded" && statusData?.output) {
+          videoUrl = statusData.output;
+          break;
+        }
+        if (status === "failed" || status === "canceled") {
+          throw new Error(statusData?.error || `Video generation ${status}`);
+        }
+      }
+
+      if (!videoUrl) throw new Error("Video generation timed out after ~7.5 minutes");
+
+      setScenes(prev => prev.map((s, i) => i === index ? { ...s, video_url: videoUrl! } : s));
       toast({ title: "Video generated!" });
     } catch (e: any) {
       toast({ title: "Video generation failed", description: e.message, variant: "destructive" });
