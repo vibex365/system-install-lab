@@ -292,7 +292,7 @@ async function handleGenerateVideo(
 
   // ── Step 1: Generate TTS audio via ElevenLabs ──
   console.log("Step 1: Generating ElevenLabs TTS audio...");
-  const voiceId = "EXAVITQu4vr4xnSDxMaL"; // Sarah default
+  const voiceId = "bTEswxYhpv7UDkQg5VRu";
   const ttsResponse = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
     {
