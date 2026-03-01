@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthGate } from "@/components/AuthGate";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall, Gift, Handshake, Share2 } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Settings, CreditCard, Menu, X, Bot, Megaphone, PhoneCall, Gift, Handshake, Share2, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -14,6 +14,7 @@ const navItems = [
   { label: "Call Log", path: "/admin/calls", icon: PhoneCall },
   { label: "Marketing", path: "/admin/marketing", icon: Megaphone },
   { label: "Social Poster", path: "/admin/social", icon: Share2 },
+  { label: "Video Studio", path: "/admin/video-studio", icon: Video },
   { label: "Affiliates", path: "/admin/affiliates", icon: Gift },
   { label: "Partner Apps", path: "/admin/partners", icon: Handshake, countKey: "partner_applications" as const },
   { label: "Payments", path: "/admin/payments", icon: CreditCard },
