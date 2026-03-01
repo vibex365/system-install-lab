@@ -34,7 +34,16 @@ serve(async (req) => {
     const platform = c.platform || a.platform || body.platform || body.network || "";
     const latePostId = p.id || body.post_id || body.late_post_id || "";
     const lateCommentId = c.id || body.comment_id || body.id || "";
+    const platformPostId = c.platformPostId || p.platformPostId || "";
     const commentUrl = c.comment_url || body.comment_url || body.url || body.permalink || "";
+
+    // Build a direct Facebook/Instagram link from platformPostId
+    let directLink = commentUrl;
+    if (!directLink && platformPostId && platform === "facebook") {
+      directLink = `https://www.facebook.com/${platformPostId}`;
+    } else if (!directLink && platformPostId && platform === "instagram") {
+      directLink = `https://www.instagram.com/p/${platformPostId}`;
+    }
 
     if (!commentText) {
       return new Response(JSON.stringify({ ok: true, skipped: "no comment text" }), {
@@ -71,7 +80,7 @@ serve(async (req) => {
       platform,
       commenter_name: commenterName,
       comment_text: commentText,
-      comment_url: commentUrl,
+      comment_url: directLink || "",
       matched_keywords: matchedKeywords,
       sms_sent: false,
     });
@@ -83,11 +92,10 @@ serve(async (req) => {
     const adminPhone = Deno.env.get("ADMIN_PHONE_NUMBER") || null;
 
     if (twilioSid && twilioToken && fromNumber && adminPhone) {
-      const platformLabel = platform || "social media";
-      const linkStr = commentUrl ? `\nReply: ${commentUrl}` : "";
-      const keywordTag = matchedKeywords.length > 0 ? `\n🔑 KEYWORD MATCH: ${matchedKeywords.join(", ")}` : "";
+      const linkStr = directLink ? `\n👉 ${directLink}` : "";
+      const keywordTag = matchedKeywords.length > 0 ? `\n🔑 KEYWORD MATCH` : "";
       
-      const smsBody = `💬 ${commenterName} on ${platformLabel}:\n"${commentText.slice(0, 120)}"${keywordTag}${linkStr}`;
+      const smsBody = `💬 Comment on ${platformLabel}:\n"${commentText.slice(0, 120)}"${keywordTag}${linkStr}`;
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
       const twilioAuth = btoa(`${twilioSid}:${twilioToken}`);
