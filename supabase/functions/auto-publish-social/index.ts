@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
     for (const post of postsToPublish) {
       try {
-        const requestedPlatforms = post.platforms || ["facebook"];
+        const requestedPlatforms = (post.platforms || ["facebook"]).filter((p: string) => p !== "youtube");
         
         // Build platforms array for Late.dev
         const platformEntries: { platform: string; accountId: string }[] = [];

@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
 
     for (const post of postsToSchedule) {
       try {
-        const requestedPlatforms = post.platforms || ["facebook"];
+        const requestedPlatforms = (post.platforms || ["facebook"]).filter((p: string) => p !== "youtube");
 
         // Map platforms to Late.dev account IDs
         const platformEntries: { platform: string; accountId: string }[] = [];
