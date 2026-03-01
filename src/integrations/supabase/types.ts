@@ -2191,6 +2191,92 @@ export type Database = {
         }
         Relationships: []
       }
+      video_projects: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          status: string
+          title: string
+          tone: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id?: string
+          status?: string
+          title: string
+          tone?: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          status?: string
+          title?: string
+          tone?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      video_scenes: {
+        Row: {
+          caption_text: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          narration: string
+          project_id: string
+          scene_order: number
+          status: string
+          title: string
+          video_url: string | null
+          visual_prompt: string | null
+        }
+        Insert: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          narration: string
+          project_id: string
+          scene_order?: number
+          status?: string
+          title: string
+          video_url?: string | null
+          visual_prompt?: string | null
+        }
+        Update: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          narration?: string
+          project_id?: string
+          scene_order?: number
+          status?: string
+          title?: string
+          video_url?: string | null
+          visual_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_scenes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_memos: {
         Row: {
           call_log_id: string | null
