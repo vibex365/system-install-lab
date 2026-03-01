@@ -11,10 +11,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sparkles, Loader2, Video, Film, Save, Play, Send, Eye,
   Clapperboard, Mic, Type, Image as ImageIcon, CheckCircle2,
+  Upload, Wand2, Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 interface ScriptScene {
   title: string;
@@ -44,7 +45,6 @@ const TOPIC_PRESETS = [
 
 export default function AdminVideoStudio() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const [topic, setTopic] = useState("");
   const [tone, setTone] = useState("educational");
@@ -54,8 +54,9 @@ export default function AdminVideoStudio() {
   const [scriptTitle, setScriptTitle] = useState("");
   const [scenes, setScenes] = useState<ScriptScene[]>([]);
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+  const [generatingImageIndex, setGeneratingImageIndex] = useState<number | null>(null);
+  const [generatingVideoIndex, setGeneratingVideoIndex] = useState<number | null>(null);
 
-  // Fetch saved projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ["video-projects"],
     queryFn: async () => {
@@ -107,8 +108,78 @@ export default function AdminVideoStudio() {
     setSaving(false);
   };
 
+  const handleGenerateImage = async (index: number) => {
+    const scene = scenes[index];
+    if (!scene?.visual_prompt) {
+      toast({ title: "Visual prompt required", variant: "destructive" });
+      return;
+    }
+    setGeneratingImageIndex(index);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-video-script", {
+        body: { action: "generate_image", visual_prompt: scene.visual_prompt, scene_id: `scene-${index}` },
+      });
+      if (error) throw error;
+
+      const imageUrl = data?.image_url;
+      if (!imageUrl) throw new Error("No image returned");
+
+      setScenes(prev => prev.map((s, i) => i === index ? { ...s, image_url: imageUrl } : s));
+      toast({ title: "Reference image generated!" });
+    } catch (e: any) {
+      toast({ title: "Image generation failed", description: e.message, variant: "destructive" });
+    }
+    setGeneratingImageIndex(null);
+  };
+
+  const handleGenerateVideo = async (index: number) => {
+    const scene = scenes[index];
+    if (!scene?.image_url) {
+      toast({ title: "Generate a reference image first", variant: "destructive" });
+      return;
+    }
+    setGeneratingVideoIndex(index);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-video-script", {
+        body: {
+          action: "generate_video",
+          scene_index: index,
+          image_url: scene.image_url,
+          visual_prompt: scene.visual_prompt,
+          narration: scene.narration,
+        },
+      });
+      if (error) throw error;
+
+      const videoUrl = data?.video_url;
+      if (!videoUrl) throw new Error("No video returned");
+
+      setScenes(prev => prev.map((s, i) => i === index ? { ...s, video_url: videoUrl } : s));
+      toast({ title: "Video generated!" });
+    } catch (e: any) {
+      toast({ title: "Video generation failed", description: e.message, variant: "destructive" });
+    }
+    setGeneratingVideoIndex(null);
+  };
+
+  const handleUploadImage = async (index: number, file: File) => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      const fileName = `video-studio/${user?.id}/${Date.now()}-scene-${index}.${file.name.split(".").pop()}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("ad-creatives")
+        .upload(fileName, file, { contentType: file.type, upsert: true });
+      if (uploadErr) throw uploadErr;
+
+      const { data: publicUrl } = supabase.storage.from("ad-creatives").getPublicUrl(fileName);
+      setScenes(prev => prev.map((s, i) => i === index ? { ...s, image_url: publicUrl.publicUrl } : s));
+      toast({ title: "Image uploaded!" });
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e.message, variant: "destructive" });
+    }
+  };
+
   const handlePublishToSocial = async (projectId: string) => {
-    // Create a social post entry with the video for auto-posting
     try {
       const project = projects.find((p: any) => p.id === projectId);
       if (!project) return;
@@ -178,7 +249,6 @@ export default function AdminVideoStudio() {
           </TabsList>
 
           <TabsContent value="create" className="space-y-6 mt-4">
-            {/* Script Generation */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: Input */}
               <div className="lg:col-span-1 space-y-4">
@@ -190,7 +260,6 @@ export default function AdminVideoStudio() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Topic */}
                     <div>
                       <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">
                         Video Topic
@@ -203,7 +272,6 @@ export default function AdminVideoStudio() {
                       />
                     </div>
 
-                    {/* Topic Presets */}
                     <div>
                       <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">
                         Quick Topics
@@ -221,15 +289,10 @@ export default function AdminVideoStudio() {
                       </div>
                     </div>
 
-                    {/* Tone */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">
-                        Tone
-                      </label>
+                      <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">Tone</label>
                       <Select value={tone} onValueChange={setTone}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="educational">Educational</SelectItem>
                           <SelectItem value="hype">High Energy / Hype</SelectItem>
@@ -240,11 +303,8 @@ export default function AdminVideoStudio() {
                       </Select>
                     </div>
 
-                    {/* Format */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">
-                        Format
-                      </label>
+                      <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 block">Format</label>
                       <div className="grid grid-cols-1 gap-2">
                         {FORMATS.map(f => (
                           <button
@@ -277,11 +337,10 @@ export default function AdminVideoStudio() {
                 </Card>
               </div>
 
-              {/* Right: Script Preview */}
+              {/* Right: Script Preview + Scene Editor */}
               <div className="lg:col-span-2 space-y-4">
                 {scenes.length > 0 ? (
                   <>
-                    {/* Title */}
                     <Card>
                       <CardContent className="pt-4">
                         <Input
@@ -299,7 +358,7 @@ export default function AdminVideoStudio() {
                         <button
                           key={i}
                           onClick={() => setActiveSceneIndex(i)}
-                          className={`flex-shrink-0 px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
+                          className={`flex-shrink-0 px-3 py-2 rounded-md border text-xs font-medium transition-colors relative ${
                             activeSceneIndex === i
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-border text-muted-foreground hover:text-foreground"
@@ -307,6 +366,15 @@ export default function AdminVideoStudio() {
                         >
                           <span className="block text-[10px] text-muted-foreground mb-0.5">Scene {i + 1}</span>
                           {scene.title}
+                          {/* Status indicators */}
+                          <div className="flex gap-1 mt-1">
+                            {scene.image_url && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" title="Image ready" />
+                            )}
+                            {scene.video_url && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="Video ready" />
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -326,62 +394,135 @@ export default function AdminVideoStudio() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          {/* Narration */}
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
-                              <Mic className="h-3 w-3" /> Narration
-                            </label>
-                            <Textarea
-                              value={activeScene.narration}
-                              onChange={e => updateScene(activeSceneIndex, "narration", e.target.value)}
-                              className="min-h-[80px]"
-                            />
-                          </div>
-
-                          {/* Caption Text */}
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
-                              <Type className="h-3 w-3" /> On-Screen Caption
-                            </label>
-                            <Input
-                              value={activeScene.caption_text}
-                              onChange={e => updateScene(activeSceneIndex, "caption_text", e.target.value)}
-                            />
-                          </div>
-
-                          {/* Visual Prompt */}
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
-                              <ImageIcon className="h-3 w-3" /> Visual Prompt
-                            </label>
-                            <Textarea
-                              value={activeScene.visual_prompt}
-                              onChange={e => updateScene(activeSceneIndex, "visual_prompt", e.target.value)}
-                              className="min-h-[60px] text-xs"
-                            />
-                          </div>
-
-                          {/* Scene Preview Placeholder */}
-                          <div className="aspect-[9/16] max-h-[320px] bg-muted rounded-lg border border-border flex items-center justify-center">
-                            {activeScene.video_url ? (
-                              <video
-                                src={activeScene.video_url}
-                                controls
-                                className="w-full h-full object-contain rounded-lg"
-                              />
-                            ) : activeScene.image_url ? (
-                              <img
-                                src={activeScene.image_url}
-                                alt={activeScene.title}
-                                className="w-full h-full object-contain rounded-lg"
-                              />
-                            ) : (
-                              <div className="text-center text-muted-foreground p-6">
-                                <Video className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                                <p className="text-xs">9:16 Preview</p>
-                                <p className="text-[10px] mt-1">Generate video to preview</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Left: Text fields */}
+                            <div className="space-y-4">
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
+                                  <Mic className="h-3 w-3" /> Narration
+                                </label>
+                                <Textarea
+                                  value={activeScene.narration}
+                                  onChange={e => updateScene(activeSceneIndex, "narration", e.target.value)}
+                                  className="min-h-[80px]"
+                                />
                               </div>
-                            )}
+
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
+                                  <Type className="h-3 w-3" /> On-Screen Caption
+                                </label>
+                                <Input
+                                  value={activeScene.caption_text}
+                                  onChange={e => updateScene(activeSceneIndex, "caption_text", e.target.value)}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase mb-1.5 flex items-center gap-1.5">
+                                  <ImageIcon className="h-3 w-3" /> Visual Prompt
+                                </label>
+                                <Textarea
+                                  value={activeScene.visual_prompt}
+                                  onChange={e => updateScene(activeSceneIndex, "visual_prompt", e.target.value)}
+                                  className="min-h-[60px] text-xs"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Right: Preview + Generation */}
+                            <div className="space-y-3">
+                              {/* Preview Area - 9:16 */}
+                              <div className="aspect-[9/16] max-h-[360px] bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden relative">
+                                {activeScene.video_url ? (
+                                  <video
+                                    src={activeScene.video_url}
+                                    controls
+                                    className="w-full h-full object-contain rounded-lg"
+                                  />
+                                ) : activeScene.image_url ? (
+                                  <img
+                                    src={activeScene.image_url}
+                                    alt={activeScene.title}
+                                    className="w-full h-full object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <div className="text-center text-muted-foreground p-6">
+                                    <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                                    <p className="text-xs">9:16 Preview</p>
+                                    <p className="text-[10px] mt-1">Generate or upload a reference image</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Generation Buttons */}
+                              <div className="space-y-2">
+                                {/* Step 1: Reference Image */}
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant={activeScene.image_url ? "outline" : "default"}
+                                    className="flex-1 text-xs"
+                                    onClick={() => handleGenerateImage(activeSceneIndex)}
+                                    disabled={generatingImageIndex === activeSceneIndex || !activeScene.visual_prompt}
+                                  >
+                                    {generatingImageIndex === activeSceneIndex ? (
+                                      <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Generating...</>
+                                    ) : (
+                                      <><Wand2 className="h-3 w-3 mr-1" /> {activeScene.image_url ? "Regenerate" : "Generate"} Image</>
+                                    )}
+                                  </Button>
+                                  <label className="cursor-pointer">
+                                    <Button size="sm" variant="outline" className="text-xs" asChild>
+                                      <span>
+                                        <Upload className="h-3 w-3 mr-1" /> Upload
+                                      </span>
+                                    </Button>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={e => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadImage(activeSceneIndex, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+
+                                {/* Step 2: Generate Video from Image */}
+                                <Button
+                                  size="sm"
+                                  className="w-full text-xs"
+                                  variant={activeScene.video_url ? "outline" : "default"}
+                                  onClick={() => handleGenerateVideo(activeSceneIndex)}
+                                  disabled={
+                                    !activeScene.image_url ||
+                                    generatingVideoIndex === activeSceneIndex
+                                  }
+                                >
+                                  {generatingVideoIndex === activeSceneIndex ? (
+                                    <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Generating Video...</>
+                                  ) : !activeScene.image_url ? (
+                                    <><Video className="h-3 w-3 mr-1" /> Generate Image First</>
+                                  ) : (
+                                    <><Play className="h-3 w-3 mr-1" /> {activeScene.video_url ? "Regenerate" : "Generate"} Video</>
+                                  )}
+                                </Button>
+
+                                {activeScene.image_url && (
+                                  <p className="text-[10px] text-muted-foreground text-center">
+                                    {activeScene.video_url ? (
+                                      <span className="flex items-center justify-center gap-1 text-green-600">
+                                        <CheckCircle2 className="h-3 w-3" /> Image + Video ready
+                                      </span>
+                                    ) : (
+                                      "Reference image will be used as the starting frame"
+                                    )}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -403,6 +544,8 @@ export default function AdminVideoStudio() {
                                 <div className="flex items-center gap-2 mb-1">
                                   <Badge variant="secondary" className="text-[10px]">Scene {i + 1}</Badge>
                                   <span className="text-xs font-medium">{scene.title}</span>
+                                  {scene.image_url && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+                                  {scene.video_url && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
                                 </div>
                                 <p className="text-sm text-foreground">{scene.narration}</p>
                                 <p className="text-[10px] text-muted-foreground mt-1">
@@ -447,6 +590,7 @@ export default function AdminVideoStudio() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {projects.map((project: any) => {
                   const sceneCount = project.video_scenes?.length || 0;
+                  const imagesReady = project.video_scenes?.filter((s: any) => s.image_url).length || 0;
                   const videosReady = project.video_scenes?.filter((s: any) => s.video_url).length || 0;
                   return (
                     <Card key={project.id}>
@@ -466,7 +610,7 @@ export default function AdminVideoStudio() {
                           </Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {sceneCount} scenes • {videosReady}/{sceneCount} videos
+                          {sceneCount} scenes • {imagesReady} images • {videosReady} videos
                         </div>
                         <div className="flex gap-2">
                           <Button
