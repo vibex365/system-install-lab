@@ -472,22 +472,25 @@ export default function AdminVideoStudio() {
                                       <><Wand2 className="h-3 w-3 mr-1" /> {activeScene.image_url ? "Regenerate" : "Generate"} Image</>
                                     )}
                                   </Button>
-                                  <label className="cursor-pointer">
-                                    <Button size="sm" variant="outline" className="text-xs" asChild>
-                                      <span>
-                                        <Upload className="h-3 w-3 mr-1" /> Upload
-                                      </span>
+                                  <div className="relative">
+                                    <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                                      const input = document.getElementById(`scene-upload-${activeSceneIndex}`) as HTMLInputElement;
+                                      input?.click();
+                                    }}>
+                                      <Upload className="h-3 w-3 mr-1" /> Upload
                                     </Button>
                                     <input
+                                      id={`scene-upload-${activeSceneIndex}`}
                                       type="file"
                                       accept="image/*"
                                       className="hidden"
                                       onChange={e => {
                                         const file = e.target.files?.[0];
                                         if (file) handleUploadImage(activeSceneIndex, file);
+                                        e.target.value = "";
                                       }}
                                     />
-                                  </label>
+                                  </div>
                                 </div>
 
                                 {/* Step 2: Generate Video from Image */}
